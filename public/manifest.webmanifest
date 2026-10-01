@@ -1,0 +1,20 @@
+{
+  "name": "정글맞팔웹",
+  "short_name": "정글맞팔",
+  "description": "정글 맞팔방 회원 및 맞팔데이 관리 웹앱",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F7F3E8",
+  "theme_color": "#A9D95D",
+  "orientation": "portrait-primary",
+  "lang": "ko-KR",
+  "icons": [
+    {
+      "src": "/jungle-follow-hero.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
