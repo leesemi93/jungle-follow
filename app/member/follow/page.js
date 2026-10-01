@@ -779,6 +779,27 @@ export default function MemberFollowPage() {
                   </div>
 
 
+                  {!isInstagram && item.account_value && (
+                    <div style={styles.myPlatformLinkBox}>
+                      <div style={styles.myPlatformLinkLabel}>
+                        내 등록 링크
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openParticipantLink(item.account_value)}
+                        style={styles.myPlatformLinkButton}
+                      >
+                        <span style={styles.myPlatformLinkValue}>
+                          {item.account_value}
+                        </span>
+                        <span style={styles.myPlatformLinkOpen}>
+                          열기 ↗
+                        </span>
+                      </button>
+                    </div>
+                  )}
+
+
                   {/* INSTAGRAM */}
 
                   {isInstagram && (
@@ -1435,6 +1456,52 @@ const styles = {
     marginTop: "3px",
     color: "#898e85",
     fontSize: "9px",
+  },
+
+  myPlatformLinkBox: {
+    marginTop: "11px",
+    padding: "10px 11px",
+    borderRadius: "13px",
+    background: "#fbfaf5",
+    border: "1px solid #ece9df",
+  },
+
+  myPlatformLinkLabel: {
+    marginBottom: "6px",
+    color: "#8b927f",
+    fontSize: "8px",
+    fontWeight: "900",
+  },
+
+  myPlatformLinkButton: {
+    width: "100%",
+    padding: "9px 10px",
+    border: "none",
+    borderRadius: "10px",
+    background: "#ffffff",
+    color: "#56664d",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "8px",
+    cursor: "pointer",
+    textAlign: "left",
+  },
+
+  myPlatformLinkValue: {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    fontSize: "9px",
+    fontWeight: "700",
+  },
+
+  myPlatformLinkOpen: {
+    flexShrink: 0,
+    fontSize: "8px",
+    fontWeight: "900",
+    color: "#6c805b",
   },
 
   instagramBox: {
