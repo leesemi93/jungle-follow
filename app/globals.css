@@ -9,10 +9,10 @@ body {
 }
 
 body {
-  font-family: "Pretendard Variable", Pretendard, "SUIT Variable", SUIT, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   color: #26352c;
   background: #f7f2e7;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.035em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -22,7 +22,7 @@ input,
 select,
 textarea {
   font: inherit;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.035em;
 }
 
 strong,
@@ -30,7 +30,9 @@ b,
 h1,
 h2,
 h3 {
-  letter-spacing: -0.045em;
+  font-family: "Arial Rounded MT Bold", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  letter-spacing: -0.055em;
+  font-weight: 800;
 }
 
 /* =========================
