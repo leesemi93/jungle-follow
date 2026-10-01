@@ -1317,16 +1317,19 @@ const styles = {
   },
 
   eventSaveButton: {
-    padding: "10px 15px",
-    border: "1px solid #9dce59",
+    minWidth: "118px",
+    minHeight: "48px",
+    padding: "12px 20px",
+    border: "1px solid #8fca3d",
     borderRadius: "999px",
-    background: "#a9dd5d",
-    color: "#27401f",
-    fontSize: "9px",
-    fontWeight: "950",
+    background: "linear-gradient(135deg, #b8e96c 0%, #9edc4f 100%)",
+    color: "#203a17",
+    fontSize: "11px",
+    fontWeight: "900",
     cursor: "pointer",
     whiteSpace: "nowrap",
-    boxShadow: "0 5px 12px rgba(122, 164, 62, 0.14)",
+    boxShadow: "0 8px 18px rgba(125, 178, 57, 0.28), inset 0 1px 0 rgba(255,255,255,0.42)",
+    transform: "translateY(-1px)",
   },
 
   openBadge: {
