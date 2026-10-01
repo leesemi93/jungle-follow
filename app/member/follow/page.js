@@ -387,9 +387,11 @@ export default function MemberFollowPage() {
         ...selections,
       });
 
-      setMessage(
-        "맞팔데이 완료 상태가 저장되었어요 💚"
-      );
+      setMessage("저장되었습니다 💚");
+
+      window.setTimeout(() => {
+        setMessage("");
+      }, 2500);
     } catch (error) {
       setErrorMessage(
         error?.message ||
@@ -1068,6 +1070,12 @@ export default function MemberFollowPage() {
             )}
 
 
+            {message && (
+              <div style={styles.saveSuccessBox}>
+                ✓ {message}
+              </div>
+            )}
+
             {/* GUIDE */}
 
             <div
@@ -1618,6 +1626,19 @@ const styles = {
     background: "#fff0ed",
     color: "#a84d43",
     fontSize: "11px",
+  },
+
+  saveSuccessBox: {
+    margin: "12px 0 4px",
+    padding: "14px 16px",
+    borderRadius: "16px",
+    background: "#edf6df",
+    border: "1px solid #d5e8b8",
+    color: "#527039",
+    fontSize: "12px",
+    fontWeight: "950",
+    textAlign: "center",
+    boxShadow: "0 8px 20px rgba(76, 104, 50, 0.08)",
   },
 
   successBox: {
