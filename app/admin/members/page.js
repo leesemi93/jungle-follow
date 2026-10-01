@@ -710,6 +710,72 @@ export default function AdminMembersPage() {
     setRoleLoadingId(null);
   }
 
+  async function copyMemberList(status) {
+    const targetMembers = members.filter((member) =>
+      status === "active"
+        ? member.status !== "inactive"
+        : member.status === "inactive"
+    );
+
+    if (targetMembers.length === 0) {
+      window.alert(
+        status === "active"
+          ? "복사할 입장 회원이 없습니다."
+          : "복사할 퇴장 회원이 없습니다."
+      );
+      return;
+    }
+
+    const header = [
+      "번호",
+      "카카오톡 닉네임",
+      "인스타그램 아이디",
+      "상태",
+      "권한",
+    ];
+
+    const rows = targetMembers.map((member, index) => {
+      const role = memberRoles[member.id] || "member";
+
+      const roleLabel =
+        role === "super_admin"
+          ? "최고관리자"
+          : role === "admin"
+            ? "관리자"
+            : "회원";
+
+      return [
+        index + 1,
+        member.kakao_nickname || "",
+        member.instagram_id
+          ? `@${member.instagram_id.replace(/^@/, "")}`
+          : "",
+        status === "active" ? "입장" : "퇴장",
+        roleLabel,
+      ];
+    });
+
+    const text = [header, ...rows]
+      .map((row) => row.join("\t"))
+      .join("\n");
+
+    try {
+      await navigator.clipboard.writeText(text);
+
+      setMessage(
+        status === "active"
+          ? `입장 목록 ${targetMembers.length}명을 복사했습니다. 엑셀에 바로 붙여넣어주세요. 💚`
+          : `퇴장 목록 ${targetMembers.length}명을 복사했습니다. 엑셀에 바로 붙여넣어주세요. 💚`
+      );
+
+      setErrorMessage("");
+    } catch (error) {
+      setErrorMessage(
+        "목록 복사에 실패했어요. 브라우저의 클립보드 권한을 확인해주세요."
+      );
+    }
+  }
+
   const filteredMembers = useMemo(() => {
     const keyword = search
       .trim()
@@ -1162,6 +1228,28 @@ export default function AdminMembersPage() {
             ))}
           </div>
 
+          <div style={copyButtonGrid}>
+            <button
+              type="button"
+              onClick={() =>
+                copyMemberList("active")
+              }
+              style={copyActiveButton}
+            >
+              📋 입장목록 엑셀 복사
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                copyMemberList("inactive")
+              }
+              style={copyInactiveButton}
+            >
+              📋 퇴장목록 엑셀 복사
+            </button>
+          </div>
+
           {loading ? (
             <div className="emptyMembers">
               회원 목록 불러오는 중...
@@ -1612,6 +1700,36 @@ function PlatformLine({
   );
 }
 
+const copyButtonGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "8px",
+  marginTop: "10px",
+  marginBottom: "14px",
+};
+
+const copyActiveButton = {
+  padding: "11px 8px",
+  border: "1px solid #cfe1bd",
+  borderRadius: "13px",
+  background: "#f1f8e9",
+  color: "#58734a",
+  fontSize: "12px",
+  fontWeight: "900",
+  cursor: "pointer",
+};
+
+const copyInactiveButton = {
+  padding: "11px 8px",
+  border: "1px solid #e0dddd",
+  borderRadius: "13px",
+  background: "#f8f7f7",
+  color: "#747070",
+  fontSize: "12px",
+  fontWeight: "900",
+  cursor: "pointer",
+};
+
 const kickerStyle = {
   fontSize: "12px",
   fontWeight: "900",
@@ -1848,3 +1966,4 @@ const centerText = {
   color: "#798174",
   fontSize: "13px",
 };
+
