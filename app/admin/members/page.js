@@ -131,57 +131,12 @@ export default function MembersPage() {
     setMemo("");
 
     setMessage(
-      `${cleanNickname}님 회원 등록 완료 💚`
+      `${cleanNickname}님 입장 등록 완료 💚`
     );
 
     await loadMembers(adminToken);
 
     setSaving(false);
-  }
-
-  async function restrictMember(member) {
-    const reason = window.prompt(
-      `${member.kakao_nickname}님의 제한 사유를 입력해주세요.`,
-      "인스타 제한"
-    );
-
-    if (reason === null) return;
-
-    const ok = window.confirm(
-      `${member.kakao_nickname}님을 제한 상태로 변경할까요?`
-    );
-
-    if (!ok) return;
-
-    setActionLoading(member.id);
-    setMessage("");
-
-    const { error } = await supabase.rpc(
-      "pause_member",
-      {
-        p_session_token: adminToken,
-        p_member_id: member.id,
-        p_reason:
-          reason.trim() || "인스타 제한",
-      }
-    );
-
-    if (error) {
-      setMessage(
-        `제한 처리 실패: ${error.message}`
-      );
-
-      setActionLoading("");
-      return;
-    }
-
-    setMessage(
-      `${member.kakao_nickname}님 제한 처리 완료`
-    );
-
-    await loadMembers(adminToken);
-
-    setActionLoading("");
   }
 
   async function leaveMember(member) {
@@ -200,7 +155,7 @@ export default function MembersPage() {
     if (memoValue === null) return;
 
     const ok = window.confirm(
-      `${member.kakao_nickname}님을 퇴장 처리할까요?\n\n회원 기록은 삭제되지 않고 보관됩니다.`
+      `${member.kakao_nickname}님을 퇴장 처리할까요?\n\n퇴장 기록은 보관됩니다.`
     );
 
     if (!ok) return;
@@ -238,14 +193,14 @@ export default function MembersPage() {
 
   async function rejoinMember(member) {
     const memoValue = window.prompt(
-      `${member.kakao_nickname}님 재입장 메모가 있으면 입력해주세요.`,
+      `${member.kakao_nickname}님 재입장 메모가 있으면 입력해주세요.\n없으면 비워두고 확인을 눌러주세요.`,
       ""
     );
 
     if (memoValue === null) return;
 
     const ok = window.confirm(
-      `${member.kakao_nickname}님을 재입장 처리할까요?`
+      `${member.kakao_nickname}님을 다시 입장 처리할까요?`
     );
 
     if (!ok) return;
@@ -287,9 +242,15 @@ export default function MembersPage() {
       .replace(/^@/, "");
 
     return members.filter((member) => {
-      const statusMatch =
-        filter === "all" ||
-        member.status === filter;
+      let statusMatch = true;
+
+      if (filter === "active") {
+        statusMatch = member.status === "active";
+      }
+
+      if (filter === "inactive") {
+        statusMatch = member.status === "inactive";
+      }
 
       if (!statusMatch) {
         return false;
@@ -315,15 +276,19 @@ export default function MembersPage() {
   }, [members, search, filter]);
 
   function getStatusText(status) {
-    if (status === "active") return "활동중";
-    if (status === "paused") return "제한";
-    if (status === "inactive") return "퇴장";
+    if (status === "inactive") {
+      return "퇴장";
+    }
 
-    return status || "-";
+    return "입장";
   }
 
   function getStatusClass(status) {
-    return `memberStatus ${status || ""}`;
+    if (status === "inactive") {
+      return "memberStatus inactive";
+    }
+
+    return "memberStatus active";
   }
 
   if (loading) {
@@ -363,15 +328,16 @@ export default function MembersPage() {
             </h1>
 
             <p className="dashboardHello">
-              정글맞팔 회원을 등록하고 관리해요.
+              회원 입장과 퇴장 기록을 관리해요.
             </p>
           </div>
         </div>
 
         <section className="memberAdminCard">
-          <h2>새 회원 등록</h2>
+          <h2>새 회원 입장</h2>
 
           <form onSubmit={addMember}>
+
             <label>카톡방 닉네임</label>
 
             <input
@@ -416,8 +382,9 @@ export default function MembersPage() {
             >
               {saving
                 ? "등록 중..."
-                : "회원 등록하기"}
+                : "회원 입장 등록"}
             </button>
+
           </form>
 
           {message && (
@@ -428,6 +395,7 @@ export default function MembersPage() {
         </section>
 
         <section className="memberAdminCard">
+
           <div className="memberListTop">
             <div>
               <h2>회원 목록</h2>
@@ -461,7 +429,13 @@ export default function MembersPage() {
             />
           </div>
 
-          <div className="memberFilters">
+          <div
+            className="memberFilters"
+            style={{
+              gridTemplateColumns:
+                "repeat(3, 1fr)",
+            }}
+          >
             <button
               type="button"
               className={
@@ -487,21 +461,7 @@ export default function MembersPage() {
                 setFilter("active")
               }
             >
-              활동중
-            </button>
-
-            <button
-              type="button"
-              className={
-                filter === "paused"
-                  ? "memberFilter active"
-                  : "memberFilter"
-              }
-              onClick={() =>
-                setFilter("paused")
-              }
-            >
-              제한
+              입장
             </button>
 
             <button
@@ -528,6 +488,7 @@ export default function MembersPage() {
           {listLoading ? (
             <div className="emptyMembers">
               <span>🌿</span>
+
               <strong>
                 회원 목록 불러오는 중...
               </strong>
@@ -535,12 +496,14 @@ export default function MembersPage() {
           ) : filteredMembers.length === 0 ? (
             <div className="emptyMembers">
               <span>🐯</span>
+
               <strong>
                 표시할 회원이 없어요.
               </strong>
             </div>
           ) : (
             <div className="membersList">
+
               {filteredMembers.map(
                 (member) => (
                   <div
@@ -553,6 +516,7 @@ export default function MembersPage() {
                     </div>
 
                     <div className="memberInfo">
+
                       <div className="memberNameRow">
                         <strong>
                           {member.kakao_nickname}
@@ -581,39 +545,8 @@ export default function MembersPage() {
 
                       <div className="memberActions">
 
-                        {member.status === "active" && (
-                          <>
-                            <button
-                              type="button"
-                              className="memberAction pause"
-                              disabled={
-                                actionLoading ===
-                                member.id
-                              }
-                              onClick={() =>
-                                restrictMember(member)
-                              }
-                            >
-                              제한
-                            </button>
-
-                            <button
-                              type="button"
-                              className="memberAction leave"
-                              disabled={
-                                actionLoading ===
-                                member.id
-                              }
-                              onClick={() =>
-                                leaveMember(member)
-                              }
-                            >
-                              퇴장
-                            </button>
-                          </>
-                        )}
-
-                        {member.status === "paused" && (
+                        {member.status !==
+                          "inactive" && (
                           <button
                             type="button"
                             className="memberAction leave"
@@ -629,7 +562,8 @@ export default function MembersPage() {
                           </button>
                         )}
 
-                        {member.status === "inactive" && (
+                        {member.status ===
+                          "inactive" && (
                           <button
                             type="button"
                             className="memberAction rejoin"
@@ -650,8 +584,10 @@ export default function MembersPage() {
                   </div>
                 )
               )}
+
             </div>
           )}
+
         </section>
 
       </section>
