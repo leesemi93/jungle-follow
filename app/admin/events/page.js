@@ -9,167 +9,125 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export default function EventsPage() {
+const PLATFORMS = [
+  { key: "instagram", label: "인스타그램", icon: "📷" },
+  { key: "blog", label: "블로그", icon: "📝" },
+  { key: "naver_clip", label: "네이버 클립", icon: "🎬" },
+  { key: "youtube", label: "유튜브", icon: "▶️" },
+  { key: "tiktok", label: "틱톡", icon: "🎵" },
+  { key: "today_house", label: "오늘의집", icon: "🏠" },
+];
+
+const STATUS_TABS = [
+  { key: "all", label: "전체" },
+  { key: "participate", label: "참여" },
+  { key: "restricted", label: "제한" },
+  { key: "not_voted", label: "미참여" },
+];
+
+export default function AdminEventsPage() {
   const router = useRouter();
 
-  const [adminToken, setAdminToken] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  const [member, setMember] = useState(null);
+
   const [events, setEvents] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState("");
+
+  const [platform, setPlatform] = useState("instagram");
+  const [statusTab, setStatusTab] = useState("all");
+
+  const [counts, setCounts] = useState({
+    total_members: 0,
+    participate_count: 0,
+    restricted_count: 0,
+    not_voted_count: 0,
+  });
+
   const [members, setMembers] = useState([]);
 
-  const [loading, setLoading] = useState(true);
-  const [eventLoading, setEventLoading] = useState(false);
-  const [memberLoading, setMemberLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState("");
-  const [addingAll, setAddingAll] = useState(false);
-
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-
-  const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    checkAdmin();
+    initialize();
   }, []);
 
-  function getKoreaNow() {
-    const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone: "Asia/Seoul",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-    }).formatToParts(new Date());
+  useEffect(() => {
+    if (!selectedEventId) return;
 
-    const values = {};
-
-    parts.forEach((part) => {
-      if (part.type !== "literal") {
-        values[part.type] = Number(part.value);
-      }
-    });
-
-    return {
-      year: values.year,
-      month: values.month,
-      day: values.day,
-    };
-  }
-
-  const currentKoreaDate = useMemo(() => {
-    return getKoreaNow();
-  }, []);
-
-  const currentEvent = useMemo(() => {
-    return events.find(
-      (event) =>
-        Number(event.year) === currentKoreaDate.year &&
-        Number(event.month) === currentKoreaDate.month
+    loadPlatformData(
+      selectedEventId,
+      platform
     );
-  }, [events, currentKoreaDate]);
+  }, [selectedEventId, platform]);
 
-  const participantCount = useMemo(() => {
-    return members.filter(
-      (member) => member.is_participant
-    ).length;
-  }, [members]);
+  async function initialize() {
+    setLoading(true);
+    setErrorMessage("");
 
-  const notParticipantCount = useMemo(() => {
-    return members.filter(
-      (member) =>
-        !member.is_participant &&
-        member.member_status === "active"
-    ).length;
-  }, [members]);
-
-  const filteredMembers = useMemo(() => {
-    const keyword = search
-      .trim()
-      .toLowerCase()
-      .replace(/^@/, "");
-
-    return members.filter((member) => {
-      if (
-        filter === "participant" &&
-        !member.is_participant
-      ) {
-        return false;
-      }
-
-      if (
-        filter === "notParticipant" &&
-        (member.is_participant ||
-          member.member_status !== "active")
-      ) {
-        return false;
-      }
-
-      if (!keyword) {
-        return true;
-      }
-
-      const nickname = (
-        member.kakao_nickname || ""
-      ).toLowerCase();
-
-      const instagram = (
-        member.instagram_id || ""
-      ).toLowerCase();
-
-      return (
-        nickname.includes(keyword) ||
-        instagram.includes(keyword)
-      );
-    });
-  }, [members, search, filter]);
-
-  async function checkAdmin() {
     const token = localStorage.getItem(
-      "jungle_follow_admin"
+      "jungle_follow_session"
     );
 
     if (!token) {
-      router.replace("/admin");
+      router.replace("/");
       return;
     }
 
-    const { data, error } = await supabase.rpc(
-      "get_current_admin",
+    const {
+      data: memberData,
+      error: memberError,
+    } = await supabase.rpc(
+      "get_current_member",
       {
         p_session_token: token,
       }
     );
 
-    if (error || !data?.length) {
+    const currentMember = Array.isArray(
+      memberData
+    )
+      ? memberData[0]
+      : memberData;
+
+    if (memberError || !currentMember) {
       localStorage.removeItem(
-        "jungle_follow_admin"
+        "jungle_follow_session"
       );
 
-      router.replace("/admin");
+      localStorage.removeItem(
+        "jungle_follow_name"
+      );
+
+      router.replace("/");
       return;
     }
 
-    setAdminToken(token);
-
-    const loadedEvents = await loadEvents(token);
-
-    const event = loadedEvents.find(
-      (item) =>
-        Number(item.year) === currentKoreaDate.year &&
-        Number(item.month) === currentKoreaDate.month
-    );
-
-    if (event) {
-      await loadEventMembers(token, event.id);
+    if (
+      currentMember.admin_role !== "admin" &&
+      currentMember.admin_role !== "super_admin"
+    ) {
+      router.replace("/member");
+      return;
     }
+
+    setMember(currentMember);
+
+    await loadEvents(token);
 
     setLoading(false);
   }
 
-  async function loadEvents(token = adminToken) {
-    if (!token) return [];
-
-    setEventLoading(true);
-    setErrorMessage("");
+  async function loadEvents(existingToken) {
+    const token =
+      existingToken ||
+      localStorage.getItem(
+        "jungle_follow_session"
+      );
 
     const { data, error } = await supabase.rpc(
       "admin_get_follow_events",
@@ -179,634 +137,1247 @@ export default function EventsPage() {
     );
 
     if (error) {
-      setErrorMessage(
-        `맞팔데이를 불러오지 못했어요: ${error.message}`
-      );
-
-      setEventLoading(false);
-      return [];
-    }
-
-    const list = data || [];
-
-    setEvents(list);
-    setEventLoading(false);
-
-    return list;
-  }
-
-  async function loadEventMembers(
-    token = adminToken,
-    eventId = currentEvent?.id
-  ) {
-    if (!token || !eventId) {
-      setMembers([]);
+      setErrorMessage(error.message);
       return;
     }
 
-    setMemberLoading(true);
-    setErrorMessage("");
+    const rows = Array.isArray(data)
+      ? data
+      : [];
 
-    const { data, error } = await supabase.rpc(
-      "admin_get_follow_event_members",
-      {
-        p_session_token: token,
-        p_event_id: eventId,
-      }
-    );
+    setEvents(rows);
 
-    if (error) {
-      setErrorMessage(
-        `참여 회원을 불러오지 못했어요: ${error.message}`
+    if (rows.length > 0) {
+      const now = new Date();
+
+      const koreaDate = new Date(
+        now.toLocaleString("en-US", {
+          timeZone: "Asia/Seoul",
+        })
       );
 
-      setMemberLoading(false);
-      return;
-    }
+      const year = koreaDate.getFullYear();
+      const month = koreaDate.getMonth() + 1;
 
-    setMembers(data || []);
-    setMemberLoading(false);
-  }
+      const current = rows.find(
+        (item) =>
+          Number(item.year) === year &&
+          Number(item.month) === month
+      );
 
-  async function refreshEverything() {
-    const list = await loadEvents(adminToken);
-
-    const event = list.find(
-      (item) =>
-        Number(item.year) === currentKoreaDate.year &&
-        Number(item.month) === currentKoreaDate.month
-    );
-
-    if (event) {
-      await loadEventMembers(
-        adminToken,
-        event.id
+      setSelectedEventId(
+        current?.id || rows[0].id
       );
     } else {
+      setSelectedEventId("");
       setMembers([]);
+
+      setCounts({
+        total_members: 0,
+        participate_count: 0,
+        restricted_count: 0,
+        not_voted_count: 0,
+      });
     }
+  }
+
+  async function loadPlatformData(
+    eventId,
+    platformKey
+  ) {
+    const token = localStorage.getItem(
+      "jungle_follow_session"
+    );
+
+    if (!token || !eventId) return;
+
+    setListLoading(true);
+    setErrorMessage("");
+
+    const [
+      countResult,
+      statusResult,
+    ] = await Promise.all([
+      supabase.rpc(
+        "admin_get_platform_vote_counts",
+        {
+          p_session_token: token,
+          p_event_id: eventId,
+          p_platform: platformKey,
+        }
+      ),
+
+      supabase.rpc(
+        "admin_get_platform_vote_status",
+        {
+          p_session_token: token,
+          p_event_id: eventId,
+          p_platform: platformKey,
+        }
+      ),
+    ]);
+
+    if (countResult.error) {
+      setErrorMessage(
+        countResult.error.message
+      );
+
+      setListLoading(false);
+      return;
+    }
+
+    if (statusResult.error) {
+      setErrorMessage(
+        statusResult.error.message
+      );
+
+      setListLoading(false);
+      return;
+    }
+
+    const countRow = Array.isArray(
+      countResult.data
+    )
+      ? countResult.data[0]
+      : countResult.data;
+
+    setCounts({
+      total_members: Number(
+        countRow?.total_members || 0
+      ),
+
+      participate_count: Number(
+        countRow?.participate_count || 0
+      ),
+
+      restricted_count: Number(
+        countRow?.restricted_count || 0
+      ),
+
+      not_voted_count: Number(
+        countRow?.not_voted_count || 0
+      ),
+    });
+
+    setMembers(
+      Array.isArray(statusResult.data)
+        ? statusResult.data
+        : []
+    );
+
+    setListLoading(false);
   }
 
   async function createCurrentEvent() {
-    const year = currentKoreaDate.year;
-    const month = currentKoreaDate.month;
-
-    const ok = window.confirm(
-      `${year}년 ${month}월 맞팔데이를 생성할까요?`
+    const token = localStorage.getItem(
+      "jungle_follow_session"
     );
 
-    if (!ok) return;
-
-    setEventLoading(true);
-    setMessage("");
-    setErrorMessage("");
-
-    const { error } = await supabase.rpc(
-      "admin_create_follow_event",
-      {
-        p_session_token: adminToken,
-        p_year: year,
-        p_month: month,
-      }
-    );
-
-    if (error) {
-      setErrorMessage(
-        `맞팔데이 생성 실패: ${error.message}`
-      );
-
-      setEventLoading(false);
+    if (!token) {
+      router.replace("/");
       return;
     }
 
-    setMessage(
-      `${year}년 ${month}월 맞팔데이가 생성됐어요 💚`
-    );
-
-    await refreshEverything();
-    setEventLoading(false);
-  }
-
-  async function addAllActiveMembers() {
-    if (!currentEvent) return;
-
-    const ok = window.confirm(
-      `현재 입장 중인 회원을 ${currentEvent.month}월 맞팔데이에 전체 추가할까요?`
-    );
-
-    if (!ok) return;
-
-    setAddingAll(true);
-    setMessage("");
+    setCreating(true);
     setErrorMessage("");
+    setSuccessMessage("");
 
-    const { error } = await supabase.rpc(
-      "admin_add_all_active_members",
-      {
-        p_session_token: adminToken,
-        p_event_id: currentEvent.id,
-      }
-    );
+    try {
+      const now = new Date();
 
-    if (error) {
-      setErrorMessage(
-        `전체 추가 실패: ${error.message}`
+      const koreaDate = new Date(
+        now.toLocaleString("en-US", {
+          timeZone: "Asia/Seoul",
+        })
       );
 
-      setAddingAll(false);
+      const year =
+        koreaDate.getFullYear();
+
+      const month =
+        koreaDate.getMonth() + 1;
+
+      const { error } = await supabase.rpc(
+        "admin_create_follow_event",
+        {
+          p_session_token: token,
+          p_year: year,
+          p_month: month,
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      setSuccessMessage(
+        `${year}년 ${month}월 맞팔데이를 준비했어요 💚`
+      );
+
+      await loadEvents(token);
+    } catch (error) {
+      setErrorMessage(
+        error?.message ||
+          "맞팔데이 생성 중 오류가 발생했어요."
+      );
+    }
+
+    setCreating(false);
+  }
+
+  async function refresh() {
+    if (!selectedEventId) return;
+
+    setSuccessMessage("");
+
+    await loadPlatformData(
+      selectedEventId,
+      platform
+    );
+  }
+
+  const selectedEvent = useMemo(
+    () =>
+      events.find(
+        (item) =>
+          item.id === selectedEventId
+      ) || null,
+    [events, selectedEventId]
+  );
+
+  const filteredMembers = useMemo(() => {
+    if (statusTab === "all") {
+      return members;
+    }
+
+    return members.filter(
+      (item) =>
+        item.vote_status === statusTab
+    );
+  }, [members, statusTab]);
+
+  function getStatusCount(key) {
+    if (key === "all") {
+      return counts.total_members;
+    }
+
+    if (key === "participate") {
+      return counts.participate_count;
+    }
+
+    if (key === "restricted") {
+      return counts.restricted_count;
+    }
+
+    return counts.not_voted_count;
+  }
+
+  function statusLabel(status) {
+    if (status === "participate") {
+      return "참여";
+    }
+
+    if (status === "restricted") {
+      return "제한";
+    }
+
+    return "미참여";
+  }
+
+  function statusStyle(status) {
+    if (status === "participate") {
+      return styles.participateBadge;
+    }
+
+    if (status === "restricted") {
+      return styles.restrictedBadge;
+    }
+
+    return styles.notVotedBadge;
+  }
+
+  function accountText(item) {
+    if (platform === "instagram") {
+      const value =
+        item.account_value ||
+        item.instagram_id ||
+        "";
+
+      return value.startsWith("@")
+        ? value
+        : `@${value}`;
+    }
+
+    return item.account_value || "-";
+  }
+
+  function openAccount(item) {
+    let value = item.account_value;
+
+    if (platform === "instagram") {
+      const id = (
+        item.account_value ||
+        item.instagram_id ||
+        ""
+      )
+        .replace(/^@/, "")
+        .trim();
+
+      if (!id) return;
+
+      window.open(
+        `https://www.instagram.com/${id}/`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
       return;
     }
 
-    setMessage(
-      "입장 중인 회원을 모두 추가했어요 💚"
-    );
+    if (!value) return;
 
-    await loadEventMembers(
-      adminToken,
-      currentEvent.id
-    );
-
-    setAddingAll(false);
-  }
-
-  async function addMember(member) {
-    if (!currentEvent) return;
-
-    setActionLoading(member.member_id);
-    setMessage("");
-    setErrorMessage("");
-
-    const { error } = await supabase.rpc(
-      "admin_add_follow_member",
-      {
-        p_session_token: adminToken,
-        p_event_id: currentEvent.id,
-        p_member_id: member.member_id,
-      }
-    );
-
-    if (error) {
-      setErrorMessage(
-        `${member.kakao_nickname}님 추가 실패: ${error.message}`
-      );
-
-      setActionLoading("");
-      return;
+    if (
+      !value.startsWith("http://") &&
+      !value.startsWith("https://")
+    ) {
+      value = `https://${value}`;
     }
 
-    setMessage(
-      `${member.kakao_nickname}님을 추가했어요 💚`
+    window.open(
+      value,
+      "_blank",
+      "noopener,noreferrer"
     );
-
-    await loadEventMembers(
-      adminToken,
-      currentEvent.id
-    );
-
-    setActionLoading("");
-  }
-
-  async function removeMember(member) {
-    if (!currentEvent) return;
-
-    const ok = window.confirm(
-      `${member.kakao_nickname}님을 이번 맞팔데이에서 제외할까요?`
-    );
-
-    if (!ok) return;
-
-    setActionLoading(member.member_id);
-    setMessage("");
-    setErrorMessage("");
-
-    const { error } = await supabase.rpc(
-      "admin_remove_follow_member",
-      {
-        p_session_token: adminToken,
-        p_event_id: currentEvent.id,
-        p_member_id: member.member_id,
-      }
-    );
-
-    if (error) {
-      setErrorMessage(
-        `${member.kakao_nickname}님 제외 실패: ${error.message}`
-      );
-
-      setActionLoading("");
-      return;
-    }
-
-    setMessage(
-      `${member.kakao_nickname}님을 제외했어요.`
-    );
-
-    await loadEventMembers(
-      adminToken,
-      currentEvent.id
-    );
-
-    setActionLoading("");
-  }
-
-  function getEventStatus(event) {
-    const now = new Date();
-    const start = new Date(event.starts_at);
-    const end = new Date(event.ends_at);
-
-    if (now < start) return "예정";
-    if (now >= end) return "마감";
-
-    return "진행중";
   }
 
   if (loading) {
     return (
-      <main className="page">
-        <section className="card">
-          <p className="dashboardLoading">
-            관리자 확인 중... 🌿
-          </p>
+      <main style={styles.page}>
+        <section style={styles.container}>
+          <div style={styles.loadingCard}>
+            <div style={styles.loadingIcon}>
+              🐯
+            </div>
+
+            <p style={styles.loadingText}>
+              맞팔 현황 불러오는 중...
+            </p>
+          </div>
         </section>
       </main>
     );
   }
 
   return (
-    <main className="page dashboardPage">
-      <section className="dashboard">
+    <main style={styles.page}>
+      <section style={styles.container}>
 
-        <div className="memberPageHeader">
-          <button
-            type="button"
-            className="backButton"
-            onClick={() =>
-              router.push("/admin/dashboard")
-            }
-          >
-            ←
-          </button>
+        <button
+          type="button"
+          style={styles.backButton}
+          onClick={() =>
+            router.push(
+              "/admin/dashboard"
+            )
+          }
+        >
+          ← 관리자 메뉴
+        </button>
 
-          <div>
-            <span className="dashboardBadge">
-              FOLLOW DAY
-            </span>
-
-            <h1 className="memberPageTitle">
-              맞팔데이 관리 🌿
-            </h1>
-
-            <p className="dashboardHello">
-              매월 맞팔데이와 참여 회원을 관리해요.
-            </p>
+        <div style={styles.header}>
+          <div style={styles.topBadge}>
+            ADMIN · FOLLOW DAY
           </div>
+
+          <div style={styles.tiger}>
+            🐯
+          </div>
+
+          <h1 style={styles.title}>
+            맞팔데이 관리
+          </h1>
+
+          <p style={styles.subtitle}>
+            플랫폼별 참여 현황을 확인해요 🌿
+          </p>
         </div>
 
-        {message && (
-          <p className="message">
-            {message}
-          </p>
+        {member && (
+          <div style={styles.adminInfo}>
+            <div>
+              <strong>
+                {member.kakao_nickname}
+              </strong>
+
+              <span style={styles.adminId}>
+                @{member.instagram_id}
+              </span>
+            </div>
+
+            <span style={styles.roleBadge}>
+              {member.admin_role ===
+              "super_admin"
+                ? "👑 최고관리자"
+                : "♛ 관리자"}
+            </span>
+          </div>
         )}
 
         {errorMessage && (
-          <p className="memberError">
+          <div style={styles.errorBox}>
             {errorMessage}
-          </p>
+          </div>
         )}
 
-        <section className="memberAdminCard">
-          <div className="memberListTop">
-            <div>
-              <h2>
-                {currentKoreaDate.year}년{" "}
-                {currentKoreaDate.month}월
-              </h2>
+        {successMessage && (
+          <div style={styles.successBox}>
+            {successMessage}
+          </div>
+        )}
 
-              <p className="memberCount">
-                이번 달 맞팔데이
-              </p>
+        {events.length === 0 ? (
+          <div style={styles.emptyCard}>
+            <div style={styles.emptyIcon}>
+              🌿
             </div>
+
+            <strong>
+              이번 달 맞팔데이가 없어요.
+            </strong>
+
+            <p style={styles.emptyText}>
+              맞팔데이를 생성하면 바로
+              참여를 받을 수 있어요.
+            </p>
 
             <button
               type="button"
-              className="refreshButton"
-              onClick={refreshEverything}
-              disabled={
-                eventLoading ||
-                memberLoading
+              onClick={
+                createCurrentEvent
               }
+              disabled={creating}
+              style={styles.createButton}
             >
-              ↻ 새로고침
+              {creating
+                ? "생성 중..."
+                : "이번 달 맞팔데이 생성"}
             </button>
           </div>
-
-          {eventLoading ? (
-            <div className="emptyMembers">
-              <span>🌿</span>
-              <strong>
-                맞팔데이 확인 중...
-              </strong>
-            </div>
-          ) : !currentEvent ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "28px 0 5px",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "34px",
-                  marginBottom: "10px",
-                }}
-              >
-                🐯
-              </div>
-
-              <h3>
-                아직 이번 달 맞팔데이가 없어요
-              </h3>
-
-              <p
-                style={{
-                  fontSize: "13px",
-                  opacity: 0.65,
-                  marginBottom: "22px",
-                }}
-              >
-                맞팔데이를 생성해주세요.
-              </p>
-
-              <button
-                type="button"
-                onClick={createCurrentEvent}
-              >
-                {currentKoreaDate.month}월 맞팔데이 생성
-              </button>
-            </div>
-          ) : (
-            <div
-              style={{
-                marginTop: "18px",
-                padding: "18px",
-                borderRadius: "18px",
-                background: "#f7f8ef",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: "12px",
-                }}
-              >
+        ) : (
+          <>
+            <div style={styles.eventCard}>
+              <div style={styles.eventTop}>
                 <div>
                   <div
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "800",
-                      color: "#789456",
-                      marginBottom: "5px",
-                    }}
+                    style={
+                      styles.eventLabel
+                    }
                   >
-                    MONTHLY FOLLOW DAY
+                    EVENT
                   </div>
 
                   <strong
-                    style={{
-                      fontSize: "17px",
-                    }}
+                    style={
+                      styles.eventTitle
+                    }
                   >
-                    {currentEvent.year}년{" "}
-                    {currentEvent.month}월 맞팔데이
+                    {selectedEvent
+                      ? `${selectedEvent.year}년 ${selectedEvent.month}월 맞팔데이`
+                      : "맞팔데이"}
                   </strong>
                 </div>
 
-                <span className="memberStatus active">
-                  {getEventStatus(
-                    currentEvent
-                  )}
+                <span
+                  style={
+                    selectedEvent?.is_open
+                      ? styles.openBadge
+                      : styles.closedBadge
+                  }
+                >
+                  {selectedEvent?.is_open
+                    ? "진행중"
+                    : "마감"}
                 </span>
               </div>
 
-              <div
-                style={{
-                  marginTop: "16px",
-                  paddingTop: "14px",
-                  borderTop:
-                    "1px solid #e2e7d8",
-                }}
-              >
-                <small
-                  style={{
-                    display: "block",
-                    opacity: 0.6,
-                    marginBottom: "5px",
+              {events.length > 1 && (
+                <select
+                  value={
+                    selectedEventId
+                  }
+                  onChange={(e) => {
+                    setSelectedEventId(
+                      e.target.value
+                    );
+
+                    setStatusTab("all");
                   }}
+                  style={styles.select}
                 >
-                  투표 기간
-                </small>
+                  {events.map((item) => (
+                    <option
+                      key={item.id}
+                      value={item.id}
+                    >
+                      {item.year}년{" "}
+                      {item.month}월
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
 
-                <strong>
-                  {currentEvent.month}월 1일
-                  00:00 ~{" "}
-                  {currentEvent.month}월 3일
-                  23:59
+            <div style={styles.platformSection}>
+              <div style={styles.sectionLabel}>
+                플랫폼
+              </div>
+
+              <div style={styles.platformTabs}>
+                {PLATFORMS.map((item) => {
+                  const active =
+                    platform === item.key;
+
+                  return (
+                    <button
+                      type="button"
+                      key={item.key}
+                      onClick={() => {
+                        setPlatform(
+                          item.key
+                        );
+
+                        setStatusTab(
+                          "all"
+                        );
+                      }}
+                      style={{
+                        ...styles.platformTab,
+
+                        ...(active
+                          ? styles.platformTabActive
+                          : {}),
+                      }}
+                    >
+                      <span>
+                        {item.icon}
+                      </span>
+
+                      <span>
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={styles.countGrid}>
+              <div style={styles.countCard}>
+                <span style={styles.countLabel}>
+                  전체
+                </span>
+
+                <strong style={styles.countNumber}>
+                  {counts.total_members}
+                </strong>
+              </div>
+
+              <div style={styles.countCard}>
+                <span style={styles.countLabel}>
+                  참여
+                </span>
+
+                <strong style={styles.countNumber}>
+                  {counts.participate_count}
+                </strong>
+              </div>
+
+              <div style={styles.countCard}>
+                <span style={styles.countLabel}>
+                  제한
+                </span>
+
+                <strong style={styles.countNumber}>
+                  {counts.restricted_count}
+                </strong>
+              </div>
+
+              <div style={styles.countCard}>
+                <span style={styles.countLabel}>
+                  미참여
+                </span>
+
+                <strong style={styles.countNumber}>
+                  {counts.not_voted_count}
                 </strong>
               </div>
             </div>
-          )}
-        </section>
 
-        {currentEvent && (
-          <section className="memberAdminCard">
+            <div style={styles.statusTabs}>
+              {STATUS_TABS.map((item) => {
+                const active =
+                  statusTab === item.key;
 
-            <div className="memberListTop">
-              <div>
-                <h2>참여 대상 회원</h2>
+                return (
+                  <button
+                    type="button"
+                    key={item.key}
+                    onClick={() =>
+                      setStatusTab(
+                        item.key
+                      )
+                    }
+                    style={{
+                      ...styles.statusTab,
 
-                <p className="memberCount">
-                  참여 {participantCount}명 ·
-                  미참여 {notParticipantCount}명
-                </p>
+                      ...(active
+                        ? styles.statusTabActive
+                        : {}),
+                    }}
+                  >
+                    {item.label}
+
+                    <span
+                      style={
+                        styles.statusCount
+                      }
+                    >
+                      {getStatusCount(
+                        item.key
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={styles.listHeader}>
+              <strong>
+                회원 명단
+              </strong>
+
+              <button
+                type="button"
+                onClick={refresh}
+                style={styles.refreshButton}
+              >
+                새로고침
+              </button>
+            </div>
+
+            {listLoading ? (
+              <div style={styles.listLoading}>
+                명단 불러오는 중...
               </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={addAllActiveMembers}
-              disabled={addingAll}
-              style={{
-                marginBottom: "18px",
-              }}
-            >
-              {addingAll
-                ? "전체 추가 중..."
-                : "입장 회원 전체 추가"}
-            </button>
-
-            <div className="memberSearchWrap">
-              <span>🔎</span>
-
-              <input
-                value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-                placeholder="닉네임 또는 인스타 아이디 검색"
-              />
-            </div>
-
-            <div
-              className="memberFilters"
-              style={{
-                gridTemplateColumns:
-                  "repeat(3, 1fr)",
-              }}
-            >
-              <button
-                type="button"
-                className={
-                  filter === "all"
-                    ? "memberFilter active"
-                    : "memberFilter"
-                }
-                onClick={() =>
-                  setFilter("all")
-                }
-              >
-                전체
-              </button>
-
-              <button
-                type="button"
-                className={
-                  filter === "participant"
-                    ? "memberFilter active"
-                    : "memberFilter"
-                }
-                onClick={() =>
-                  setFilter("participant")
-                }
-              >
-                참여중
-              </button>
-
-              <button
-                type="button"
-                className={
-                  filter === "notParticipant"
-                    ? "memberFilter active"
-                    : "memberFilter"
-                }
-                onClick={() =>
-                  setFilter("notParticipant")
-                }
-              >
-                미참여
-              </button>
-            </div>
-
-            {memberLoading ? (
-              <div className="emptyMembers">
-                <span>🌿</span>
-                <strong>
-                  회원 목록 불러오는 중...
-                </strong>
-              </div>
-            ) : filteredMembers.length === 0 ? (
-              <div className="emptyMembers">
-                <span>🐯</span>
-                <strong>
-                  표시할 회원이 없어요.
-                </strong>
+            ) : filteredMembers.length ===
+              0 ? (
+              <div style={styles.noMember}>
+                해당 회원이 없어요 🌿
               </div>
             ) : (
-              <div className="membersList">
+              <div style={styles.memberList}>
                 {filteredMembers.map(
-                  (member) => (
+                  (item) => (
                     <div
-                      className="memberItem"
-                      key={member.member_id}
+                      key={item.member_id}
+                      style={
+                        styles.memberCard
+                      }
                     >
-                      <div className="memberAvatar">
-                        {member.kakao_nickname
-                          ?.charAt(0) ||
-                          "🌿"}
-                      </div>
+                      <div
+                        style={
+                          styles.memberTop
+                        }
+                      >
+                        <div
+                          style={
+                            styles.avatar
+                          }
+                        >
+                          {item.kakao_nickname
+                            ?.slice(0, 1)
+                            ?.toUpperCase() ||
+                            "🌿"}
+                        </div>
 
-                      <div className="memberInfo">
-                        <div className="memberNameRow">
-                          <strong>
-                            {
-                              member.kakao_nickname
+                        <div
+                          style={
+                            styles.memberInfo
+                          }
+                        >
+                          <div
+                            style={
+                              styles.nameRow
                             }
-                          </strong>
-
-                          {member.is_participant ? (
-                            <span className="memberStatus active">
-                              참여중
-                            </span>
-                          ) : (
-                            <span className="memberStatus inactive">
-                              미참여
-                            </span>
-                          )}
-                        </div>
-
-                        <p>
-                          @{member.instagram_id}
-                        </p>
-
-                        {member.member_status ===
-                          "inactive" && (
-                          <small>
-                            현재 퇴장 회원
-                          </small>
-                        )}
-
-                        <div className="memberActions">
-                          {member.is_participant ? (
-                            <button
-                              type="button"
-                              className="memberAction leave"
-                              disabled={
-                                actionLoading ===
-                                member.member_id
-                              }
-                              onClick={() =>
-                                removeMember(member)
+                          >
+                            <strong
+                              style={
+                                styles.memberName
                               }
                             >
-                              제외
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="memberAction rejoin"
-                              disabled={
-                                actionLoading ===
-                                member.member_id
+                              {
+                                item.kakao_nickname
                               }
-                              onClick={() =>
-                                addMember(member)
-                              }
+                            </strong>
+
+                            <span
+                              style={statusStyle(
+                                item.vote_status
+                              )}
                             >
-                              추가
-                            </button>
-                          )}
+                              {statusLabel(
+                                item.vote_status
+                              )}
+                            </span>
+                          </div>
+
+                          <div
+                            style={
+                              styles.instagramId
+                            }
+                          >
+                            @
+                            {
+                              item.instagram_id
+                            }
+                          </div>
                         </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openAccount(
+                            item
+                          )
+                        }
+                        style={
+                          styles.accountButton
+                        }
+                      >
+                        <span
+                          style={
+                            styles.accountValue
+                          }
+                        >
+                          {accountText(
+                            item
+                          )}
+                        </span>
+
+                        <span>
+                          열기 ↗
+                        </span>
+                      </button>
                     </div>
                   )
                 )}
               </div>
             )}
-          </section>
-        )}
 
+            <div style={styles.guide}>
+              <strong>
+                🌿 현황 기준
+              </strong>
+
+              <p>
+                <b>참여</b> : 해당 플랫폼
+                맞팔 참여를 선택한 회원
+                <br />
+                <b>제한</b> : 이번 달 해당
+                플랫폼 참여 제한을 선택한 회원
+                <br />
+                <b>미참여</b> : 아직 선택하지
+                않은 회원
+              </p>
+
+              <p>
+                인스타그램은 모든 입장 회원,
+                나머지 플랫폼은 해당 링크가
+                등록된 입장 회원만 집계됩니다.
+              </p>
+            </div>
+          </>
+        )}
       </section>
     </main>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background:
+      "linear-gradient(180deg, #f5f1e7 0%, #faf8f1 48%, #edf4e4 100%)",
+    padding: "24px 15px 60px",
+    color: "#273426",
+  },
+
+  container: {
+    width: "100%",
+    maxWidth: "520px",
+    margin: "0 auto",
+  },
+
+  backButton: {
+    border: "none",
+    background: "transparent",
+    color: "#718064",
+    fontSize: "12px",
+    fontWeight: "900",
+    padding: "8px 2px",
+    cursor: "pointer",
+  },
+
+  header: {
+    textAlign: "center",
+    margin: "14px 0 22px",
+  },
+
+  topBadge: {
+    display: "inline-block",
+    padding: "6px 11px",
+    borderRadius: "999px",
+    background: "#e4edce",
+    color: "#708252",
+    fontSize: "9px",
+    fontWeight: "950",
+    letterSpacing: "1.3px",
+  },
+
+  tiger: {
+    fontSize: "39px",
+    marginTop: "12px",
+  },
+
+  title: {
+    margin: "5px 0 0",
+    fontSize: "28px",
+    fontWeight: "950",
+    letterSpacing: "-1px",
+  },
+
+  subtitle: {
+    margin: "6px 0 0",
+    color: "#7c8577",
+    fontSize: "12px",
+  },
+
+  adminInfo: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "10px",
+    padding: "14px 16px",
+    background: "#fff",
+    border: "1px solid #ebe9df",
+    borderRadius: "18px",
+    marginBottom: "12px",
+    fontSize: "13px",
+  },
+
+  adminId: {
+    display: "block",
+    marginTop: "3px",
+    color: "#858b81",
+    fontSize: "10px",
+  },
+
+  roleBadge: {
+    padding: "6px 9px",
+    borderRadius: "999px",
+    background: "#fff1ca",
+    color: "#85651d",
+    fontSize: "9px",
+    fontWeight: "950",
+  },
+
+  eventCard: {
+    padding: "17px",
+    borderRadius: "21px",
+    background: "#fff",
+    border: "1px solid #e7e6dc",
+    marginBottom: "12px",
+  },
+
+  eventTop: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "10px",
+  },
+
+  eventLabel: {
+    color: "#91a46f",
+    fontSize: "9px",
+    fontWeight: "950",
+    letterSpacing: "1.2px",
+    marginBottom: "4px",
+  },
+
+  eventTitle: {
+    fontSize: "16px",
+  },
+
+  openBadge: {
+    padding: "6px 9px",
+    borderRadius: "999px",
+    background: "#e7f4d3",
+    color: "#5d773e",
+    fontSize: "9px",
+    fontWeight: "950",
+  },
+
+  closedBadge: {
+    padding: "6px 9px",
+    borderRadius: "999px",
+    background: "#efefec",
+    color: "#777b74",
+    fontSize: "9px",
+    fontWeight: "950",
+  },
+
+  select: {
+    width: "100%",
+    marginTop: "13px",
+    padding: "11px 12px",
+    border: "1px solid #dfe4d7",
+    borderRadius: "13px",
+    background: "#fafbf7",
+    color: "#46503f",
+    fontSize: "12px",
+    outline: "none",
+  },
+
+  platformSection: {
+    padding: "15px",
+    borderRadius: "21px",
+    background: "#fff",
+    border: "1px solid #e7e6dc",
+    marginBottom: "12px",
+  },
+
+  sectionLabel: {
+    marginBottom: "10px",
+    color: "#77826d",
+    fontSize: "10px",
+    fontWeight: "950",
+  },
+
+  platformTabs: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(3, minmax(0, 1fr))",
+    gap: "7px",
+  },
+
+  platformTab: {
+    minHeight: "57px",
+    padding: "8px 5px",
+    border: "1px solid #e1e5da",
+    borderRadius: "14px",
+    background: "#fafbf8",
+    color: "#697264",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "4px",
+    fontSize: "10px",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+
+  platformTabActive: {
+    background: "#eaf4d7",
+    border: "1px solid #b9d77c",
+    color: "#435b2c",
+  },
+
+  countGrid: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(4, minmax(0, 1fr))",
+    gap: "7px",
+    marginBottom: "12px",
+  },
+
+  countCard: {
+    padding: "12px 5px",
+    borderRadius: "16px",
+    background: "#fff",
+    border: "1px solid #e7e6dc",
+    textAlign: "center",
+  },
+
+  countLabel: {
+    display: "block",
+    color: "#858b81",
+    fontSize: "9px",
+    fontWeight: "900",
+  },
+
+  countNumber: {
+    display: "block",
+    marginTop: "4px",
+    color: "#35442e",
+    fontSize: "19px",
+    fontWeight: "950",
+  },
+
+  statusTabs: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(4, minmax(0, 1fr))",
+    padding: "4px",
+    borderRadius: "16px",
+    background: "#e9ede2",
+    gap: "4px",
+    marginBottom: "17px",
+  },
+
+  statusTab: {
+    border: "none",
+    borderRadius: "12px",
+    padding: "10px 3px",
+    background: "transparent",
+    color: "#70776b",
+    fontSize: "10px",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+
+  statusTabActive: {
+    background: "#fff",
+    color: "#3d4f32",
+    boxShadow:
+      "0 2px 8px rgba(55,70,44,0.08)",
+  },
+
+  statusCount: {
+    marginLeft: "3px",
+    fontSize: "9px",
+  },
+
+  listHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    margin: "0 3px 9px",
+    fontSize: "13px",
+  },
+
+  refreshButton: {
+    border: "none",
+    background: "transparent",
+    color: "#738662",
+    fontSize: "10px",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+
+  memberList: {
+    display: "grid",
+    gap: "9px",
+  },
+
+  memberCard: {
+    padding: "14px",
+    borderRadius: "19px",
+    background: "#fff",
+    border: "1px solid #e7e6dc",
+  },
+
+  memberTop: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+
+  avatar: {
+    width: "41px",
+    height: "41px",
+    borderRadius: "13px",
+    background: "#edf4df",
+    color: "#597043",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "15px",
+    fontWeight: "950",
+    flexShrink: 0,
+  },
+
+  memberInfo: {
+    minWidth: 0,
+    flex: 1,
+  },
+
+  nameRow: {
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: "6px",
+  },
+
+  memberName: {
+    fontSize: "13px",
+  },
+
+  instagramId: {
+    marginTop: "3px",
+    color: "#868c82",
+    fontSize: "10px",
+  },
+
+  participateBadge: {
+    padding: "4px 7px",
+    borderRadius: "999px",
+    background: "#e5f3cf",
+    color: "#5b773d",
+    fontSize: "8px",
+    fontWeight: "950",
+  },
+
+  restrictedBadge: {
+    padding: "4px 7px",
+    borderRadius: "999px",
+    background: "#eee6f7",
+    color: "#75598c",
+    fontSize: "8px",
+    fontWeight: "950",
+  },
+
+  notVotedBadge: {
+    padding: "4px 7px",
+    borderRadius: "999px",
+    background: "#efefec",
+    color: "#7b7d77",
+    fontSize: "8px",
+    fontWeight: "950",
+  },
+
+  accountButton: {
+    width: "100%",
+    marginTop: "11px",
+    padding: "10px 11px",
+    border: "none",
+    borderRadius: "12px",
+    background: "#f3f6ec",
+    color: "#607052",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "10px",
+    fontSize: "9px",
+    fontWeight: "850",
+    cursor: "pointer",
+  },
+
+  accountValue: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    textAlign: "left",
+  },
+
+  listLoading: {
+    padding: "30px",
+    borderRadius: "19px",
+    background: "#fff",
+    textAlign: "center",
+    color: "#7c8477",
+    fontSize: "11px",
+  },
+
+  noMember: {
+    padding: "28px",
+    borderRadius: "19px",
+    background: "#fff",
+    border: "1px solid #e7e6dc",
+    textAlign: "center",
+    color: "#7c8477",
+    fontSize: "11px",
+  },
+
+  guide: {
+    marginTop: "16px",
+    padding: "16px",
+    borderRadius: "18px",
+    background: "#f1f4e9",
+    color: "#687263",
+    fontSize: "10px",
+    lineHeight: "1.7",
+  },
+
+  errorBox: {
+    marginBottom: "12px",
+    padding: "13px",
+    borderRadius: "14px",
+    background: "#fff0ed",
+    color: "#a84d43",
+    fontSize: "11px",
+    fontWeight: "800",
+  },
+
+  successBox: {
+    marginBottom: "12px",
+    padding: "13px",
+    borderRadius: "14px",
+    background: "#edf6df",
+    color: "#59733e",
+    fontSize: "11px",
+    fontWeight: "900",
+  },
+
+  emptyCard: {
+    padding: "30px 20px",
+    borderRadius: "23px",
+    background: "#fff",
+    border: "1px solid #e7e6dc",
+    textAlign: "center",
+    color: "#66705f",
+  },
+
+  emptyIcon: {
+    fontSize: "31px",
+    marginBottom: "9px",
+  },
+
+  emptyText: {
+    margin: "8px 0 17px",
+    color: "#858b81",
+    fontSize: "11px",
+  },
+
+  createButton: {
+    width: "100%",
+    padding: "14px",
+    border: "none",
+    borderRadius: "15px",
+    background: "#a9d95d",
+    color: "#2d3b24",
+    fontSize: "12px",
+    fontWeight: "950",
+    cursor: "pointer",
+  },
+
+  loadingCard: {
+    marginTop: "100px",
+    padding: "35px",
+    borderRadius: "25px",
+    background: "#fff",
+    textAlign: "center",
+  },
+
+  loadingIcon: {
+    fontSize: "40px",
+  },
+
+  loadingText: {
+    margin: "10px 0 0",
+    color: "#7c8477",
+    fontSize: "11px",
+    fontWeight: "800",
+  },
+};
