@@ -1157,7 +1157,7 @@ const styles = {
 
   container: {
     width: "100%",
-    maxWidth: "520px",
+    maxWidth: "480px",
     margin: "0 auto",
   },
 
@@ -1173,7 +1173,7 @@ const styles = {
 
   header: {
     textAlign: "center",
-    margin: "14px 0 22px",
+    margin: "10px 0 18px",
   },
 
   topBadge: {
@@ -1211,8 +1211,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "14px 16px",
-    borderRadius: "18px",
+    padding: "13px 15px",
+    borderRadius: "17px",
     background: "#fff",
     border: "1px solid #ebe9df",
     marginBottom: "12px",
@@ -1240,8 +1240,8 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     gap: "10px",
-    padding: "17px",
-    borderRadius: "20px",
+    padding: "15px",
+    borderRadius: "18px",
     background: "#fff",
     border: "1px solid #e7e6dc",
     marginBottom: "8px",
@@ -1291,8 +1291,8 @@ const styles = {
   todoCard: {
     marginTop: "12px",
     marginBottom: "12px",
-    padding: "14px",
-    borderRadius: "18px",
+    padding: "13px",
+    borderRadius: "17px",
     background: "#ffffff",
     border: "1px solid #e1e7d9",
     boxShadow: "0 7px 18px rgba(76, 96, 55, 0.06)",
@@ -1304,7 +1304,7 @@ const styles = {
     justifyContent: "space-between",
     gap: "10px",
     marginBottom: "12px",
-    boxShadow: "0 5px 16px rgba(64, 82, 48, 0.035)",
+    boxShadow: "none",
   },
 
   todoLabel: {
@@ -1378,11 +1378,12 @@ const styles = {
   },
 
   platformCard: {
-    padding: "17px",
-    borderRadius: "21px",
+    padding: "15px",
+    borderRadius: "18px",
     background: "#fff",
     border: "1px solid #e7e6dc",
-    marginBottom: "11px",
+    marginBottom: "10px",
+    boxShadow: "0 4px 14px rgba(60, 78, 48, 0.035)",
   },
 
   platformTop: {
@@ -1399,14 +1400,14 @@ const styles = {
   },
 
   platformIcon: {
-    width: "39px",
-    height: "39px",
-    borderRadius: "13px",
+    width: "36px",
+    height: "36px",
+    borderRadius: "11px",
     background: "#f0f4e8",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "17px",
+    fontSize: "16px",
     flexShrink: 0,
   },
 
@@ -1459,9 +1460,9 @@ const styles = {
   },
 
   participantSection: {
-    marginTop: "14px",
-    padding: "13px",
-    borderRadius: "15px",
+    marginTop: "12px",
+    padding: "11px 12px",
+    borderRadius: "13px",
     background: "#f5f7f1",
   },
 
@@ -1555,9 +1556,9 @@ const styles = {
   },
 
   choiceButton: {
-    minHeight: "62px",
+    minHeight: "54px",
     border: "1px solid #e2e5dc",
-    borderRadius: "15px",
+    borderRadius: "13px",
     background: "#fafbf8",
     color: "#747b70",
     display: "flex",
@@ -1583,7 +1584,7 @@ const styles = {
   },
 
   choiceEmoji: {
-    fontSize: "17px",
+    fontSize: "15px",
   },
 
   currentChoice: {
@@ -1606,8 +1607,8 @@ const styles = {
 
   saveButton: {
     width: "100%",
-    padding: "15px",
-    marginTop: "5px",
+    padding: "14px",
+    marginTop: "4px",
     border: "none",
     borderRadius: "16px",
     background: "#a9d95d",
