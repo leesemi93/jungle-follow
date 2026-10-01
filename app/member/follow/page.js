@@ -1556,7 +1556,7 @@ const styles = {
   },
 
   choiceButton: {
-    minHeight: "54px",
+    minHeight: "44px",
     border: "1px solid #e2e5dc",
     borderRadius: "13px",
     background: "#fafbf8",
@@ -1565,8 +1565,8 @@ const styles = {
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    gap: "4px",
-    fontSize: "11px",
+    gap: "2px",
+    fontSize: "10px",
     fontWeight: "800",
     cursor: "pointer",
   },
