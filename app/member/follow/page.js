@@ -391,11 +391,11 @@ export default function MemberFollowPage() {
         ...selections,
       });
 
-      setMessage("저장되었습니다 💚");
+      setMessage("저장완료 💚");
 
       window.setTimeout(() => {
         setMessage("");
-      }, 2500);
+      }, 1800);
     } catch (error) {
       setErrorMessage(
         error?.message ||
@@ -1127,8 +1127,11 @@ export default function MemberFollowPage() {
 
 
             {message && (
-              <div style={styles.saveSuccessBox}>
-                ✓ {message}
+              <div style={styles.saveToastBackdrop}>
+                <div style={styles.saveToast}>
+                  <div style={styles.saveToastIcon}>✓</div>
+                  <div style={styles.saveToastText}>{message}</div>
+                </div>
               </div>
             )}
 
@@ -1775,6 +1778,48 @@ const styles = {
     background: "#fff0ed",
     color: "#a84d43",
     fontSize: "11px",
+  },
+
+  saveToastBackdrop: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 9999,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px",
+    background: "rgba(38, 48, 33, 0.16)",
+    backdropFilter: "blur(2px)",
+  },
+
+  saveToast: {
+    minWidth: "180px",
+    padding: "22px 24px",
+    borderRadius: "22px",
+    background: "#ffffff",
+    border: "1px solid #dce9ca",
+    boxShadow: "0 16px 40px rgba(57, 76, 42, 0.18)",
+    textAlign: "center",
+  },
+
+  saveToastIcon: {
+    width: "38px",
+    height: "38px",
+    margin: "0 auto 9px",
+    borderRadius: "50%",
+    background: "#a9d95d",
+    color: "#ffffff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "20px",
+    fontWeight: "900",
+  },
+
+  saveToastText: {
+    color: "#3e5532",
+    fontSize: "14px",
+    fontWeight: "900",
   },
 
   saveSuccessBox: {
