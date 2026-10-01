@@ -790,89 +790,32 @@ export default function MemberFollowPage() {
                           }
                         >
 
-                          {links.map(
-                            (
-                              person,
-                              index
-                            ) => (
-                              <div
-                                key={
-                                  `${person.member_id}-${index}`
-                                }
-                                style={
-                                  styles.participantItem
-                                }
-                              >
-
-                                <div
-                                  style={
-                                    styles.participantInfo
-                                  }
-                                >
-
-                                  <div
-                                    style={
-                                      styles.participantAvatar
-                                    }
-                                  >
-                                    {person
-                                      .kakao_nickname
-                                      ?.slice(
-                                        0,
-                                        1
-                                      ) ||
-                                      "🌿"}
-                                  </div>
-
-                                  <div
-                                    style={
-                                      styles.participantNameArea
-                                    }
-                                  >
-
-                                    <strong
-                                      style={
-                                        styles.participantName
-                                      }
-                                    >
-                                      {
-                                        person.kakao_nickname
-                                      }
-                                    </strong>
-
-                                    <span
-                                      style={
-                                        styles.participantInstagram
-                                      }
-                                    >
-                                      @
-                                      {
-                                        person.instagram_id
-                                      }
-                                    </span>
-
-                                  </div>
-
+                          {links.map((person, index) => (
+                            <div
+                              key={`${person.member_id}-${index}`}
+                              style={styles.participantItem}
+                            >
+                              <div style={styles.participantInfo}>
+                                <div style={styles.participantNumber}>
+                                  {index + 1}
                                 </div>
 
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    openParticipantLink(
-                                      person.account_value
-                                    )
-                                  }
-                                  style={
-                                    styles.openLinkButton
-                                  }
-                                >
-                                  링크 열기 ↗
-                                </button>
-
+                                <strong style={styles.participantName}>
+                                  {person.kakao_nickname || "회원"}
+                                </strong>
                               </div>
-                            )
-                          )}
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openParticipantLink(person.account_value)
+                                }
+                                style={styles.openLinkButton}
+                              >
+                                링크 열기 ↗
+                              </button>
+                            </div>
+                          ))}
 
                         </div>
                       )}
@@ -1355,11 +1298,13 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: "8px",
-    padding: "9px",
-    borderRadius: "12px",
+    gap: "12px",
+    minHeight: "54px",
+    padding: "10px 12px",
+    borderRadius: "14px",
     background: "#fff",
-    border: "1px solid #e8ece1",
+    border: "1px solid #e5eadc",
+    boxSizing: "border-box",
   },
 
   participantInfo: {
@@ -1369,47 +1314,39 @@ const styles = {
     minWidth: 0,
   },
 
-  participantAvatar: {
-    width: "29px",
-    height: "29px",
+  participantNumber: {
+    width: "28px",
+    height: "28px",
     flexShrink: 0,
-    borderRadius: "10px",
+    borderRadius: "9px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     background: "#edf4df",
-    color: "#657952",
+    color: "#64784e",
     fontSize: "10px",
     fontWeight: "950",
   },
 
-  participantNameArea: {
-    minWidth: 0,
-    display: "flex",
-    flexDirection: "column",
-    gap: "2px",
-  },
-
   participantName: {
-    fontSize: "10px",
-  },
-
-  participantInstagram: {
-    color: "#969d91",
-    fontSize: "8px",
+    minWidth: 0,
+    color: "#34432f",
+    fontSize: "11px",
+    fontWeight: "900",
+    whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
   },
 
   openLinkButton: {
     flexShrink: 0,
-    border: "none",
-    borderRadius: "10px",
-    padding: "8px 9px",
+    minWidth: "88px",
+    border: "1px solid #dce8ca",
+    borderRadius: "11px",
+    padding: "9px 11px",
     background: "#edf5df",
-    color: "#5c7347",
-    fontSize: "8px",
+    color: "#526b3e",
+    fontSize: "9px",
     fontWeight: "950",
     cursor: "pointer",
   },
