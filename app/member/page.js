@@ -786,21 +786,38 @@ export default function MemberPage() {
                       }
                       placeholder="링크를 입력해주세요"
                       style={styles.platformInput}
+                      disabled={Boolean(platformLinks[key])}
                     />
                     <button
                       type="button"
                       onClick={() => saveMyPlatform(key)}
-                      disabled={platformSaving === key}
-                      style={styles.platformSaveButton}
+                      disabled={
+                        platformSaving === key ||
+                        Boolean(platformLinks[key])
+                      }
+                      style={{
+                        ...styles.platformSaveButton,
+                        ...(platformLinks[key]
+                          ? {
+                              background: "#eef0ea",
+                              color: "#92978e",
+                              cursor: "default",
+                            }
+                          : {}),
+                      }}
                     >
-                      {platformSaving === key ? "저장중" : "저장"}
+                      {platformLinks[key]
+                        ? "등록완료"
+                        : platformSaving === key
+                          ? "저장중"
+                          : "등록"}
                     </button>
                   </div>
                 </div>
               ))}
 
               <div style={styles.platformHelp}>
-                링크를 비우고 저장하면 해당 플랫폼이 삭제돼요.
+                최초 등록만 가능해요. 등록 후 변경은 관리자에게 요청해주세요.
               </div>
 
               {platformMessage && (
