@@ -413,27 +413,6 @@ export default function MemberPage() {
           </button>
         )}
 
-        {/* HEADER */}
-
-        <div style={styles.top}>
-          <div style={styles.brandBadge}>
-            JUNGLE FOLLOW
-          </div>
-
-          <div style={styles.logoCircle}>
-            <span style={styles.tiger}>🐯</span>
-          </div>
-
-          <h1 style={styles.title}>
-            정글맞팔
-          </h1>
-
-          <p style={styles.brandCaption}>
-            MONTHLY FOLLOW DAY
-          </p>
-        </div>
-
-
         {/* PROFILE */}
 
         <div style={styles.profileCard}>
@@ -775,59 +754,6 @@ const styles = {
     cursor: "pointer",
     zIndex: 9999,
     whiteSpace: "nowrap",
-  },
-
-  top: {
-    textAlign: "center",
-    marginBottom: "30px",
-    paddingTop: "8px",
-  },
-
-  brandBadge: {
-    display: "inline-block",
-    padding: "6px 14px",
-    borderRadius: "999px",
-    background: "#edf4df",
-    color: "#63794d",
-    fontSize: "8px",
-    fontWeight: "900",
-    letterSpacing: "2px",
-  },
-
-  logoCircle: {
-    width: "74px",
-    height: "74px",
-    margin: "14px auto 10px",
-    borderRadius: "50%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#f1f7e5",
-    border: "2px solid #dbe9c2",
-    boxShadow: "0 8px 20px rgba(86, 107, 62, 0.10)",
-  },
-
-  tiger: {
-    display: "block",
-    fontSize: "38px",
-    lineHeight: 1,
-  },
-
-  title: {
-    margin: 0,
-    color: "#263a26",
-    fontSize: "30px",
-    fontWeight: "950",
-    letterSpacing: "-1.8px",
-    lineHeight: 1.1,
-  },
-
-  brandCaption: {
-    margin: "8px 0 0",
-    color: "#a1aa98",
-    fontSize: "7px",
-    fontWeight: "800",
-    letterSpacing: "2.2px",
   },
 
   profileCard: {
