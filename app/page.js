@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -47,13 +48,19 @@ export default function Home() {
 
   return (
     <main className="page">
-      <section className="card">
-        <div className="badge">JUNGLE FOLLOW DAY</div>
-        <div className="mark">🌿</div>
-        <h1>정글맞팔웹</h1>
-        <p className="sub">매달 만나는 우리들의 맞팔데이</p>
+      <section className="card prettyCard">
+        <div className="heroFrame">
+          <Image
+            src="/jungle-follow-hero.png"
+            alt="정글맞팔웹"
+            width={1536}
+            height={1024}
+            priority
+            className="heroImage"
+          />
+        </div>
 
-        <form onSubmit={login}>
+        <form onSubmit={login} className="loginForm">
           <label>카톡방 닉네임</label>
           <input
             value={nickname}
@@ -74,15 +81,20 @@ export default function Home() {
           </div>
 
           <button disabled={loading}>
-            {loading ? "로그인 중..." : "로그인하기"}
+            {loading ? "로그인 중..." : "정글맞팔 시작하기"}
           </button>
         </form>
 
         {message && <p className="message">{message}</p>}
-        <p className="notice">관리자에게 등록된 회원만 이용할 수 있어요.</p>
-        <a className="admin" href="/admin">관리자 로그인 →</a>
+
+        <p className="notice">
+          🌿 관리자에게 등록된 회원만 이용할 수 있어요.
+        </p>
+
+        <a className="admin" href="/admin">
+          관리자 로그인 →
+        </a>
       </section>
-      <p className="foot">🐯 정글룸 맞팔데이</p>
     </main>
   );
 }
