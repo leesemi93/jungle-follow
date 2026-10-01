@@ -1153,8 +1153,10 @@ const styles = {
     minHeight: "100vh",
     background:
       "linear-gradient(180deg, #f5f1e7 0%, #faf8f1 48%, #edf4e4 100%)",
-    padding: "24px 15px 60px",
+    padding: "22px 14px 60px",
     color: "#273426",
+    fontFamily: "'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    letterSpacing: "-0.02em",
   },
 
   container: {
@@ -1196,15 +1198,17 @@ const styles = {
 
   title: {
     margin: "5px 0 0",
-    fontSize: "28px",
-    fontWeight: "950",
+    fontSize: "27px",
+    fontWeight: "900",
+    letterSpacing: "-0.05em",
   },
 
   subtitle: {
     margin: "6px 0 0",
     color: "#7c8577",
-    fontSize: "12px",
-    lineHeight: "1.6",
+    fontSize: "11px",
+    lineHeight: "1.65",
+    fontWeight: "500",
   },
 
   memberCard: {
@@ -1303,7 +1307,8 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     gap: "10px",
-    marginBottom: "11px",
+    marginBottom: "12px",
+    boxShadow: "0 5px 16px rgba(64, 82, 48, 0.035)",
   },
 
   todoLabel: {
@@ -1377,7 +1382,7 @@ const styles = {
   },
 
   platformCard: {
-    padding: "16px",
+    padding: "17px",
     borderRadius: "21px",
     background: "#fff",
     border: "1px solid #e7e6dc",
@@ -1393,7 +1398,7 @@ const styles = {
   platformTitleArea: {
     display: "flex",
     alignItems: "center",
-    gap: "10px",
+    gap: "11px",
     minWidth: 0,
   },
 
@@ -1410,7 +1415,9 @@ const styles = {
   },
 
   platformTitle: {
-    fontSize: "13px",
+    fontSize: "14px",
+    fontWeight: "900",
+    letterSpacing: "-0.035em",
   },
 
   platformAccount: {
@@ -1456,8 +1463,8 @@ const styles = {
   },
 
   participantSection: {
-    marginTop: "13px",
-    padding: "12px",
+    marginTop: "14px",
+    padding: "13px",
     borderRadius: "15px",
     background: "#f5f7f1",
   },
@@ -1466,9 +1473,9 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: "8px",
     color: "#66745d",
     fontSize: "10px",
+    fontWeight: "700",
   },
 
   participantCount: {
@@ -1493,7 +1500,8 @@ const styles = {
   linkList: {
     display: "flex",
     flexDirection: "column",
-    gap: "6px",
+    gap: "7px",
+    marginTop: "10px",
   },
 
   participantItem: {
@@ -1546,8 +1554,8 @@ const styles = {
   choiceGrid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: "8px",
-    marginTop: "13px",
+    gap: "9px",
+    marginTop: "15px",
   },
 
   choiceButton: {
@@ -1562,6 +1570,7 @@ const styles = {
     alignItems: "center",
     gap: "4px",
     fontSize: "11px",
+    fontWeight: "800",
     cursor: "pointer",
   },
 
@@ -1608,8 +1617,9 @@ const styles = {
     background: "#a9d95d",
     color: "#2d3b24",
     fontSize: "13px",
-    fontWeight: "950",
+    fontWeight: "900",
     cursor: "pointer",
+    boxShadow: "0 7px 18px rgba(124, 165, 65, 0.18)",
   },
 
   guideCard: {
