@@ -9,31 +9,36 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-const EXTRA_ROOMS = [
+const OPTIONAL_PLATFORMS = [
   {
     key: "blog",
     label: "블로그",
     icon: "📝",
+    placeholder: "https://m.blog.naver.com/...",
   },
   {
     key: "naver_clip",
     label: "네이버 클립",
     icon: "🎬",
+    placeholder: "네이버 클립 링크",
   },
   {
     key: "youtube",
     label: "유튜브",
     icon: "▶️",
+    placeholder: "https://youtube.com/...",
   },
   {
     key: "tiktok",
     label: "틱톡",
     icon: "🎵",
+    placeholder: "https://www.tiktok.com/@...",
   },
   {
     key: "today_house",
     label: "오늘의집",
     icon: "🏠",
+    placeholder: "오늘의집 프로필 링크",
   },
 ];
 
@@ -42,6 +47,7 @@ export default function HomePage() {
 
   const [mode, setMode] = useState("login");
 
+  // 로그인
   const [loginNickname, setLoginNickname] =
     useState("");
   const [loginInstagram, setLoginInstagram] =
@@ -49,18 +55,27 @@ export default function HomePage() {
   const [loginLoading, setLoginLoading] =
     useState(false);
 
+  // 가입신청
   const [joinNickname, setJoinNickname] =
     useState("");
   const [joinInstagram, setJoinInstagram] =
     useState("");
-  const [joinRooms, setJoinRooms] = useState([]);
+
+  const [platformLinks, setPlatformLinks] =
+    useState({
+      blog: "",
+      naver_clip: "",
+      youtube: "",
+      tiktok: "",
+      today_house: "",
+    });
+
   const [joinLoading, setJoinLoading] =
     useState(false);
 
   const [joinSuccess, setJoinSuccess] =
     useState(false);
 
-  const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] =
     useState("");
 
@@ -97,37 +112,40 @@ export default function HomePage() {
   }
 
   function normalizeInstagram(value) {
-    return value.trim().replace(/^@/, "");
+    return value
+      .trim()
+      .replace(/^@/, "");
   }
 
   function changeMode(nextMode) {
     setMode(nextMode);
-    setMessage("");
     setErrorMessage("");
     setJoinSuccess(false);
   }
 
-  function toggleRoom(platform) {
-    setJoinRooms((prev) => {
-      if (prev.includes(platform)) {
-        return prev.filter(
-          (item) => item !== platform
-        );
-      }
-
-      return [...prev, platform];
-    });
+  function updatePlatformLink(key, value) {
+    setPlatformLinks((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   }
+
+  // =====================================================
+  // 로그인
+  // =====================================================
 
   async function handleLogin(event) {
     event.preventDefault();
 
-    setMessage("");
     setErrorMessage("");
 
-    const nickname = loginNickname.trim();
+    const nickname =
+      loginNickname.trim();
+
     const instagram =
-      normalizeInstagram(loginInstagram);
+      normalizeInstagram(
+        loginInstagram
+      );
 
     if (!nickname) {
       setErrorMessage(
@@ -145,13 +163,17 @@ export default function HomePage() {
 
     setLoginLoading(true);
 
-    const { data, error } = await supabase.rpc(
-      "login_member",
-      {
-        p_kakao_nickname: nickname,
-        p_instagram_id: instagram,
-      }
-    );
+    const { data, error } =
+      await supabase.rpc(
+        "login_member",
+        {
+          p_kakao_nickname:
+            nickname,
+
+          p_instagram_id:
+            instagram,
+        }
+      );
 
     if (error) {
       setErrorMessage(
@@ -168,7 +190,8 @@ export default function HomePage() {
         ? data
         : data?.session_token ||
           data?.token ||
-          data?.[0]?.session_token ||
+          data?.[0]
+            ?.session_token ||
           data?.[0]?.token;
 
     if (!token) {
@@ -193,15 +216,22 @@ export default function HomePage() {
     router.push("/member");
   }
 
+  // =====================================================
+  // 가입신청
+  // =====================================================
+
   async function handleJoin(event) {
     event.preventDefault();
 
-    setMessage("");
     setErrorMessage("");
 
-    const nickname = joinNickname.trim();
+    const nickname =
+      joinNickname.trim();
+
     const instagram =
-      normalizeInstagram(joinInstagram);
+      normalizeInstagram(
+        joinInstagram
+      );
 
     if (!nickname) {
       setErrorMessage(
@@ -219,14 +249,37 @@ export default function HomePage() {
 
     setJoinLoading(true);
 
-    const { error } = await supabase.rpc(
-      "request_member_join",
-      {
-        p_kakao_nickname: nickname,
-        p_instagram_id: instagram,
-        p_platforms: joinRooms,
-      }
-    );
+    const { error } =
+      await supabase.rpc(
+        "request_member_join",
+        {
+          p_kakao_nickname:
+            nickname,
+
+          p_instagram_id:
+            instagram,
+
+          p_blog:
+            platformLinks.blog.trim() ||
+            null,
+
+          p_naver_clip:
+            platformLinks.naver_clip.trim() ||
+            null,
+
+          p_youtube:
+            platformLinks.youtube.trim() ||
+            null,
+
+          p_tiktok:
+            platformLinks.tiktok.trim() ||
+            null,
+
+          p_today_house:
+            platformLinks.today_house.trim() ||
+            null,
+        }
+      );
 
     if (error) {
       setErrorMessage(
@@ -239,24 +292,39 @@ export default function HomePage() {
     }
 
     setJoinLoading(false);
-    setJoinSuccess(true);
 
     setJoinNickname("");
     setJoinInstagram("");
-    setJoinRooms([]);
+
+    setPlatformLinks({
+      blog: "",
+      naver_clip: "",
+      youtube: "",
+      tiktok: "",
+      today_house: "",
+    });
+
+    setJoinSuccess(true);
   }
 
-  if (joinSuccess && mode === "join") {
+  // =====================================================
+  // 가입 완료
+  // =====================================================
+
+  if (
+    mode === "join" &&
+    joinSuccess
+  ) {
     return (
       <main style={styles.page}>
         <section style={styles.container}>
-          <div style={styles.brandBadge}>
-            JUNGLE FOLLOW
-          </div>
-
           <div style={styles.successCard}>
             <div style={styles.successIcon}>
               🌿
+            </div>
+
+            <div style={styles.brandBadge}>
+              JUNGLE FOLLOW
             </div>
 
             <h1 style={styles.successTitle}>
@@ -264,14 +332,17 @@ export default function HomePage() {
             </h1>
 
             <p style={styles.successText}>
-              관리자 승인 후 로그인할 수 있어요.
+              관리자 승인 후 로그인할 수
+              있어요.
             </p>
 
             <div style={styles.successNotice}>
-              📸 인스타그램은 기본 참여방이에요.
+              📸 인스타그램은 기본 참여
+              플랫폼이에요.
               <br />
-              선택한 추가 참여방도 함께
-              신청되었습니다.
+              <br />
+              추가로 입력한 플랫폼 링크도
+              함께 등록되었습니다.
             </div>
 
             <button
@@ -290,9 +361,14 @@ export default function HomePage() {
     );
   }
 
+  // =====================================================
+  // 기본 화면
+  // =====================================================
+
   return (
     <main style={styles.page}>
       <section style={styles.container}>
+
         <div style={styles.top}>
           <div style={styles.brandBadge}>
             JUNGLE FOLLOW
@@ -307,16 +383,19 @@ export default function HomePage() {
           </h1>
 
           <p style={styles.subtitle}>
-            정글 맞팔방을 편하게 이용해요 🌿
+            정글 맞팔을 더 편하게 🌿
           </p>
         </div>
 
         <div style={styles.modeTabs}>
           <button
             type="button"
-            onClick={() => changeMode("login")}
+            onClick={() =>
+              changeMode("login")
+            }
             style={{
               ...styles.modeTab,
+
               ...(mode === "login"
                 ? styles.modeTabActive
                 : {}),
@@ -327,9 +406,12 @@ export default function HomePage() {
 
           <button
             type="button"
-            onClick={() => changeMode("join")}
+            onClick={() =>
+              changeMode("join")
+            }
             style={{
               ...styles.modeTab,
+
               ...(mode === "join"
                 ? styles.modeTabActive
                 : {}),
@@ -345,13 +427,11 @@ export default function HomePage() {
           </div>
         )}
 
-        {message && (
-          <div style={styles.messageBox}>
-            {message}
-          </div>
-        )}
-
         {mode === "login" ? (
+          // =================================================
+          // 로그인
+          // =================================================
+
           <form
             onSubmit={handleLogin}
             style={styles.card}
@@ -366,12 +446,16 @@ export default function HomePage() {
               </h2>
 
               <p style={styles.cardDescription}>
-                승인된 회원만 로그인할 수 있어요.
+                승인된 회원만 로그인할 수
+                있어요.
               </p>
             </div>
 
             <label style={styles.label}>
               카카오톡 닉네임
+              <span style={styles.required}>
+                *
+              </span>
             </label>
 
             <input
@@ -389,14 +473,19 @@ export default function HomePage() {
             <label
               style={{
                 ...styles.label,
-                marginTop: "14px",
+                marginTop: "15px",
               }}
             >
               인스타그램 아이디
+              <span style={styles.required}>
+                *
+              </span>
             </label>
 
             <div style={styles.instagramInput}>
-              <span style={styles.at}>@</span>
+              <span style={styles.at}>
+                @
+              </span>
 
               <input
                 type="text"
@@ -407,7 +496,9 @@ export default function HomePage() {
                   )
                 }
                 placeholder="instagram_id"
-                style={styles.instagramField}
+                style={
+                  styles.instagramField
+                }
               />
             </div>
 
@@ -416,7 +507,10 @@ export default function HomePage() {
               disabled={loginLoading}
               style={{
                 ...styles.mainButton,
-                opacity: loginLoading ? 0.6 : 1,
+
+                opacity: loginLoading
+                  ? 0.6
+                  : 1,
               }}
             >
               {loginLoading
@@ -425,7 +519,8 @@ export default function HomePage() {
             </button>
 
             <div style={styles.bottomGuide}>
-              아직 회원이 아니신가요?
+              처음 오셨나요?
+
               <button
                 type="button"
                 onClick={() =>
@@ -438,6 +533,10 @@ export default function HomePage() {
             </div>
           </form>
         ) : (
+          // =================================================
+          // 가입신청
+          // =================================================
+
           <form
             onSubmit={handleJoin}
             style={styles.card}
@@ -452,12 +551,18 @@ export default function HomePage() {
               </h2>
 
               <p style={styles.cardDescription}>
-                신청 후 관리자 승인이 필요해요.
+                필수 정보와 활동 중인
+                플랫폼을 입력해주세요.
               </p>
             </div>
 
+            {/* 카카오톡 */}
+
             <label style={styles.label}>
               카카오톡 닉네임
+              <span style={styles.required}>
+                *
+              </span>
             </label>
 
             <input
@@ -468,21 +573,28 @@ export default function HomePage() {
                   event.target.value
                 )
               }
-              placeholder="카카오톡방 닉네임"
+              placeholder="예) 아율"
               style={styles.input}
             />
+
+            {/* 인스타그램 */}
 
             <label
               style={{
                 ...styles.label,
-                marginTop: "14px",
+                marginTop: "15px",
               }}
             >
               인스타그램 아이디
+              <span style={styles.required}>
+                *
+              </span>
             </label>
 
             <div style={styles.instagramInput}>
-              <span style={styles.at}>@</span>
+              <span style={styles.at}>
+                @
+              </span>
 
               <input
                 type="text"
@@ -492,79 +604,120 @@ export default function HomePage() {
                     event.target.value
                   )
                 }
-                placeholder="instagram_id"
-                style={styles.instagramField}
+                placeholder="bubbly_ayul"
+                style={
+                  styles.instagramField
+                }
               />
             </div>
 
-            <div style={styles.roomSection}>
-              <div style={styles.roomTitle}>
-                참여방
-              </div>
+            <div style={styles.instagramInfo}>
+              📸 인스타그램은 모든 회원
+              필수 플랫폼입니다.
+            </div>
 
-              <div style={styles.instagramRoom}>
+            {/* 선택 플랫폼 */}
+
+            <div
+              style={
+                styles.platformSection
+              }
+            >
+              <div
+                style={
+                  styles.platformSectionTop
+                }
+              >
                 <div>
-                  <strong>
-                    ✓ 📸 인스타그램
-                  </strong>
+                  <div
+                    style={
+                      styles.platformTitle
+                    }
+                  >
+                    추가 플랫폼
+                  </div>
 
-                  <div style={styles.roomSub}>
-                    모든 회원 필수 참여방
+                  <div
+                    style={
+                      styles.platformDescription
+                    }
+                  >
+                    활동 중인 플랫폼만
+                    입력해주세요.
                   </div>
                 </div>
 
-                <span style={styles.requiredBadge}>
-                  필수
+                <span
+                  style={
+                    styles.optionalBadge
+                  }
+                >
+                  선택
                 </span>
               </div>
 
-              <div style={styles.extraRoomTitle}>
-                추가로 활동하는 방을
-                선택해주세요.
-              </div>
-
-              <div style={styles.roomGrid}>
-                {EXTRA_ROOMS.map((room) => {
-                  const selected =
-                    joinRooms.includes(room.key);
-
-                  return (
-                    <button
-                      key={room.key}
-                      type="button"
-                      onClick={() =>
-                        toggleRoom(room.key)
+              {OPTIONAL_PLATFORMS.map(
+                (platform) => (
+                  <div
+                    key={platform.key}
+                    style={
+                      styles.platformItem
+                    }
+                  >
+                    <label
+                      style={
+                        styles.platformLabel
                       }
-                      style={{
-                        ...styles.roomButton,
-                        ...(selected
-                          ? styles.roomButtonSelected
-                          : {}),
-                      }}
                     >
                       <span
                         style={{
-                          fontSize: "19px",
+                          fontSize: "18px",
                         }}
                       >
-                        {room.icon}
+                        {platform.icon}
                       </span>
 
-                      <span>
-                        {selected
-                          ? "✓ "
-                          : ""}
-                        {room.label}
+                      {platform.label}
+
+                      <span
+                        style={
+                          styles.optionalText
+                        }
+                      >
+                        선택
                       </span>
-                    </button>
-                  );
-                })}
-              </div>
+                    </label>
+
+                    <input
+                      type="text"
+                      value={
+                        platformLinks[
+                          platform.key
+                        ]
+                      }
+                      onChange={(event) =>
+                        updatePlatformLink(
+                          platform.key,
+                          event.target.value
+                        )
+                      }
+                      placeholder={
+                        platform.placeholder
+                      }
+                      style={styles.input}
+                    />
+                  </div>
+                )
+              )}
             </div>
 
             <div style={styles.joinNotice}>
-              💚 신청하신 정보와 참여방을
-              관리자가 확인한 후 승인해드려요.
+              💚 링크를 입력한 플랫폼만
+              해당 플랫폼 명단에 자동으로
+              등록돼요.
+              <br />
+              입력하지 않은 플랫폼은
+              참여 명단에 포함되지 않아요.
             </div>
 
             <button
@@ -572,7 +725,10 @@ export default function HomePage() {
               disabled={joinLoading}
               style={{
                 ...styles.mainButton,
-                opacity: joinLoading ? 0.6 : 1,
+
+                opacity: joinLoading
+                  ? 0.6
+                  : 1,
               }}
             >
               {joinLoading
@@ -582,6 +738,7 @@ export default function HomePage() {
 
             <div style={styles.bottomGuide}>
               이미 승인받으셨나요?
+
               <button
                 type="button"
                 onClick={() =>
@@ -614,9 +771,12 @@ export default function HomePage() {
 const styles = {
   page: {
     minHeight: "100vh",
+
     background:
       "linear-gradient(180deg, #f5f1e7 0%, #f8f6ef 48%, #eef4e7 100%)",
+
     padding: "34px 18px 60px",
+
     color: "#253326",
   },
 
@@ -633,76 +793,117 @@ const styles = {
 
   brandBadge: {
     display: "inline-block",
+
     padding: "7px 12px",
+
     borderRadius: "999px",
+
     background: "#e3eccd",
+
     color: "#687a4d",
+
     fontSize: "11px",
+
     fontWeight: "900",
+
     letterSpacing: "1.5px",
   },
 
   logoCircle: {
     width: "72px",
     height: "72px",
+
     margin: "18px auto 12px",
+
     borderRadius: "24px",
+
     display: "flex",
+
     alignItems: "center",
+
     justifyContent: "center",
+
     background: "#dcebb9",
+
     fontSize: "38px",
+
     boxShadow:
-      "0 10px 28px rgba(91, 112, 62, 0.13)",
+      "0 10px 28px rgba(91,112,62,0.13)",
   },
 
   title: {
     margin: 0,
+
     fontSize: "30px",
+
     fontWeight: "950",
+
     letterSpacing: "-1.3px",
   },
 
   subtitle: {
     margin: "8px 0 0",
+
     color: "#788176",
+
     fontSize: "14px",
   },
 
   modeTabs: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+
+    gridTemplateColumns:
+      "1fr 1fr",
+
     padding: "5px",
+
     borderRadius: "18px",
+
     background: "#e8e8df",
+
     marginBottom: "13px",
   },
 
   modeTab: {
     border: "none",
+
     borderRadius: "14px",
+
     padding: "12px",
+
     background: "transparent",
+
     color: "#7c8277",
+
     fontSize: "14px",
+
     fontWeight: "900",
+
     cursor: "pointer",
   },
 
   modeTabActive: {
     background: "#ffffff",
+
     color: "#405037",
+
     boxShadow:
-      "0 3px 10px rgba(60, 70, 50, 0.08)",
+      "0 3px 10px rgba(60,70,50,0.08)",
   },
 
   card: {
     padding: "25px 21px",
+
     borderRadius: "28px",
-    background: "rgba(255,255,255,0.94)",
-    border: "1px solid #ebe9df",
+
+    background:
+      "rgba(255,255,255,0.94)",
+
+    border:
+      "1px solid #ebe9df",
+
     boxShadow:
-      "0 18px 50px rgba(66, 73, 54, 0.08)",
+      "0 18px 50px rgba(66,73,54,0.08)",
   },
 
   cardTop: {
@@ -711,250 +912,354 @@ const styles = {
 
   smallLabel: {
     color: "#87a15d",
+
     fontSize: "10px",
+
     fontWeight: "950",
+
     letterSpacing: "1.5px",
+
     marginBottom: "5px",
   },
 
   cardTitle: {
     margin: 0,
+
     fontSize: "23px",
+
     fontWeight: "950",
+
     letterSpacing: "-0.7px",
   },
 
   cardDescription: {
     margin: "6px 0 0",
+
     color: "#848b80",
+
     fontSize: "13px",
   },
 
   label: {
     display: "block",
+
     fontSize: "13px",
+
     fontWeight: "900",
+
     marginBottom: "7px",
+  },
+
+  required: {
+    marginLeft: "4px",
+
+    color: "#86a958",
   },
 
   input: {
     width: "100%",
+
     boxSizing: "border-box",
+
     padding: "14px 15px",
+
     borderRadius: "15px",
-    border: "1px solid #dde1d5",
+
+    border:
+      "1px solid #dde1d5",
+
     background: "#fbfcf9",
+
     outline: "none",
-    fontSize: "15px",
+
+    fontSize: "14px",
   },
 
   instagramInput: {
     display: "flex",
+
     alignItems: "center",
-    border: "1px solid #dde1d5",
+
+    border:
+      "1px solid #dde1d5",
+
     borderRadius: "15px",
+
     background: "#fbfcf9",
+
     overflow: "hidden",
   },
 
   at: {
     paddingLeft: "15px",
+
     color: "#788272",
+
     fontWeight: "900",
   },
 
   instagramField: {
     flex: 1,
+
     minWidth: 0,
-    padding: "14px 14px 14px 5px",
+
+    padding:
+      "14px 14px 14px 5px",
+
     border: "none",
+
     background: "transparent",
+
     outline: "none",
-    fontSize: "15px",
-  },
 
-  roomSection: {
-    marginTop: "22px",
-  },
-
-  roomTitle: {
     fontSize: "14px",
-    fontWeight: "950",
-    marginBottom: "9px",
   },
 
-  instagramRoom: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "14px",
-    borderRadius: "16px",
-    border: "1px solid #cfe0ad",
+  instagramInfo: {
+    marginTop: "8px",
+
+    padding: "10px 12px",
+
+    borderRadius: "13px",
+
     background: "#edf6dc",
-    fontSize: "14px",
-  },
 
-  roomSub: {
-    marginTop: "3px",
-    color: "#7c896f",
+    color: "#647552",
+
     fontSize: "11px",
-    fontWeight: "600",
+
+    fontWeight: "700",
   },
 
-  requiredBadge: {
-    padding: "5px 8px",
-    borderRadius: "999px",
-    background: "#d5e9ae",
-    color: "#617742",
-    fontSize: "10px",
+  platformSection: {
+    marginTop: "25px",
+
+    paddingTop: "21px",
+
+    borderTop:
+      "1px solid #eceee7",
+  },
+
+  platformSectionTop: {
+    display: "flex",
+
+    justifyContent:
+      "space-between",
+
+    alignItems: "flex-start",
+
+    marginBottom: "15px",
+  },
+
+  platformTitle: {
+    fontSize: "16px",
+
     fontWeight: "950",
   },
 
-  extraRoomTitle: {
-    margin: "14px 0 9px",
-    color: "#7e857a",
-    fontSize: "12px",
+  platformDescription: {
+    marginTop: "3px",
+
+    color: "#8a9086",
+
+    fontSize: "11px",
   },
 
-  roomGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(2, minmax(0, 1fr))",
-    gap: "8px",
+  optionalBadge: {
+    padding: "5px 9px",
+
+    borderRadius: "999px",
+
+    background: "#f1f2ec",
+
+    color: "#8b9085",
+
+    fontSize: "10px",
+
+    fontWeight: "900",
   },
 
-  roomButton: {
-    minHeight: "56px",
-    padding: "10px 8px",
-    borderRadius: "15px",
-    border: "1px solid #e0e3d8",
-    background: "#ffffff",
+  platformItem: {
+    marginTop: "14px",
+  },
+
+  platformLabel: {
     display: "flex",
-    flexDirection: "column",
-    gap: "4px",
+
     alignItems: "center",
-    justifyContent: "center",
-    color: "#4c5549",
-    fontSize: "12px",
-    fontWeight: "850",
-    cursor: "pointer",
+
+    gap: "6px",
+
+    marginBottom: "7px",
+
+    fontSize: "13px",
+
+    fontWeight: "900",
   },
 
-  roomButtonSelected: {
-    border: "1px solid #9fbe78",
-    background: "#eef7e4",
-    color: "#506a36",
+  optionalText: {
+    marginLeft: "3px",
+
+    color: "#a1a59c",
+
+    fontSize: "10px",
+
+    fontWeight: "700",
   },
 
   joinNotice: {
-    marginTop: "17px",
-    padding: "12px 13px",
-    borderRadius: "14px",
+    marginTop: "20px",
+
+    padding: "13px 14px",
+
+    borderRadius: "15px",
+
     background: "#f6f4e9",
+
     color: "#77796c",
+
     fontSize: "12px",
-    lineHeight: "1.6",
+
+    lineHeight: "1.65",
   },
 
   mainButton: {
     width: "100%",
+
     marginTop: "20px",
+
     padding: "15px",
+
     border: "none",
+
     borderRadius: "16px",
+
     background: "#a9d95d",
+
     color: "#2d3b24",
+
     fontSize: "15px",
+
     fontWeight: "950",
+
     cursor: "pointer",
   },
 
   bottomGuide: {
     marginTop: "17px",
+
     textAlign: "center",
+
     color: "#858b81",
+
     fontSize: "12px",
   },
 
   textButton: {
     marginLeft: "5px",
+
     padding: 0,
+
     border: "none",
+
     background: "transparent",
+
     color: "#6e8f3f",
+
     fontSize: "12px",
+
     fontWeight: "900",
+
     cursor: "pointer",
   },
 
   errorBox: {
     marginBottom: "12px",
-    padding: "12px 14px",
-    borderRadius: "14px",
-    background: "#fff0ed",
-    color: "#a84d43",
-    fontSize: "13px",
-    fontWeight: "800",
-  },
 
-  messageBox: {
-    marginBottom: "12px",
     padding: "12px 14px",
+
     borderRadius: "14px",
-    background: "#edf6df",
-    color: "#607848",
+
+    background: "#fff0ed",
+
+    color: "#a84d43",
+
     fontSize: "13px",
+
     fontWeight: "800",
   },
 
   successCard: {
-    marginTop: "70px",
-    padding: "35px 24px",
+    marginTop: "60px",
+
+    padding: "36px 24px",
+
     borderRadius: "28px",
+
     background: "#ffffff",
+
     textAlign: "center",
-    border: "1px solid #ebe9df",
+
+    border:
+      "1px solid #ebe9df",
+
     boxShadow:
-      "0 18px 50px rgba(66, 73, 54, 0.08)",
+      "0 18px 50px rgba(66,73,54,0.08)",
   },
 
   successIcon: {
     fontSize: "48px",
-    marginBottom: "13px",
+
+    marginBottom: "14px",
   },
 
   successTitle: {
-    margin: 0,
+    margin: "18px 0 0",
+
     fontSize: "25px",
+
     fontWeight: "950",
   },
 
   successText: {
     margin: "8px 0 0",
+
     color: "#7c8477",
+
     fontSize: "14px",
   },
 
   successNotice: {
     marginTop: "20px",
+
     padding: "14px",
+
     borderRadius: "15px",
+
     background: "#f2f7e8",
+
     color: "#69775d",
+
     fontSize: "12px",
-    lineHeight: "1.7",
+
+    lineHeight: "1.6",
   },
 
   adminLinkWrap: {
     textAlign: "center",
+
     marginTop: "18px",
   },
 
   adminLink: {
     border: "none",
+
     background: "transparent",
+
     color: "#9a9d94",
+
     fontSize: "11px",
+
     cursor: "pointer",
   },
 };
