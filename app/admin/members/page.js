@@ -80,7 +80,7 @@ export default function MembersPage() {
         p_session_token: adminToken,
         p_kakao_nickname: cleanNickname,
         p_instagram_id: cleanInstagram,
-        p_memo: memo.trim() || null,
+        p_admin_memo: memo.trim() || null,
       }
     );
 
@@ -225,14 +225,11 @@ export default function MembersPage() {
           <div className="memberListTitle">
 
             <div>
-
               <h2>회원 목록</h2>
 
               <p>
-                회원 검색 · 퇴장 · 재입장 ·
-                일시정지
+                회원 검색 · 퇴장 · 재입장 · 일시정지
               </p>
-
             </div>
 
             <span className="comingBadge">
