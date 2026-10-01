@@ -416,11 +416,23 @@ export default function MemberPage() {
         {/* HEADER */}
 
         <div style={styles.top}>
-          <img
-            src="/jungle-follow-header.jpg"
-            alt="정글맞팔"
-            style={styles.heroImage}
-          />
+          <div style={styles.brandBadge}>
+            JUNGLE FOLLOW
+          </div>
+
+          <div style={styles.logoCircle}>
+            🐯
+          </div>
+
+          <h1 style={styles.title}>
+            정글맞팔
+          </h1>
+
+          <div style={styles.cuteLeaves}>
+            <span>🌿</span>
+            <span style={styles.cuteDot}>●</span>
+            <span>🍃</span>
+          </div>
         </div>
 
 
@@ -769,18 +781,59 @@ const styles = {
 
   top: {
     textAlign: "center",
-    marginBottom: "22px",
+    marginBottom: "26px",
+    paddingTop: "4px",
   },
 
-  heroImage: {
-    display: "block",
-    width: "100%",
-    maxWidth: "460px",
-    height: "auto",
-    margin: "0 auto",
-    borderRadius: "26px",
-    objectFit: "cover",
-    boxShadow: "0 12px 32px rgba(69, 91, 45, 0.10)",
+  brandBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "6px 15px",
+    borderRadius: "999px",
+    background: "#e7f1d2",
+    color: "#617b43",
+    fontSize: "9px",
+    fontWeight: "950",
+    letterSpacing: "1.7px",
+    boxShadow: "0 5px 14px rgba(87, 108, 61, 0.08)",
+  },
+
+  logoCircle: {
+    width: "66px",
+    height: "66px",
+    margin: "13px auto 8px",
+    borderRadius: "24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "linear-gradient(145deg, #eff7df 0%, #d9eca9 100%)",
+    border: "1px solid #d5e7ae",
+    boxShadow: "0 9px 22px rgba(77, 102, 48, 0.11)",
+    fontSize: "35px",
+  },
+
+  title: {
+    margin: 0,
+    color: "#233722",
+    fontSize: "28px",
+    fontWeight: "950",
+    letterSpacing: "-1.4px",
+    lineHeight: "1.15",
+  },
+
+  cuteLeaves: {
+    marginTop: "7px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "5px",
+    fontSize: "10px",
+  },
+
+  cuteDot: {
+    color: "#a9d95d",
+    fontSize: "5px",
   },
 
   profileCard: {
