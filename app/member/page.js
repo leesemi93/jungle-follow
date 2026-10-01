@@ -15,8 +15,7 @@ function urlBase64ToUint8Array(base64String) {
   );
 
   const base64 = (
-    base64String +
-    padding
+    base64String + padding
   )
     .replace(/-/g, "+")
     .replace(/_/g, "/");
@@ -67,16 +66,18 @@ export default function MemberPage() {
       return;
     }
 
-    const { data, error } = await supabase.rpc(
-      "get_current_member",
-      {
-        p_session_token: token,
-      }
-    );
+    const { data, error } =
+      await supabase.rpc(
+        "get_current_member",
+        {
+          p_session_token: token,
+        }
+      );
 
-    const currentMember = Array.isArray(data)
-      ? data[0]
-      : data;
+    const currentMember =
+      Array.isArray(data)
+        ? data[0]
+        : data;
 
     if (error || !currentMember) {
       localStorage.removeItem(
@@ -194,10 +195,6 @@ export default function MemberPage() {
         );
       }
 
-      /*
-       * iPhone은 홈 화면에 설치된 웹앱에서
-       * Web Push를 사용하는 것이 중요합니다.
-       */
       const isStandalone =
         window.matchMedia(
           "(display-mode: standalone)"
@@ -367,13 +364,14 @@ export default function MemberPage() {
   }
 
   function goAdmin() {
-    if (!member?.is_admin) return;
+    if (!hasAdminAccess) return;
 
     router.push("/admin/dashboard");
   }
 
   const isSuperAdmin =
-    member?.admin_role === "super_admin";
+    member?.admin_role ===
+    "super_admin";
 
   const isAdmin =
     member?.admin_role === "admin";
@@ -402,6 +400,18 @@ export default function MemberPage() {
   return (
     <main style={styles.page}>
       <section style={styles.container}>
+
+        {/* 관리자 빠른 메뉴 */}
+
+        {hasAdminAccess && (
+          <button
+            type="button"
+            onClick={goAdmin}
+            style={styles.adminQuickButton}
+          >
+            👑 관리자
+          </button>
+        )}
 
         {/* HEADER */}
 
@@ -481,50 +491,7 @@ export default function MemberPage() {
         </div>
 
 
-        {/* MONTHLY FOLLOW */}
-
-        <div style={styles.sectionCard}>
-
-          <div style={styles.sectionTop}>
-
-            <div>
-              <div style={styles.smallLabel}>
-                MONTHLY FOLLOW
-              </div>
-
-              <h2 style={styles.sectionTitle}>
-                이번 달 맞팔데이 🌿
-              </h2>
-            </div>
-
-            <div style={styles.leafCircle}>
-              🌱
-            </div>
-
-          </div>
-
-          <p style={styles.description}>
-            매월 1일 00:00 ~ 3일 23:59
-            <br />
-            참여할 플랫폼을 선택할 수 있어요.
-          </p>
-
-          <button
-            type="button"
-            style={styles.mainButton}
-            onClick={() =>
-              router.push(
-                "/member/follow"
-              )
-            }
-          >
-            맞팔데이 참여하기
-          </button>
-
-        </div>
-
-
-        {/* PHONE / NOTIFICATION */}
+        {/* MOBILE / NOTIFICATION */}
 
         <div style={styles.phoneCard}>
 
@@ -553,7 +520,7 @@ export default function MemberPage() {
           </p>
 
 
-          {/* HOME SCREEN GUIDE */}
+          {/* 홈 화면 추가 방법 */}
 
           <button
             type="button"
@@ -565,6 +532,7 @@ export default function MemberPage() {
             }
           >
             📱 홈 화면에 추가하는 방법
+
             <span>
               {showInstallGuide
                 ? "▲"
@@ -612,7 +580,7 @@ export default function MemberPage() {
           )}
 
 
-          {/* NOTIFICATION */}
+          {/* 휴대폰 알림 */}
 
           <div style={styles.notificationBox}>
 
@@ -648,7 +616,9 @@ export default function MemberPage() {
           ) : (
             <button
               type="button"
-              style={styles.notificationButton}
+              style={
+                styles.notificationButton
+              }
               onClick={
                 enableNotifications
               }
@@ -686,59 +656,47 @@ export default function MemberPage() {
         </div>
 
 
-        {/* ADMIN */}
+        {/* MONTHLY FOLLOW */}
 
-        {hasAdminAccess && (
-          <div style={styles.adminCard}>
+        <div style={styles.sectionCard}>
 
-            <div style={styles.adminCardTop}>
+          <div style={styles.sectionTop}>
 
-              <div>
-
-                <div
-                  style={
-                    styles.adminSmallLabel
-                  }
-                >
-                  ADMIN
-                </div>
-
-                <h2
-                  style={
-                    styles.adminCardTitle
-                  }
-                >
-                  관리자 메뉴
-                </h2>
-
+            <div>
+              <div style={styles.smallLabel}>
+                MONTHLY FOLLOW
               </div>
 
-              <div style={styles.crownCircle}>
-                👑
-              </div>
-
+              <h2 style={styles.sectionTitle}>
+                이번 달 맞팔데이 🌿
+              </h2>
             </div>
 
-            <p
-              style={
-                styles.adminDescription
-              }
-            >
-              회원 관리, 가입 승인,
-              맞팔데이 관리 기능을 이용할 수
-              있어요.
-            </p>
-
-            <button
-              type="button"
-              onClick={goAdmin}
-              style={styles.adminButton}
-            >
-              관리자 메뉴 들어가기
-            </button>
+            <div style={styles.leafCircle}>
+              🌱
+            </div>
 
           </div>
-        )}
+
+          <p style={styles.description}>
+            매월 1일 00:00 ~ 3일 23:59
+            <br />
+            참여할 플랫폼을 선택할 수 있어요.
+          </p>
+
+          <button
+            type="button"
+            style={styles.mainButton}
+            onClick={() =>
+              router.push(
+                "/member/follow"
+              )
+            }
+          >
+            맞팔데이 참여하기
+          </button>
+
+        </div>
 
 
         {/* NOTICE */}
@@ -790,6 +748,26 @@ const styles = {
     width: "100%",
     maxWidth: "460px",
     margin: "0 auto",
+    position: "relative",
+  },
+
+  /* 관리자 오른쪽 위 */
+
+  adminQuickButton: {
+    position: "absolute",
+    top: "-18px",
+    right: "0",
+    padding: "8px 12px",
+    border: "1px solid #dfd0ee",
+    borderRadius: "999px",
+    background: "#ffffff",
+    color: "#66477e",
+    fontSize: "10px",
+    fontWeight: "950",
+    boxShadow:
+      "0 5px 15px rgba(104,72,135,0.10)",
+    cursor: "pointer",
+    zIndex: 20,
   },
 
   top: {
@@ -916,6 +894,8 @@ const styles = {
     fontWeight: "950",
   },
 
+  /* 맞팔데이 */
+
   sectionCard: {
     padding: "22px 20px",
     borderRadius: "25px",
@@ -981,8 +961,7 @@ const styles = {
     cursor: "pointer",
   },
 
-
-  /* MOBILE */
+  /* 모바일 / 알림 */
 
   phoneCard: {
     padding: "21px 20px",
@@ -1057,7 +1036,8 @@ const styles = {
     marginTop: "9px",
     padding: "15px",
     borderRadius: "15px",
-    background: "rgba(255,255,255,0.75)",
+    background:
+      "rgba(255,255,255,0.75)",
     border: "1px solid #e0e9d1",
   },
 
@@ -1108,16 +1088,6 @@ const styles = {
     gap: "3px",
   },
 
-  notificationInfoStrong: {
-    fontSize: "12px",
-    fontWeight: "950",
-  },
-
-  notificationInfoSpan: {
-    fontSize: "9px",
-    color: "#7d8578",
-  },
-
   notificationButton: {
     width: "100%",
     marginTop: "9px",
@@ -1163,79 +1133,6 @@ const styles = {
     lineHeight: "1.5",
   },
 
-
-  /* ADMIN */
-
-  adminCard: {
-    padding: "22px 20px",
-    borderRadius: "25px",
-    background:
-      "linear-gradient(135deg, #faf6ff 0%, #f4edfb 100%)",
-    border: "1px solid #dfd0ee",
-    boxShadow:
-      "0 12px 35px rgba(104,72,135,0.08)",
-    marginBottom: "14px",
-  },
-
-  adminCardTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "15px",
-  },
-
-  adminSmallLabel: {
-    color: "#9271ae",
-    fontSize: "10px",
-    fontWeight: "950",
-    letterSpacing: "1.4px",
-    marginBottom: "5px",
-  },
-
-  adminCardTitle: {
-    margin: 0,
-    fontSize: "19px",
-    fontWeight: "950",
-    color: "#5f4775",
-  },
-
-  crownCircle: {
-    width: "43px",
-    height: "43px",
-    flexShrink: 0,
-    borderRadius: "15px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#ffffff",
-    fontSize: "20px",
-    boxShadow:
-      "0 4px 12px rgba(104,72,135,0.08)",
-  },
-
-  adminDescription: {
-    margin: "12px 0 0",
-    color: "#806e8e",
-    fontSize: "12px",
-    lineHeight: "1.6",
-  },
-
-  adminButton: {
-    width: "100%",
-    marginTop: "17px",
-    padding: "14px",
-    border: "1px solid #d6c2e8",
-    borderRadius: "15px",
-    background: "#ffffff",
-    color: "#66477e",
-    fontSize: "13px",
-    fontWeight: "950",
-    cursor: "pointer",
-  },
-
-
-  /* NOTICE */
-
   notice: {
     padding: "16px",
     borderRadius: "19px",
@@ -1256,7 +1153,6 @@ const styles = {
     lineHeight: "1.65",
   },
 
-
   logoutButton: {
     width: "100%",
     marginTop: "18px",
@@ -1268,9 +1164,6 @@ const styles = {
     fontWeight: "800",
     cursor: "pointer",
   },
-
-
-  /* LOADING */
 
   loadingCard: {
     marginTop: "100px",
