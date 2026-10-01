@@ -127,6 +127,10 @@ export default function MemberFollowPage() {
 
     setMember(currentMember || null);
 
+    const isAdminMember =
+      currentMember?.admin_role === "admin" ||
+      currentMember?.admin_role === "super_admin";
+
     if (eventResult.error) {
       setErrorMessage(
         eventResult.error.message
@@ -155,9 +159,12 @@ export default function MemberFollowPage() {
         ? platformResult.data
         : [];
 
-    setPlatforms(platformRows);
+    const visiblePlatformRows =
+      isAdminMember ? [] : platformRows;
 
-    if (currentEvent?.event_id) {
+    setPlatforms(visiblePlatformRows);
+
+    if (currentEvent?.event_id && !isAdminMember) {
       await loadMyVotes(
         token,
         currentEvent.event_id
@@ -166,7 +173,7 @@ export default function MemberFollowPage() {
       await loadParticipantLinks(
         token,
         currentEvent.event_id,
-        platformRows
+        visiblePlatformRows
       );
     }
 
@@ -505,6 +512,16 @@ export default function MemberFollowPage() {
               MEMBER
             </span>
 
+          </div>
+        )}
+
+
+        {(
+          member?.admin_role === "admin" ||
+          member?.admin_role === "super_admin"
+        ) && (
+          <div style={styles.adminExemptBox}>
+            👑 관리자는 맞팔데이 투표 대상에서 제외돼요.
           </div>
         )}
 
@@ -1580,6 +1597,18 @@ const styles = {
     textAlign: "center",
     fontSize: "11px",
     fontWeight: "900",
+  },
+
+  adminExemptBox: {
+    marginBottom: "12px",
+    padding: "12px 14px",
+    borderRadius: "14px",
+    background: "#f2ecfb",
+    border: "1px solid #e2d5f3",
+    color: "#72588b",
+    fontSize: "10px",
+    fontWeight: "900",
+    textAlign: "center",
   },
 
   errorBox: {
