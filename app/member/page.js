@@ -420,16 +420,22 @@ export default function MemberPage() {
             JUNGLE FOLLOW
           </div>
 
-          <div style={styles.logoCircle}>
-            🐯
+          <div style={styles.logoWrap}>
+            <div style={styles.logoGlow} />
+            <div style={styles.logoCircle}>
+              🐯
+            </div>
           </div>
 
           <h1 style={styles.title}>
             정글맞팔웹
           </h1>
 
+          <div style={styles.titleAccent} />
+
           <p style={styles.subtitle}>
-            정글 맞팔을 더 편하게 🌿
+            정글 맞팔을 <strong style={styles.subtitleStrong}>더 쉽고 편하게</strong>
+            <span style={styles.subtitleLeaf}> 🌿</span>
           </p>
         </div>
 
@@ -778,46 +784,90 @@ const styles = {
   },
 
   top: {
+    position: "relative",
     textAlign: "center",
-    marginBottom: "25px",
+    marginBottom: "28px",
+    padding: "8px 0 4px",
   },
 
   brandBadge: {
-    display: "inline-block",
-    padding: "7px 12px",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "7px 15px",
     borderRadius: "999px",
-    background: "#e3eccd",
-    color: "#687a4d",
-    fontSize: "11px",
-    fontWeight: "900",
-    letterSpacing: "1.5px",
+    background: "linear-gradient(135deg, #e8f1d5 0%, #dcebbd 100%)",
+    color: "#607747",
+    fontSize: "10px",
+    fontWeight: "950",
+    letterSpacing: "1.8px",
+    boxShadow: "0 5px 16px rgba(93,116,66,0.08)",
   },
 
-  logoCircle: {
-    width: "72px",
-    height: "72px",
-    margin: "18px auto 12px",
-    borderRadius: "24px",
+  logoWrap: {
+    position: "relative",
+    width: "82px",
+    height: "82px",
+    margin: "15px auto 8px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#dcebb9",
-    fontSize: "38px",
-    boxShadow:
-      "0 10px 28px rgba(91,112,62,0.13)",
+  },
+
+  logoGlow: {
+    position: "absolute",
+    width: "72px",
+    height: "72px",
+    borderRadius: "26px",
+    background: "rgba(183,220,116,0.20)",
+    transform: "rotate(9deg)",
+  },
+
+  logoCircle: {
+    position: "relative",
+    width: "64px",
+    height: "64px",
+    borderRadius: "22px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "linear-gradient(145deg, #edf6dc 0%, #d7eaaa 100%)",
+    border: "1px solid rgba(154,190,93,0.22)",
+    fontSize: "34px",
+    boxShadow: "0 10px 26px rgba(91,112,62,0.12)",
   },
 
   title: {
     margin: 0,
-    fontSize: "30px",
+    color: "#213421",
+    fontSize: "29px",
     fontWeight: "950",
-    letterSpacing: "-1.3px",
+    letterSpacing: "-1.5px",
+    lineHeight: "1.15",
+  },
+
+  titleAccent: {
+    width: "25px",
+    height: "3px",
+    margin: "8px auto 0",
+    borderRadius: "999px",
+    background: "#a9d95d",
   },
 
   subtitle: {
-    margin: "8px 0 0",
-    color: "#788176",
-    fontSize: "14px",
+    margin: "9px 0 0",
+    color: "#8a9184",
+    fontSize: "12px",
+    lineHeight: "1.5",
+  },
+
+  subtitleStrong: {
+    color: "#68775e",
+    fontWeight: "900",
+  },
+
+  subtitleLeaf: {
+    fontSize: "12px",
   },
 
   profileCard: {
