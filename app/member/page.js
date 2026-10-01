@@ -14,7 +14,6 @@ export default function MemberPage() {
 
   const [loading, setLoading] = useState(true);
   const [member, setMember] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     loadMember();
@@ -22,7 +21,6 @@ export default function MemberPage() {
 
   async function loadMember() {
     setLoading(true);
-    setErrorMessage("");
 
     const token = localStorage.getItem(
       "jungle_follow_session"
@@ -40,26 +38,11 @@ export default function MemberPage() {
       }
     );
 
-    if (error) {
-      console.error(error);
-
-      localStorage.removeItem(
-        "jungle_follow_session"
-      );
-
-      localStorage.removeItem(
-        "jungle_follow_name"
-      );
-
-      router.replace("/");
-      return;
-    }
-
     const currentMember = Array.isArray(data)
       ? data[0]
       : data;
 
-    if (!currentMember) {
+    if (error || !currentMember) {
       localStorage.removeItem(
         "jungle_follow_session"
       );
@@ -99,6 +82,10 @@ export default function MemberPage() {
       "jungle_follow_name"
     );
 
+    localStorage.removeItem(
+      "jungle_follow_admin"
+    );
+
     router.replace("/");
   }
 
@@ -113,6 +100,9 @@ export default function MemberPage() {
 
   const isAdmin =
     member?.admin_role === "admin";
+
+  const hasAdminAccess =
+    isSuperAdmin || isAdmin;
 
   if (loading) {
     return (
@@ -135,7 +125,6 @@ export default function MemberPage() {
   return (
     <main style={styles.page}>
       <section style={styles.container}>
-        {/* 상단 */}
 
         <div style={styles.top}>
           <div style={styles.brandBadge}>
@@ -154,8 +143,6 @@ export default function MemberPage() {
             정글 맞팔을 더 편하게 🌿
           </p>
         </div>
-
-        {/* 내 정보 */}
 
         <div style={styles.profileCard}>
           <div style={styles.profileTop}>
@@ -189,16 +176,13 @@ export default function MemberPage() {
                   </span>
                 )}
 
-                {!isSuperAdmin &&
-                  !isAdmin && (
-                    <span
-                      style={
-                        styles.memberBadge
-                      }
-                    >
-                      입장
-                    </span>
-                  )}
+                {!hasAdminAccess && (
+                  <span
+                    style={styles.memberBadge}
+                  >
+                    입장
+                  </span>
+                )}
               </div>
 
               <div style={styles.instagram}>
@@ -207,14 +191,6 @@ export default function MemberPage() {
             </div>
           </div>
         </div>
-
-        {errorMessage && (
-          <div style={styles.errorBox}>
-            {errorMessage}
-          </div>
-        )}
-
-        {/* 맞팔데이 */}
 
         <div style={styles.sectionCard}>
           <div style={styles.sectionTop}>
@@ -250,9 +226,7 @@ export default function MemberPage() {
           </button>
         </div>
 
-        {/* 관리자 메뉴 */}
-
-        {(isAdmin || isSuperAdmin) && (
+        {hasAdminAccess && (
           <div style={styles.adminCard}>
             <div style={styles.adminCardTop}>
               <div>
@@ -269,16 +243,12 @@ export default function MemberPage() {
                     styles.adminCardTitle
                   }
                 >
-                  {isSuperAdmin
-                    ? "👑 최고관리자 메뉴"
-                    : "♛ 관리자 메뉴"}
+                  관리자 메뉴
                 </h2>
               </div>
 
               <div style={styles.crownCircle}>
-                {isSuperAdmin
-                  ? "👑"
-                  : "♛"}
+                👑
               </div>
             </div>
 
@@ -302,8 +272,6 @@ export default function MemberPage() {
           </div>
         )}
 
-        {/* 안내 */}
-
         <div style={styles.notice}>
           <div style={styles.noticeTitle}>
             🌿 정글맞팔웹
@@ -318,8 +286,6 @@ export default function MemberPage() {
           </div>
         </div>
 
-        {/* 로그아웃 */}
-
         <button
           type="button"
           onClick={handleLogout}
@@ -327,6 +293,7 @@ export default function MemberPage() {
         >
           로그아웃
         </button>
+
       </section>
     </main>
   );
@@ -335,12 +302,9 @@ export default function MemberPage() {
 const styles = {
   page: {
     minHeight: "100vh",
-
     background:
       "linear-gradient(180deg, #f5f1e7 0%, #f8f6ef 48%, #eef4e7 100%)",
-
     padding: "34px 18px 60px",
-
     color: "#253326",
   },
 
@@ -357,106 +321,70 @@ const styles = {
 
   brandBadge: {
     display: "inline-block",
-
     padding: "7px 12px",
-
     borderRadius: "999px",
-
     background: "#e3eccd",
-
     color: "#687a4d",
-
     fontSize: "11px",
-
     fontWeight: "900",
-
     letterSpacing: "1.5px",
   },
 
   logoCircle: {
     width: "72px",
     height: "72px",
-
     margin: "18px auto 12px",
-
     borderRadius: "24px",
-
     display: "flex",
-
     alignItems: "center",
-
     justifyContent: "center",
-
     background: "#dcebb9",
-
     fontSize: "38px",
-
     boxShadow:
       "0 10px 28px rgba(91,112,62,0.13)",
   },
 
   title: {
     margin: 0,
-
     fontSize: "30px",
-
     fontWeight: "950",
-
     letterSpacing: "-1.3px",
   },
 
   subtitle: {
     margin: "8px 0 0",
-
     color: "#788176",
-
     fontSize: "14px",
   },
 
   profileCard: {
     padding: "18px",
-
     borderRadius: "24px",
-
     background:
       "rgba(255,255,255,0.94)",
-
     border: "1px solid #ebe9df",
-
     boxShadow:
       "0 12px 35px rgba(66,73,54,0.07)",
-
     marginBottom: "14px",
   },
 
   profileTop: {
     display: "flex",
-
     alignItems: "center",
-
     gap: "13px",
   },
 
   avatar: {
     width: "48px",
     height: "48px",
-
     flexShrink: 0,
-
     borderRadius: "16px",
-
     display: "flex",
-
     alignItems: "center",
-
     justifyContent: "center",
-
     background: "#edf5df",
-
     color: "#536642",
-
     fontSize: "19px",
-
     fontWeight: "950",
   },
 
@@ -467,349 +395,219 @@ const styles = {
 
   nameLine: {
     display: "flex",
-
     alignItems: "center",
-
     flexWrap: "wrap",
-
     gap: "6px",
   },
 
   name: {
     fontSize: "17px",
-
     fontWeight: "950",
   },
 
   instagram: {
     marginTop: "4px",
-
     color: "#788176",
-
     fontSize: "12px",
   },
 
   memberBadge: {
     padding: "4px 7px",
-
     borderRadius: "999px",
-
     background: "#e7f2d4",
-
     color: "#668146",
-
     fontSize: "9px",
-
     fontWeight: "950",
   },
 
   adminBadge: {
     padding: "4px 8px",
-
     borderRadius: "999px",
-
     background: "#f2eafa",
-
     color: "#79579b",
-
     fontSize: "9px",
-
     fontWeight: "950",
   },
 
   superAdminBadge: {
     padding: "4px 8px",
-
     borderRadius: "999px",
-
     background: "#fff0c7",
-
     color: "#8d6918",
-
     fontSize: "9px",
-
     fontWeight: "950",
   },
 
   sectionCard: {
     padding: "22px 20px",
-
     borderRadius: "25px",
-
     background:
       "rgba(255,255,255,0.94)",
-
     border: "1px solid #ebe9df",
-
     boxShadow:
       "0 12px 35px rgba(66,73,54,0.07)",
-
     marginBottom: "14px",
   },
 
   sectionTop: {
     display: "flex",
-
     alignItems: "center",
-
-    justifyContent:
-      "space-between",
-
+    justifyContent: "space-between",
     gap: "15px",
   },
 
   smallLabel: {
     color: "#87a15d",
-
     fontSize: "10px",
-
     fontWeight: "950",
-
     letterSpacing: "1.3px",
-
     marginBottom: "5px",
   },
 
   sectionTitle: {
     margin: 0,
-
     fontSize: "20px",
-
     fontWeight: "950",
-
     letterSpacing: "-0.6px",
   },
 
   leafCircle: {
     width: "43px",
     height: "43px",
-
     flexShrink: 0,
-
     borderRadius: "15px",
-
     display: "flex",
-
     alignItems: "center",
-
     justifyContent: "center",
-
     background: "#eef5df",
-
     fontSize: "21px",
   },
 
   description: {
     margin: "13px 0 0",
-
     color: "#7d8579",
-
     fontSize: "12px",
-
     lineHeight: "1.65",
   },
 
   mainButton: {
     width: "100%",
-
     marginTop: "18px",
-
     padding: "15px",
-
     border: "none",
-
     borderRadius: "16px",
-
     background: "#a9d95d",
-
     color: "#2d3b24",
-
     fontSize: "14px",
-
     fontWeight: "950",
-
     cursor: "pointer",
   },
 
   adminCard: {
     padding: "22px 20px",
-
     borderRadius: "25px",
-
     background:
       "linear-gradient(135deg, #faf6ff 0%, #f4edfb 100%)",
-
     border: "1px solid #dfd0ee",
-
     boxShadow:
       "0 12px 35px rgba(104,72,135,0.08)",
-
     marginBottom: "14px",
   },
 
   adminCardTop: {
     display: "flex",
-
-    justifyContent:
-      "space-between",
-
+    justifyContent: "space-between",
     alignItems: "center",
-
     gap: "15px",
   },
 
   adminSmallLabel: {
     color: "#9271ae",
-
     fontSize: "10px",
-
     fontWeight: "950",
-
     letterSpacing: "1.4px",
-
     marginBottom: "5px",
   },
 
   adminCardTitle: {
     margin: 0,
-
     fontSize: "19px",
-
     fontWeight: "950",
-
     color: "#5f4775",
   },
 
   crownCircle: {
     width: "43px",
     height: "43px",
-
     flexShrink: 0,
-
     borderRadius: "15px",
-
     display: "flex",
-
     alignItems: "center",
-
     justifyContent: "center",
-
     background: "#ffffff",
-
     fontSize: "20px",
-
     boxShadow:
       "0 4px 12px rgba(104,72,135,0.08)",
   },
 
   adminDescription: {
     margin: "12px 0 0",
-
     color: "#806e8e",
-
     fontSize: "12px",
-
     lineHeight: "1.6",
   },
 
   adminButton: {
     width: "100%",
-
     marginTop: "17px",
-
     padding: "14px",
-
-    border:
-      "1px solid #d6c2e8",
-
+    border: "1px solid #d6c2e8",
     borderRadius: "15px",
-
     background: "#ffffff",
-
     color: "#66477e",
-
     fontSize: "13px",
-
     fontWeight: "950",
-
     cursor: "pointer",
   },
 
   notice: {
     padding: "16px",
-
     borderRadius: "19px",
-
     background: "#f3f5e9",
-
     marginTop: "14px",
   },
 
   noticeTitle: {
     fontSize: "12px",
-
     fontWeight: "950",
-
     color: "#61744c",
   },
 
   noticeText: {
     marginTop: "6px",
-
     color: "#7b8176",
-
     fontSize: "11px",
-
     lineHeight: "1.65",
   },
 
   logoutButton: {
     width: "100%",
-
     marginTop: "18px",
-
     padding: "13px",
-
     border: "none",
-
     background: "transparent",
-
     color: "#969b92",
-
     fontSize: "11px",
-
     fontWeight: "800",
-
     cursor: "pointer",
-  },
-
-  errorBox: {
-    marginBottom: "12px",
-
-    padding: "12px 14px",
-
-    borderRadius: "14px",
-
-    background: "#fff0ed",
-
-    color: "#a84d43",
-
-    fontSize: "13px",
-
-    fontWeight: "800",
   },
 
   loadingCard: {
     marginTop: "100px",
-
     padding: "35px",
-
     borderRadius: "28px",
-
     background: "#ffffff",
-
     textAlign: "center",
-
     border: "1px solid #ebe9df",
   },
 
@@ -819,11 +617,8 @@ const styles = {
 
   loadingText: {
     marginTop: "12px",
-
     color: "#778072",
-
     fontSize: "13px",
-
     fontWeight: "800",
   },
 };
