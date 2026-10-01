@@ -1,11 +1,22 @@
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
+html,
 body {
   margin: 0;
+  padding: 0;
+}
+
+body {
   font-family: Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   color: #26352c;
   background: #f7f2e7;
 }
+
+/* =========================
+   공통 배경
+========================= */
 
 .page {
   min-height: 100vh;
@@ -14,152 +25,249 @@ body {
   align-items: center;
   justify-content: center;
   padding: 28px 18px;
+
   background:
-    radial-gradient(circle at 10% 10%, #e8f2d6 0 90px, transparent 91px),
-    radial-gradient(circle at 90% 85%, #e1edc7 0 120px, transparent 121px),
+    radial-gradient(
+      circle at 10% 10%,
+      #e8f2d6 0 90px,
+      transparent 91px
+    ),
+    radial-gradient(
+      circle at 90% 85%,
+      #e1edc7 0 120px,
+      transparent 121px
+    ),
     #f7f2e7;
 }
+
+/* =========================
+   기본 카드
+========================= */
 
 .card {
   width: 100%;
   max-width: 430px;
-  background: rgba(255,255,255,.86);
+
+  padding: 34px 26px;
+
+  background: rgba(255, 255, 255, 0.9);
+
   border: 1px solid #dfe6cf;
   border-radius: 30px;
-  padding: 34px 26px;
-  box-shadow: 0 18px 50px rgba(69,91,58,.12);
+
+  box-shadow:
+    0 18px 50px rgba(69, 91, 58, 0.12);
 }
+
+/* =========================
+   공통 타이틀
+========================= */
 
 .badge {
   display: table;
+
   margin: 0 auto 14px;
   padding: 7px 12px;
+
   border-radius: 999px;
+
   background: #eef4df;
   color: #65784d;
+
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.2px;
 }
 
-.mark { text-align: center; font-size: 34px; }
+.mark {
+  text-align: center;
+  font-size: 34px;
+}
 
 h1 {
-  text-align: center;
   margin: 8px 0 4px;
+
+  text-align: center;
+
   font-size: 32px;
   letter-spacing: -1.5px;
 }
 
 .sub {
-  text-align: center;
   margin: 0 0 30px;
+
+  text-align: center;
+
   color: #74806f;
   font-size: 14px;
 }
 
+/* =========================
+   입력폼
+========================= */
+
 label {
   display: block;
+
   margin: 17px 0 8px;
+
+  color: #465544;
+
   font-size: 13px;
   font-weight: 800;
-  color: #465544;
 }
 
 input {
   width: 100%;
   height: 52px;
+
+  padding: 0 15px;
+
   border: 1px solid #d9dfce;
   border-radius: 15px;
-  background: #fff;
-  padding: 0 15px;
+
+  background: #ffffff;
+
   font-size: 16px;
+
   outline: none;
 }
 
 input:focus {
   border-color: #8ea66d;
-  box-shadow: 0 0 0 3px rgba(142,166,109,.13);
+
+  box-shadow:
+    0 0 0 3px rgba(142, 166, 109, 0.13);
 }
 
 .inputWrap {
   display: flex;
   align-items: center;
-  background: #fff;
+
+  padding-left: 15px;
+
+  background: #ffffff;
+
   border: 1px solid #d9dfce;
   border-radius: 15px;
-  padding-left: 15px;
 }
 
-.inputWrap span { color: #7a8a6e; }
-.inputWrap input { border: 0; }
+.inputWrap span {
+  color: #7a8a6e;
+}
+
+.inputWrap input {
+  border: 0;
+  box-shadow: none;
+}
+
+/* =========================
+   기본 버튼
+========================= */
 
 button {
   width: 100%;
   height: 54px;
+
   margin-top: 24px;
+
   border: 0;
   border-radius: 16px;
+
   background: #718a55;
-  color: #fff;
+  color: #ffffff;
+
   font-size: 16px;
   font-weight: 900;
+
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(113,138,85,.22);
+
+  box-shadow:
+    0 8px 18px rgba(113, 138, 85, 0.22);
 }
 
-button:disabled { opacity: .6; }
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
 
-.notice, .message {
-  text-align: center;
-  font-size: 12px;
-  color: #7b8477;
+/* =========================
+   메시지
+========================= */
+
+.notice,
+.message {
   margin: 16px 0 0;
+
+  text-align: center;
+
+  color: #7b8477;
+
+  font-size: 12px;
+  line-height: 1.6;
 }
 
-.message { color: #536b3d; font-weight: 800; }
+.message {
+  color: #536b3d;
+  font-weight: 800;
+}
 
 .admin {
   display: block;
-  text-align: center;
+
   margin-top: 18px;
+
+  text-align: center;
+
   color: #647458;
+
   font-size: 13px;
-  text-decoration: none;
   font-weight: 700;
+
+  text-decoration: none;
 }
 
 .foot {
-  font-size: 12px;
-  color: #87927e;
   margin-top: 18px;
+
+  color: #87927e;
+
+  font-size: 12px;
 }
 
-@media (max-width: 480px) {
-  .card { padding: 30px 21px; border-radius: 26px; }
-  h1 { font-size: 29px; }
-}
-/* 🌿 정글맞팔웹 메인 디자인 */
+/* =========================
+   회원 로그인 이미지
+========================= */
 
 .prettyCard {
   max-width: 440px;
+
   padding: 14px 18px 26px;
+
   overflow: hidden;
+
   border: 1px solid #e4ead8;
   border-radius: 30px;
+
   background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 20px 55px rgba(72, 101, 54, 0.15);
+
+  box-shadow:
+    0 20px 55px rgba(72, 101, 54, 0.15);
 }
 
 .heroFrame {
   overflow: hidden;
-  border-radius: 24px;
-  background: #f7f4e8;
+
   margin-bottom: 10px;
+
+  border-radius: 24px;
+
+  background: #f7f4e8;
 }
 
 .heroImage {
   display: block;
+
   width: 100%;
   height: auto;
 }
@@ -174,29 +282,26 @@ button:disabled { opacity: .6; }
 }
 
 .prettyCard button {
-  background: linear-gradient(135deg, #6f8f4f, #8eaa62);
-  box-shadow: 0 10px 22px rgba(94, 126, 68, 0.24);
+  background:
+    linear-gradient(
+      135deg,
+      #6f8f4f,
+      #8eaa62
+    );
+
+  box-shadow:
+    0 10px 22px rgba(94, 126, 68, 0.24);
 }
 
-.prettyCard .notice {
-  margin-top: 18px;
-}
-
-@media (max-width: 480px) {
-  .prettyCard {
-    padding: 11px 13px 23px;
-    border-radius: 28px;
-  }
-
-  .heroFrame {
-    border-radius: 21px;
-  }
-}
-/* 🐯 관리자 대시보드 */
+/* =========================
+   관리자 대시보드
+========================= */
 
 .dashboardPage {
   justify-content: flex-start;
+
   padding-top: 45px;
+  padding-bottom: 60px;
 }
 
 .dashboard {
@@ -208,44 +313,60 @@ button:disabled { opacity: .6; }
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+
   gap: 15px;
+
   margin-bottom: 25px;
 }
 
 .dashboardBadge {
   display: inline-block;
+
   padding: 7px 13px;
+
   border-radius: 999px;
+
   background: #eaf2d7;
   color: #607746;
+
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 1px;
 }
 
 .dashboardTitle {
-  text-align: left;
   margin: 12px 0 5px;
-  font-size: 28px;
+
+  text-align: left;
+
   color: #26352c;
+
+  font-size: 28px;
 }
 
 .dashboardHello {
   margin: 0;
+
   color: #788474;
+
   font-size: 14px;
 }
 
 .logoutButton {
   width: auto;
   height: 38px;
+
   margin: 4px 0 0;
   padding: 0 15px;
-  border-radius: 12px;
-  background: #fff;
-  color: #6f7d67;
+
   border: 1px solid #dce4d3;
+  border-radius: 12px;
+
+  background: #ffffff;
+  color: #6f7d67;
+
   box-shadow: none;
+
   font-size: 12px;
 }
 
@@ -257,65 +378,540 @@ button:disabled { opacity: .6; }
 .dashboardMenuCard {
   display: flex;
   align-items: center;
-  gap: 15px;
+
   width: 100%;
+
+  gap: 15px;
+
   padding: 19px 18px;
+
   border: 1px solid #e0e7d7;
   border-radius: 20px;
+
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 8px 25px rgba(72, 101, 54, 0.08);
+
+  box-shadow:
+    0 8px 25px rgba(72, 101, 54, 0.08);
+
   color: #26352c;
+
   text-decoration: none;
 }
 
 .dashboardMenuCard:hover {
-  transform: translateY(-1px);
   border-color: #bdcda8;
+  transform: translateY(-1px);
 }
 
 .menuIcon {
   display: flex;
   align-items: center;
   justify-content: center;
+
   flex: 0 0 48px;
+
   width: 48px;
   height: 48px;
+
   border-radius: 15px;
+
   background: #f1f5e5;
+
   font-size: 23px;
 }
 
 .dashboardMenuCard strong {
   display: block;
+
   margin-bottom: 5px;
+
   font-size: 16px;
 }
 
 .dashboardMenuCard p {
   margin: 0;
+
   color: #84907e;
+
   font-size: 12px;
   line-height: 1.5;
 }
 
 .menuArrow {
   margin-left: auto;
+
   color: #8ca078;
+
   font-size: 28px;
-  font-weight: 300;
 }
 
 .dashboardLoading {
   margin: 0;
   padding: 25px 0;
+
   text-align: center;
+
   color: #718a55;
+
   font-weight: 800;
 }
 
+/* =========================
+   회원 관리 상단
+========================= */
+
+.memberPageHeader {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 13px;
+
+  margin-bottom: 22px;
+}
+
+.backButton {
+  flex: 0 0 40px;
+
+  width: 40px !important;
+  height: 40px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 1px solid #dce5d1;
+  border-radius: 12px;
+
+  background: #ffffff !important;
+  color: #61754d !important;
+
+  box-shadow: none !important;
+
+  font-size: 19px;
+}
+
+.memberPageTitle {
+  margin: 9px 0 4px;
+
+  text-align: left;
+
+  font-size: 27px;
+}
+
+/* =========================
+   회원 관리 카드
+========================= */
+
+.memberAdminCard {
+  margin-bottom: 16px;
+  padding: 22px;
+
+  border: 1px solid #e0e7d7;
+  border-radius: 22px;
+
+  background: rgba(255, 255, 255, 0.95);
+
+  box-shadow:
+    0 8px 25px rgba(72, 101, 54, 0.08);
+}
+
+.memberAdminCard h2 {
+  margin: 0 0 18px;
+
+  font-size: 18px;
+}
+
+.memberAdminCard small {
+  color: #929c8c;
+
+  font-weight: 500;
+}
+
+/* =========================
+   회원 목록 상단
+========================= */
+
+.memberListTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 15px;
+}
+
+.memberListTop h2 {
+  margin: 0 0 4px;
+}
+
+.memberCount {
+  margin: 0;
+
+  color: #7e8a78;
+
+  font-size: 12px;
+}
+
+.refreshButton {
+  width: auto !important;
+  height: 36px !important;
+
+  margin: 0 !important;
+  padding: 0 13px !important;
+
+  border: 1px solid #d8e2ce !important;
+  border-radius: 11px !important;
+
+  background: #f5f8ee !important;
+  color: #65794f !important;
+
+  box-shadow: none !important;
+
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+/* =========================
+   회원 검색
+========================= */
+
+.memberSearchWrap {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+
+  margin-bottom: 13px;
+  padding-left: 14px;
+
+  border: 1px solid #dce4d4;
+  border-radius: 14px;
+
+  background: #fffef9;
+}
+
+.memberSearchWrap span {
+  flex: 0 0 auto;
+
+  font-size: 15px;
+}
+
+.memberSearchWrap input {
+  height: 46px;
+
+  border: 0;
+  background: transparent;
+
+  box-shadow: none;
+}
+
+/* =========================
+   ★ 회원 상태 필터
+   작은 탭으로 표시
+========================= */
+
+.memberFilters {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+
+  gap: 6px;
+
+  margin: 0 0 20px;
+
+  padding: 5px;
+
+  border-radius: 14px;
+
+  background: #f1f3e9;
+}
+
+.memberFilter {
+  width: 100% !important;
+  height: 36px !important;
+
+  margin: 0 !important;
+  padding: 0 5px !important;
+
+  border: 0 !important;
+  border-radius: 10px !important;
+
+  background: transparent !important;
+  color: #7b8674 !important;
+
+  box-shadow: none !important;
+
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+.memberFilter.active {
+  background: #ffffff !important;
+  color: #536b3d !important;
+
+  box-shadow:
+    0 3px 10px rgba(73, 91, 60, 0.09) !important;
+}
+
+/* =========================
+   회원 목록
+========================= */
+
+.membersList {
+  display: grid;
+
+  gap: 11px;
+}
+
+.memberItem {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding: 16px;
+
+  border: 1px solid #e3e8dc;
+  border-radius: 17px;
+
+  background: #fffefb;
+}
+
+.memberAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 44px;
+
+  width: 44px;
+  height: 44px;
+
+  border-radius: 14px;
+
+  background: #edf3df;
+  color: #61764a;
+
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.memberInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.memberNameRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 7px;
+}
+
+.memberNameRow strong {
+  font-size: 15px;
+}
+
+.memberInfo p {
+  margin: 5px 0 0;
+
+  color: #74806f;
+
+  font-size: 13px;
+}
+
+.memberInfo small {
+  display: block;
+
+  margin-top: 7px;
+
+  color: #8c9588;
+
+  font-size: 11px;
+}
+
+/* =========================
+   회원 상태 뱃지
+========================= */
+
+.memberStatus {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 23px;
+
+  padding: 3px 8px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.memberStatus.active {
+  background: #e9f3dc;
+  color: #5d7842;
+}
+
+.memberStatus.paused {
+  background: #fff1ce;
+  color: #9a7528;
+}
+
+.memberStatus.inactive {
+  background: #f1eeee;
+  color: #877a7a;
+}
+
+/* =========================
+   ★ 실제 회원 관리 버튼
+========================= */
+
+.memberActions {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  margin-top: 13px;
+}
+
+.memberAction {
+  width: auto !important;
+  min-width: 78px;
+  height: 34px !important;
+
+  margin: 0 !important;
+  padding: 0 12px !important;
+
+  border-radius: 10px !important;
+
+  box-shadow: none !important;
+
+  font-size: 11px !important;
+  font-weight: 900 !important;
+}
+
+/* 일시정지 */
+
+.memberAction.pause {
+  border: 1px solid #e8d8aa !important;
+
+  background: #fff8e5 !important;
+  color: #8a6a25 !important;
+}
+
+/* 실제 퇴장 처리 */
+
+.memberAction.leave {
+  border: 1px solid #e7caca !important;
+
+  background: #fff2f2 !important;
+  color: #a25353 !important;
+}
+
+/* 활동 재개 */
+
+.memberAction.resume {
+  border: 1px solid #cbdcbc !important;
+
+  background: #edf6e5 !important;
+  color: #56743f !important;
+}
+
+/* 재입장 */
+
+.memberAction.rejoin {
+  border: 1px solid #bfcfb0 !important;
+
+  background: #718a55 !important;
+  color: #ffffff !important;
+}
+
+/* =========================
+   빈 목록 / 오류
+========================= */
+
+.emptyMembers {
+  margin-top: 15px;
+  padding: 25px 15px;
+
+  border-radius: 17px;
+
+  background: #f8f8f1;
+
+  text-align: center;
+}
+
+.emptyMembers span {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 27px;
+}
+
+.emptyMembers strong {
+  display: block;
+
+  font-size: 14px;
+}
+
+.emptyMembers p {
+  margin: 7px 0 0;
+
+  color: #8a9484;
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.memberError {
+  margin: 12px 0;
+
+  padding: 11px 12px;
+
+  border-radius: 11px;
+
+  background: #fff0f0;
+  color: #a55353;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================
+   모바일
+========================= */
+
 @media (max-width: 480px) {
+
+  .page {
+    padding: 22px 16px;
+  }
+
+  .card {
+    padding: 30px 21px;
+
+    border-radius: 26px;
+  }
+
+  h1 {
+    font-size: 29px;
+  }
+
+  .prettyCard {
+    padding: 11px 13px 23px;
+
+    border-radius: 28px;
+  }
+
+  .heroFrame {
+    border-radius: 21px;
+  }
+
   .dashboardPage {
-    padding: 28px 17px;
+    padding: 25px 17px 50px;
   }
 
   .dashboardTitle {
@@ -328,107 +924,28 @@ button:disabled { opacity: .6; }
 
   .menuIcon {
     flex-basis: 44px;
+
     width: 44px;
     height: 44px;
   }
-}
-/* 👥 회원 관리 */
 
-.memberPageHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 22px;
-}
+  .memberAdminCard {
+    padding: 18px 16px;
+  }
 
-.backButton {
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
-  margin: 2px 0 0;
-  padding: 0;
-  border-radius: 13px;
-  background: #ffffff;
-  color: #61754d;
-  border: 1px solid #dce5d1;
-  box-shadow: none;
-  font-size: 21px;
-}
+  .memberPageTitle {
+    font-size: 24px;
+  }
 
-.memberPageTitle {
-  text-align: left;
-  margin: 9px 0 4px;
-  font-size: 27px;
-}
+  .memberFilters {
+    gap: 4px;
+  }
 
-.memberAdminCard {
-  margin-bottom: 16px;
-  padding: 22px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid #e0e7d7;
-  box-shadow: 0 8px 25px rgba(72, 101, 54, 0.08);
-}
+  .memberFilter {
+    font-size: 11px !important;
+  }
 
-.memberAdminCard h2 {
-  margin: 0 0 18px;
-  font-size: 18px;
-}
-
-.memberAdminCard small {
-  color: #929c8c;
-  font-weight: 500;
-}
-
-.memberListTitle {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.memberListTitle h2 {
-  margin-bottom: 5px;
-}
-
-.memberListTitle p {
-  margin: 0;
-  color: #899483;
-  font-size: 12px;
-}
-
-.comingBadge {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #eef4df;
-  color: #718657;
-  font-size: 11px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.emptyMembers {
-  margin-top: 22px;
-  padding: 25px 15px;
-  border-radius: 17px;
-  background: #f8f8f1;
-  text-align: center;
-}
-
-.emptyMembers span {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 27px;
-}
-
-.emptyMembers strong {
-  display: block;
-  font-size: 14px;
-}
-
-.emptyMembers p {
-  margin: 7px 0 0;
-  color: #8a9484;
-  font-size: 12px;
-  line-height: 1.6;
+  .memberItem {
+    padding: 14px;
+  }
 }
