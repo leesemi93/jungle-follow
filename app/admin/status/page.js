@@ -313,6 +313,10 @@ export default function AdminStatusPage() {
   }
 
   function getStatusLabel(status) {
+    if (status === "admin") {
+      return "♛ 관리자";
+    }
+
     if (status === "participate") {
       return isInstagram ? "맞팔완료" : "완료";
     }
@@ -325,6 +329,10 @@ export default function AdminStatusPage() {
   }
 
   function statusStyle(status) {
+    if (status === "admin") {
+      return styles.adminStatusBadge;
+    }
+
     if (status === "participate") {
       return styles.participateBadge;
     }
@@ -1158,6 +1166,15 @@ const styles = {
     background: "#e5f3cf",
     color: "#5b773d",
     fontSize: "8px",
+    fontWeight: "950",
+  },
+
+  adminStatusBadge: {
+    padding: "4px 8px",
+    borderRadius: "999px",
+    background: "#f2eafa",
+    color: "#79579b",
+    fontSize: "9px",
     fontWeight: "950",
   },
 
