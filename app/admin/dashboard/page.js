@@ -41,6 +41,7 @@ export default function AdminDashboard() {
 
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [joinRequestCount, setJoinRequestCount] = useState(0);
 
   const [events, setEvents] = useState([]);
   const [targetType, setTargetType] =
@@ -127,8 +128,28 @@ export default function AdminDashboard() {
 
     await loadEvents(token);
     await loadHistory(token);
+    await loadJoinRequestCount(token);
 
     setLoading(false);
+  }
+
+  async function loadJoinRequestCount(token) {
+    const { data, error } = await supabase.rpc(
+      "admin_get_join_requests",
+      {
+        p_session_token: token,
+      }
+    );
+
+    if (error) {
+      console.error("가입대기 건수 조회 오류:", error);
+      setJoinRequestCount(0);
+      return;
+    }
+
+    setJoinRequestCount(
+      Array.isArray(data) ? data.length : 0
+    );
   }
 
   async function loadEvents(token) {
@@ -492,8 +513,37 @@ export default function AdminDashboard() {
             </span>
 
             <div>
-              <strong>
+              <strong
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "7px",
+                }}
+              >
                 회원 관리
+
+                {joinRequestCount > 0 && (
+                  <span
+                    style={{
+                      minWidth: "20px",
+                      height: "20px",
+                      padding: "0 6px",
+                      borderRadius: "999px",
+                      background: "#e85d5d",
+                      color: "#fff",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "10px",
+                      fontWeight: "950",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {joinRequestCount > 99
+                      ? "99+"
+                      : joinRequestCount}
+                  </span>
+                )}
               </strong>
 
               <p>
