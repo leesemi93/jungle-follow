@@ -1252,23 +1252,18 @@ export default function AdminDashboard() {
                 }
               }}
               style={{
-                padding:
-                  "8px 11px",
-                border:
-                  "1px solid #d8e4c4",
-                borderRadius:
-                  "10px",
-                background:
-                  "#f6f9ef",
-                color:
-                  "#60744e",
-                fontSize:
-                  "10px",
-                fontWeight:
-                  "900",
+                padding: "10px 14px",
+                border: "1px solid #b9cf91",
+                borderRadius: "12px",
+                background: "#eaf4d9",
+                color: "#4f6839",
+                fontSize: "11px",
+                fontWeight: "950",
+                cursor: "pointer",
+                boxShadow: "0 4px 10px rgba(84, 108, 58, 0.10)",
               }}
             >
-              새로고침
+              🔄 새로고침
             </button>
           </div>
 
