@@ -421,18 +421,16 @@ export default function MemberPage() {
           </div>
 
           <div style={styles.logoCircle}>
-            🐯
+            <span style={styles.tiger}>🐯</span>
           </div>
 
           <h1 style={styles.title}>
             정글맞팔
           </h1>
 
-          <div style={styles.cuteLeaves}>
-            <span>🌿</span>
-            <span style={styles.cuteDot}>●</span>
-            <span>🍃</span>
-          </div>
+          <p style={styles.brandCaption}>
+            MONTHLY FOLLOW DAY
+          </p>
         </div>
 
 
@@ -781,59 +779,55 @@ const styles = {
 
   top: {
     textAlign: "center",
-    marginBottom: "26px",
-    paddingTop: "4px",
+    marginBottom: "30px",
+    paddingTop: "8px",
   },
 
   brandBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "6px 15px",
+    display: "inline-block",
+    padding: "6px 14px",
     borderRadius: "999px",
-    background: "#e7f1d2",
-    color: "#617b43",
-    fontSize: "9px",
-    fontWeight: "950",
-    letterSpacing: "1.7px",
-    boxShadow: "0 5px 14px rgba(87, 108, 61, 0.08)",
+    background: "#edf4df",
+    color: "#63794d",
+    fontSize: "8px",
+    fontWeight: "900",
+    letterSpacing: "2px",
   },
 
   logoCircle: {
-    width: "66px",
-    height: "66px",
-    margin: "13px auto 8px",
-    borderRadius: "24px",
+    width: "74px",
+    height: "74px",
+    margin: "14px auto 10px",
+    borderRadius: "50%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "linear-gradient(145deg, #eff7df 0%, #d9eca9 100%)",
-    border: "1px solid #d5e7ae",
-    boxShadow: "0 9px 22px rgba(77, 102, 48, 0.11)",
-    fontSize: "35px",
+    background: "#f1f7e5",
+    border: "2px solid #dbe9c2",
+    boxShadow: "0 8px 20px rgba(86, 107, 62, 0.10)",
+  },
+
+  tiger: {
+    display: "block",
+    fontSize: "38px",
+    lineHeight: 1,
   },
 
   title: {
     margin: 0,
-    color: "#233722",
-    fontSize: "28px",
+    color: "#263a26",
+    fontSize: "30px",
     fontWeight: "950",
-    letterSpacing: "-1.4px",
-    lineHeight: "1.15",
+    letterSpacing: "-1.8px",
+    lineHeight: 1.1,
   },
 
-  cuteLeaves: {
-    marginTop: "7px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "5px",
-    fontSize: "10px",
-  },
-
-  cuteDot: {
-    color: "#a9d95d",
-    fontSize: "5px",
+  brandCaption: {
+    margin: "8px 0 0",
+    color: "#a1aa98",
+    fontSize: "7px",
+    fontWeight: "800",
+    letterSpacing: "2.2px",
   },
 
   profileCard: {
