@@ -9,11 +9,48 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+const PLATFORMS = [
+  { value: "instagram", label: "인스타그램" },
+  { value: "blog", label: "블로그" },
+  { value: "naver_clip", label: "네이버 클립" },
+  { value: "youtube", label: "유튜브" },
+  { value: "tiktok", label: "틱톡" },
+  { value: "today_house", label: "오늘의집" },
+];
+
 export default function AdminDashboard() {
   const router = useRouter();
 
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // 알림
+  const [targetType, setTargetType] = useState("all");
+  const [events, setEvents] = useState([]);
+  const [eventId, setEventId] = useState("");
+  const [platform, setPlatform] =
+    useState("instagram");
+
+  const [notVotedCount, setNotVotedCount] =
+    useState(null);
+  const [countLoading, setCountLoading] =
+    useState(false);
+
+  const [pushTitle, setPushTitle] = useState(
+    "정글맞팔웹 🐯"
+  );
+
+  const [pushMessage, setPushMessage] =
+    useState("");
+
+  const [pushUrl, setPushUrl] =
+    useState("/member");
+
+  const [pushLoading, setPushLoading] =
+    useState(false);
+
+  const [pushResult, setPushResult] =
+    useState("");
 
   useEffect(() => {
     checkAdmin();
@@ -24,25 +61,24 @@ export default function AdminDashboard() {
       "jungle_follow_session"
     );
 
-    // 회원 로그인이 안 되어 있으면 메인으로
     if (!token) {
       router.replace("/");
       return;
     }
 
-    // 회원 세션 + 관리자 권한 확인
-    const { data, error } = await supabase.rpc(
-      "get_current_member",
-      {
-        p_session_token: token,
-      }
-    );
+    const { data, error } =
+      await supabase.rpc(
+        "get_current_member",
+        {
+          p_session_token: token,
+        }
+      );
 
-    const currentMember = Array.isArray(data)
-      ? data[0]
-      : data;
+    const currentMember =
+      Array.isArray(data)
+        ? data[0]
+        : data;
 
-    // 회원 세션 자체가 유효하지 않음
     if (error || !currentMember) {
       localStorage.removeItem(
         "jungle_follow_session"
@@ -56,21 +92,230 @@ export default function AdminDashboard() {
       return;
     }
 
-    // 일반 회원이면 관리자 화면 접근 차단
     if (
-      currentMember.admin_role !== "admin" &&
-      currentMember.admin_role !== "super_admin"
+      currentMember.admin_role !==
+        "admin" &&
+      currentMember.admin_role !==
+        "super_admin"
     ) {
       router.replace("/member");
       return;
     }
 
     setMember(currentMember);
+
+    await loadEvents(token);
+
     setLoading(false);
   }
 
+  async function loadEvents(token) {
+    const { data, error } =
+      await supabase.rpc(
+        "admin_get_follow_events",
+        {
+          p_session_token: token,
+        }
+      );
+
+    if (error) {
+      console.error(
+        "맞팔데이 불러오기 오류:",
+        error
+      );
+      return;
+    }
+
+    const list = Array.isArray(data)
+      ? data
+      : [];
+
+    setEvents(list);
+
+    if (list.length > 0) {
+      setEventId(list[0].id);
+    }
+  }
+
+  async function loadNotVotedCount() {
+    if (
+      targetType !== "not_voted" ||
+      !eventId ||
+      !platform
+    ) {
+      setNotVotedCount(null);
+      return;
+    }
+
+    const token = localStorage.getItem(
+      "jungle_follow_session"
+    );
+
+    if (!token) {
+      router.replace("/");
+      return;
+    }
+
+    setCountLoading(true);
+
+    try {
+      const { data, error } =
+        await supabase.rpc(
+          "admin_get_platform_vote_counts",
+          {
+            p_session_token: token,
+            p_event_id: eventId,
+            p_platform: platform,
+          }
+        );
+
+      if (error) {
+        console.error(
+          "미참여자 수 조회 오류:",
+          error
+        );
+
+        setNotVotedCount(null);
+        return;
+      }
+
+      const row = Array.isArray(data)
+        ? data[0]
+        : data;
+
+      setNotVotedCount(
+        Number(
+          row?.not_voted_count || 0
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      setNotVotedCount(null);
+    } finally {
+      setCountLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadNotVotedCount();
+  }, [
+    targetType,
+    eventId,
+    platform,
+  ]);
+
   function goMemberHome() {
     router.push("/member");
+  }
+
+  async function sendPushNotification(e) {
+    e.preventDefault();
+
+    setPushResult("");
+
+    const title =
+      pushTitle.trim();
+
+    const message =
+      pushMessage.trim();
+
+    const url =
+      pushUrl.trim() || "/member";
+
+    if (!title || !message) {
+      setPushResult(
+        "알림 제목과 내용을 입력해주세요."
+      );
+      return;
+    }
+
+    if (
+      targetType === "not_voted" &&
+      (!eventId || !platform)
+    ) {
+      setPushResult(
+        "맞팔데이와 플랫폼을 선택해주세요."
+      );
+      return;
+    }
+
+    const token = localStorage.getItem(
+      "jungle_follow_session"
+    );
+
+    if (!token) {
+      router.replace("/");
+      return;
+    }
+
+    setPushLoading(true);
+
+    try {
+      const response =
+        await fetch(
+          "/api/admin/send-push",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              sessionToken: token,
+              title,
+              message,
+              url,
+              targetType,
+              eventId:
+                targetType ===
+                "not_voted"
+                  ? eventId
+                  : null,
+              platform:
+                targetType ===
+                "not_voted"
+                  ? platform
+                  : null,
+            }),
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result?.error ||
+            "알림 발송에 실패했습니다."
+        );
+      }
+
+      if (
+        result.total === 0
+      ) {
+        setPushResult(
+          targetType ===
+            "not_voted"
+            ? "해당 미참여자 중 알림 설정을 완료한 회원이 없어요."
+            : "알림을 받을 수 있도록 등록된 회원이 없어요."
+        );
+      } else {
+        setPushResult(
+          `발송 완료 💚 성공 ${result.sent}명 · 실패 ${result.failed}명`
+        );
+      }
+
+      setPushMessage("");
+    } catch (error) {
+      console.error(error);
+
+      setPushResult(
+        error?.message ||
+          "알림 발송 중 문제가 발생했어요."
+      );
+    } finally {
+      setPushLoading(false);
+    }
   }
 
   async function logout() {
@@ -80,9 +325,12 @@ export default function AdminDashboard() {
 
     if (token) {
       try {
-        await supabase.rpc("logout_member", {
-          p_session_token: token,
-        });
+        await supabase.rpc(
+          "logout_member",
+          {
+            p_session_token: token,
+          }
+        );
       } catch (error) {
         console.error(error);
       }
@@ -96,7 +344,6 @@ export default function AdminDashboard() {
       "jungle_follow_name"
     );
 
-    // 예전 관리자 로그인 흔적도 정리
     localStorage.removeItem(
       "jungle_follow_admin"
     );
@@ -120,6 +367,8 @@ export default function AdminDashboard() {
     <main className="page dashboardPage">
       <section className="dashboard">
 
+        {/* HEADER */}
+
         <div className="dashboardTop">
           <div>
             <span className="dashboardBadge">
@@ -131,8 +380,9 @@ export default function AdminDashboard() {
             </h1>
 
             <p className="dashboardHello">
-              {member?.kakao_nickname || "관리자"}님,
-              안녕하세요 💚
+              {member?.kakao_nickname ||
+                "관리자"}
+              님, 안녕하세요 💚
             </p>
           </div>
 
@@ -144,6 +394,9 @@ export default function AdminDashboard() {
             회원 홈
           </button>
         </div>
+
+
+        {/* 기존 관리자 메뉴 */}
 
         <div className="dashboardMenu">
 
@@ -170,6 +423,7 @@ export default function AdminDashboard() {
             </span>
           </a>
 
+
           <a
             href="/admin/events"
             className="dashboardMenuCard"
@@ -193,6 +447,7 @@ export default function AdminDashboard() {
             </span>
           </a>
 
+
           <a
             href="/admin/status"
             className="dashboardMenuCard"
@@ -215,6 +470,7 @@ export default function AdminDashboard() {
               ›
             </span>
           </a>
+
 
           <a
             href="/admin/platforms"
@@ -240,6 +496,542 @@ export default function AdminDashboard() {
           </a>
 
         </div>
+
+
+        {/* 알림 보내기 */}
+
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "22px 20px",
+            borderRadius: "24px",
+            background:
+              "linear-gradient(135deg, #f7fbea 0%, #eef5df 100%)",
+            border:
+              "1px solid #dce8c7",
+          }}
+        >
+
+          <div
+            style={{
+              color: "#7f9958",
+              fontSize: "10px",
+              fontWeight: "950",
+              letterSpacing: "1.4px",
+            }}
+          >
+            PUSH NOTIFICATION
+          </div>
+
+          <h2
+            style={{
+              margin:
+                "5px 0 0",
+              fontSize: "20px",
+              fontWeight: "950",
+              color: "#455b35",
+            }}
+          >
+            회원 휴대폰 알림 보내기 🔔
+          </h2>
+
+          <p
+            style={{
+              margin:
+                "9px 0 17px",
+              color: "#748069",
+              fontSize: "11px",
+              lineHeight: "1.6",
+            }}
+          >
+            알림 설정을 완료한 회원에게
+            휴대폰 알림을 보낼 수 있어요.
+          </p>
+
+
+          {/* 대상 */}
+
+          <div
+            style={{
+              marginBottom: "15px",
+            }}
+          >
+
+            <div
+              style={{
+                marginBottom: "7px",
+                color: "#536941",
+                fontSize: "11px",
+                fontWeight: "900",
+              }}
+            >
+              알림 대상
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "1fr 1fr",
+                gap: "8px",
+              }}
+            >
+
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetType("all");
+                  setNotVotedCount(null);
+                }}
+                style={{
+                  padding: "12px 8px",
+                  borderRadius: "13px",
+                  border:
+                    targetType === "all"
+                      ? "2px solid #9bc957"
+                      : "1px solid #d8e4c4",
+                  background:
+                    targetType === "all"
+                      ? "#eaf5dc"
+                      : "#ffffff",
+                  color: "#536941",
+                  fontSize: "11px",
+                  fontWeight: "950",
+                  cursor: "pointer",
+                }}
+              >
+                👥 전체 회원
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setTargetType(
+                    "not_voted"
+                  )
+                }
+                style={{
+                  padding: "12px 8px",
+                  borderRadius: "13px",
+                  border:
+                    targetType ===
+                    "not_voted"
+                      ? "2px solid #9bc957"
+                      : "1px solid #d8e4c4",
+                  background:
+                    targetType ===
+                    "not_voted"
+                      ? "#eaf5dc"
+                      : "#ffffff",
+                  color: "#536941",
+                  fontSize: "11px",
+                  fontWeight: "950",
+                  cursor: "pointer",
+                }}
+              >
+                ⚠️ 미참여자만
+              </button>
+
+            </div>
+          </div>
+
+
+          {/* 미참여자 조건 */}
+
+          {targetType ===
+            "not_voted" && (
+            <div
+              style={{
+                padding: "14px",
+                marginBottom:
+                  "15px",
+                borderRadius: "15px",
+                background:
+                  "rgba(255,255,255,0.8)",
+                border:
+                  "1px solid #dce8c7",
+              }}
+            >
+
+              <div
+                style={{
+                  color: "#536941",
+                  fontSize: "11px",
+                  fontWeight: "950",
+                  marginBottom:
+                    "10px",
+                }}
+              >
+                어떤 미참여자에게
+                보낼까요?
+              </div>
+
+
+              {/* 맞팔데이 */}
+
+              <label
+                style={{
+                  display:
+                    "block",
+                  marginBottom:
+                    "6px",
+                  color:
+                    "#748069",
+                  fontSize:
+                    "10px",
+                  fontWeight:
+                    "800",
+                }}
+              >
+                맞팔데이
+              </label>
+
+              <select
+                value={eventId}
+                onChange={(e) =>
+                  setEventId(
+                    e.target.value
+                  )
+                }
+                style={{
+                  width: "100%",
+                  boxSizing:
+                    "border-box",
+                  padding:
+                    "12px",
+                  borderRadius:
+                    "12px",
+                  border:
+                    "1px solid #d8e4c4",
+                  background:
+                    "#ffffff",
+                  color:
+                    "#455b35",
+                  fontSize:
+                    "12px",
+                  marginBottom:
+                    "11px",
+                }}
+              >
+
+                {events.length ===
+                0 ? (
+                  <option value="">
+                    맞팔데이가 없습니다
+                  </option>
+                ) : (
+                  events.map(
+                    (event) => (
+                      <option
+                        key={
+                          event.id
+                        }
+                        value={
+                          event.id
+                        }
+                      >
+                        {event.year}년{" "}
+                        {event.month}월{" "}
+                        {event.title}
+                      </option>
+                    )
+                  )
+                )}
+
+              </select>
+
+
+              {/* 플랫폼 */}
+
+              <label
+                style={{
+                  display:
+                    "block",
+                  marginBottom:
+                    "6px",
+                  color:
+                    "#748069",
+                  fontSize:
+                    "10px",
+                  fontWeight:
+                    "800",
+                }}
+              >
+                플랫폼
+              </label>
+
+              <select
+                value={platform}
+                onChange={(e) =>
+                  setPlatform(
+                    e.target.value
+                  )
+                }
+                style={{
+                  width: "100%",
+                  boxSizing:
+                    "border-box",
+                  padding:
+                    "12px",
+                  borderRadius:
+                    "12px",
+                  border:
+                    "1px solid #d8e4c4",
+                  background:
+                    "#ffffff",
+                  color:
+                    "#455b35",
+                  fontSize:
+                    "12px",
+                }}
+              >
+
+                {PLATFORMS.map(
+                  (item) => (
+                    <option
+                      key={
+                        item.value
+                      }
+                      value={
+                        item.value
+                      }
+                    >
+                      {item.label}
+                    </option>
+                  )
+                )}
+
+              </select>
+
+
+              {/* 미참여자 수 */}
+
+              <div
+                style={{
+                  marginTop:
+                    "12px",
+                  padding:
+                    "11px",
+                  borderRadius:
+                    "12px",
+                  background:
+                    "#f4f8eb",
+                  textAlign:
+                    "center",
+                  color:
+                    "#60744e",
+                  fontSize:
+                    "11px",
+                  fontWeight:
+                    "950",
+                }}
+              >
+                {countLoading
+                  ? "미참여자 확인 중..."
+                  : notVotedCount ===
+                    null
+                  ? "미참여자 수 확인 중"
+                  : `현재 미참여자 ${notVotedCount}명`}
+              </div>
+
+            </div>
+          )}
+
+
+          {/* 제목 */}
+
+          <label
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              color: "#536941",
+              fontSize: "11px",
+              fontWeight: "900",
+            }}
+          >
+            알림 제목
+          </label>
+
+          <input
+            value={pushTitle}
+            onChange={(e) =>
+              setPushTitle(
+                e.target.value
+              )
+            }
+            maxLength={80}
+            style={{
+              width: "100%",
+              boxSizing:
+                "border-box",
+              padding: "12px",
+              borderRadius: "12px",
+              border:
+                "1px solid #d8e4c4",
+              background:
+                "#ffffff",
+              marginBottom:
+                "11px",
+              fontSize: "12px",
+              outline: "none",
+            }}
+          />
+
+
+          {/* 내용 */}
+
+          <label
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              color: "#536941",
+              fontSize: "11px",
+              fontWeight: "900",
+            }}
+          >
+            알림 내용
+          </label>
+
+          <textarea
+            value={pushMessage}
+            onChange={(e) =>
+              setPushMessage(
+                e.target.value
+              )
+            }
+            maxLength={300}
+            rows={4}
+            placeholder="예: 아직 맞팔 참여하지 않으신 분들은 지금 참여해주세요 🌿"
+            style={{
+              width: "100%",
+              boxSizing:
+                "border-box",
+              padding: "12px",
+              borderRadius: "12px",
+              border:
+                "1px solid #d8e4c4",
+              background:
+                "#ffffff",
+              marginBottom:
+                "11px",
+              fontSize: "12px",
+              lineHeight: "1.5",
+              resize: "vertical",
+              outline: "none",
+            }}
+          />
+
+
+          {/* 이동 주소 */}
+
+          <label
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              color: "#536941",
+              fontSize: "11px",
+              fontWeight: "900",
+            }}
+          >
+            알림을 눌렀을 때 이동할 화면
+          </label>
+
+          <input
+            value={pushUrl}
+            onChange={(e) =>
+              setPushUrl(
+                e.target.value
+              )
+            }
+            placeholder="/member"
+            style={{
+              width: "100%",
+              boxSizing:
+                "border-box",
+              padding: "12px",
+              borderRadius: "12px",
+              border:
+                "1px solid #d8e4c4",
+              background:
+                "#ffffff",
+              marginBottom:
+                "12px",
+              fontSize: "12px",
+              outline: "none",
+            }}
+          />
+
+
+          {/* 발송 */}
+
+          <button
+            type="button"
+            onClick={
+              sendPushNotification
+            }
+            disabled={
+              pushLoading
+            }
+            style={{
+              width: "100%",
+              padding: "14px",
+              border: "none",
+              borderRadius: "14px",
+              background:
+                "#a9d95d",
+              color:
+                "#2d3b24",
+              fontSize: "12px",
+              fontWeight:
+                "950",
+              cursor:
+                pushLoading
+                  ? "default"
+                  : "pointer",
+              opacity:
+                pushLoading
+                  ? 0.65
+                  : 1,
+            }}
+          >
+            {pushLoading
+              ? "알림 보내는 중..."
+              : targetType ===
+                "not_voted"
+              ? "⚠️ 미참여자에게 알림 보내기"
+              : "🔔 전체 회원에게 알림 보내기"}
+          </button>
+
+
+          {/* 결과 */}
+
+          {pushResult && (
+            <div
+              style={{
+                marginTop:
+                  "11px",
+                padding:
+                  "11px 12px",
+                borderRadius:
+                  "12px",
+                background:
+                  "#ffffff",
+                color:
+                  "#5f704f",
+                fontSize:
+                  "10px",
+                lineHeight:
+                  "1.5",
+              }}
+            >
+              {pushResult}
+            </div>
+          )}
+
+        </div>
+
+
+        {/* LOGOUT */}
 
         <button
           type="button"
