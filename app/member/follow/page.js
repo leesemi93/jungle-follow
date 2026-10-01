@@ -791,30 +791,26 @@ export default function MemberFollowPage() {
                         >
 
                           {links.map((person, index) => (
-                            <div
+                            <button
                               key={`${person.member_id}-${index}`}
+                              type="button"
+                              onClick={() =>
+                                openParticipantLink(person.account_value)
+                              }
                               style={styles.participantItem}
                             >
-                              <div style={styles.participantInfo}>
-                                <div style={styles.participantNumber}>
-                                  {index + 1}
-                                </div>
+                              <span style={styles.participantNumber}>
+                                {index + 1}
+                              </span>
 
-                                <strong style={styles.participantName}>
-                                  {person.kakao_nickname || "회원"}
-                                </strong>
-                              </div>
+                              <span style={styles.participantName}>
+                                {person.kakao_nickname || "회원"}
+                              </span>
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openParticipantLink(person.account_value)
-                                }
-                                style={styles.openLinkButton}
-                              >
-                                링크 열기 ↗
-                              </button>
-                            </div>
+                              <span style={styles.openLinkText}>
+                                열기 ↗
+                              </span>
+                            </button>
                           ))}
 
                         </div>
@@ -1291,64 +1287,54 @@ const styles = {
   linkList: {
     display: "flex",
     flexDirection: "column",
-    gap: "7px",
+    gap: "6px",
   },
 
   participantItem: {
-    display: "flex",
+    width: "100%",
+    minHeight: "42px",
+    padding: "7px 9px",
+    border: "1px solid #e1e8d8",
+    borderRadius: "11px",
+    background: "#ffffff",
+    display: "grid",
+    gridTemplateColumns: "25px minmax(0, 1fr) 50px",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: "12px",
-    minHeight: "54px",
-    padding: "10px 12px",
-    borderRadius: "14px",
-    background: "#fff",
-    border: "1px solid #e5eadc",
+    gap: "7px",
+    textAlign: "left",
+    cursor: "pointer",
     boxSizing: "border-box",
   },
 
-  participantInfo: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    minWidth: 0,
-  },
-
   participantNumber: {
-    width: "28px",
-    height: "28px",
-    flexShrink: 0,
-    borderRadius: "9px",
+    width: "24px",
+    height: "24px",
+    borderRadius: "8px",
+    background: "#edf5df",
+    color: "#71835e",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#edf4df",
-    color: "#64784e",
-    fontSize: "10px",
-    fontWeight: "950",
+    fontSize: "9px",
+    fontWeight: "900",
   },
 
   participantName: {
     minWidth: 0,
     color: "#34432f",
-    fontSize: "11px",
+    fontSize: "10px",
     fontWeight: "900",
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
 
-  openLinkButton: {
-    flexShrink: 0,
-    minWidth: "88px",
-    border: "1px solid #dce8ca",
-    borderRadius: "11px",
-    padding: "9px 11px",
-    background: "#edf5df",
-    color: "#526b3e",
+  openLinkText: {
+    color: "#6d8258",
     fontSize: "9px",
-    fontWeight: "950",
-    cursor: "pointer",
+    fontWeight: "900",
+    textAlign: "right",
+    whiteSpace: "nowrap",
   },
 
   choiceGrid: {
