@@ -842,32 +842,19 @@ export default function MemberFollowPage() {
                           다른 참여자 링크
                         </strong>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={styles.participantCount}>
-                            {links.length}명
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setExpandedLinks((prev) => ({
-                                ...prev,
-                                [item.platform]: !prev[item.platform],
-                              }))
-                            }
-                            style={{
-                              padding: "6px 9px",
-                              borderRadius: "9px",
-                              border: "1px solid #d8e5c8",
-                              background: "#ffffff",
-                              color: "#60744e",
-                              fontSize: "9px",
-                              fontWeight: "900",
-                              cursor: "pointer",
-                            }}
-                          >
-                            {expandedLinks[item.platform] ? "접어두기 ▲" : "펼치기 ▼"}
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedLinks((prev) => ({
+                              ...prev,
+                              [item.platform]: !prev[item.platform],
+                            }))
+                          }
+                          style={styles.participantToggle}
+                        >
+                          <span>{links.length}명</span>
+                          <span>{expandedLinks[item.platform] ? "접기 ▲" : "보기 ▼"}</span>
+                        </button>
                       </div>
 
 
@@ -1478,6 +1465,22 @@ const styles = {
   participantCount: {
     color: "#94a08d",
     fontSize: "9px",
+  },
+
+  participantToggle: {
+    minWidth: "84px",
+    padding: "7px 10px",
+    border: "1px solid #dce7ce",
+    borderRadius: "999px",
+    background: "#ffffff",
+    color: "#61764f",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "7px",
+    fontSize: "9px",
+    fontWeight: "900",
+    cursor: "pointer",
   },
 
   linksLoading: {
