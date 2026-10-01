@@ -25,7 +25,6 @@ export async function POST(request) {
     const sessionToken = body?.sessionToken;
     const title = String(body?.title || "").trim();
     const message = String(body?.message || "").trim();
-    const url = String(body?.url || "/member").trim();
 
     const targetType =
       body?.targetType === "not_voted"
@@ -38,8 +37,7 @@ export async function POST(request) {
     if (!sessionToken) {
       return NextResponse.json(
         {
-          error:
-            "관리자 로그인이 필요합니다.",
+          error: "관리자 로그인이 필요합니다.",
         },
         { status: 401 }
       );
@@ -57,12 +55,13 @@ export async function POST(request) {
 
     if (
       targetType === "not_voted" &&
-      (!eventId || !PLATFORMS.includes(platform))
+      (!eventId ||
+        !PLATFORMS.includes(platform))
     ) {
       return NextResponse.json(
         {
           error:
-            "미참여자 발송은 맞팔데이와 플랫폼을 선택해주세요.",
+            "맞팔데이와 플랫폼을 선택해주세요.",
         },
         { status: 400 }
       );
@@ -91,11 +90,8 @@ export async function POST(request) {
     );
 
     let subscriptions = [];
-    let memberCount = null;
 
-    /*
-     * 미참여자만 발송
-     */
+    // 미참여자만 발송
     if (targetType === "not_voted") {
       const {
         data: voteRows,
@@ -103,9 +99,12 @@ export async function POST(request) {
       } = await supabase.rpc(
         "admin_get_platform_vote_status",
         {
-          p_session_token: sessionToken,
-          p_event_id: eventId,
-          p_platform: platform,
+          p_session_token:
+            sessionToken,
+          p_event_id:
+            eventId,
+          p_platform:
+            platform,
         }
       );
 
@@ -114,23 +113,24 @@ export async function POST(request) {
           {
             error:
               voteError.message ||
-              "미참여자 목록을 불러오지 못했습니다.",
+              "미참여자를 불러오지 못했습니다.",
           },
           { status: 500 }
         );
       }
 
-      const memberIds = (voteRows || [])
+      const memberIds = (
+        voteRows || []
+      )
         .filter(
           (row) =>
             row.vote_status ===
             "not_voted"
         )
         .map(
-          (row) => row.member_id
+          (row) =>
+            row.member_id
         );
-
-      memberCount = memberIds.length;
 
       if (memberIds.length > 0) {
         const {
@@ -151,19 +151,18 @@ export async function POST(request) {
             {
               error:
                 error.message ||
-                "미참여자의 알림 정보를 불러오지 못했습니다.",
+                "알림 대상을 불러오지 못했습니다.",
             },
             { status: 500 }
           );
         }
 
-        subscriptions = data || [];
+        subscriptions =
+          data || [];
       }
     }
 
-    /*
-     * 전체 회원 발송
-     */
+    // 전체 회원 발송
     else {
       const {
         data,
@@ -181,13 +180,14 @@ export async function POST(request) {
           {
             error:
               error.message ||
-              "알림 발송 대상을 불러오지 못했습니다.",
+              "알림 대상을 불러오지 못했습니다.",
           },
           { status: 500 }
         );
       }
 
-      subscriptions = data || [];
+      subscriptions =
+        data || [];
     }
 
     const targets = Array.isArray(
@@ -196,32 +196,27 @@ export async function POST(request) {
       ? subscriptions
       : [];
 
-    if (targets.length === 0) {
-      return NextResponse.json({
-        success: true,
-        sent: 0,
-        failed: 0,
-        total: 0,
-        memberCount,
-        message:
-          targetType ===
-          "not_voted"
-            ? "미참여자 중 알림 설정을 완료한 회원이 없습니다."
-            : "알림을 받을 수 있도록 등록된 회원이 없습니다.",
-      });
-    }
-
     const payload =
       JSON.stringify({
         title,
         body: message,
+
         icon:
           "/jungle-follow-hero.png",
+
         badge:
           "/jungle-follow-hero.png",
-        url,
+
+        // 전체 회원 → 회원 홈
+        // 미참여자 → 맞팔데이
+        url:
+          targetType ===
+          "not_voted"
+            ? "/member/follow"
+            : "/member",
+
         tag:
-          "jungle-follow-admin",
+          "jungle-follow",
       });
 
     let sent = 0;
@@ -235,9 +230,11 @@ export async function POST(request) {
               {
                 endpoint:
                   target.endpoint,
+
                 keys: {
                   p256dh:
                     target.p256dh,
+
                   auth:
                     target.auth,
                 },
@@ -245,33 +242,77 @@ export async function POST(request) {
               payload
             );
 
-            sent += 1;
+            sent++;
           } catch (error) {
-            failed += 1;
+            failed++;
 
             console.error(
-              "push send failed:",
-              target.id ||
-                target.subscription_id,
-              error?.statusCode,
-              error?.message
+              "Push error:",
+              error
             );
           }
         }
       )
     );
 
+    // 발송 내역 저장
+    const {
+      error: historyError,
+    } = await supabase.rpc(
+      "admin_record_push_history",
+      {
+        p_session_token:
+          sessionToken,
+
+        p_title:
+          title,
+
+        p_message:
+          message,
+
+        p_target_type:
+          targetType,
+
+        p_event_id:
+          targetType ===
+          "not_voted"
+            ? eventId
+            : null,
+
+        p_platform:
+          targetType ===
+          "not_voted"
+            ? platform
+            : null,
+
+        p_total_count:
+          targets.length,
+
+        p_sent_count:
+          sent,
+
+        p_failed_count:
+          failed,
+      }
+    );
+
+    if (historyError) {
+      console.error(
+        "History save error:",
+        historyError
+      );
+    }
+
     return NextResponse.json({
       success: true,
+      total:
+        targets.length,
       sent,
       failed,
-      total: targets.length,
-      memberCount,
-      targetType,
     });
   } catch (error) {
     console.error(
-      "push API error:",
+      "Send push error:",
       error
     );
 
@@ -279,7 +320,7 @@ export async function POST(request) {
       {
         error:
           error?.message ||
-          "알림 발송 중 문제가 발생했습니다.",
+          "알림 발송 중 오류가 발생했습니다.",
       },
       { status: 500 }
     );
