@@ -416,27 +416,11 @@ export default function MemberPage() {
         {/* HEADER */}
 
         <div style={styles.top}>
-          <div style={styles.brandBadge}>
-            JUNGLE FOLLOW
-          </div>
-
-          <div style={styles.logoWrap}>
-            <div style={styles.logoGlow} />
-            <div style={styles.logoCircle}>
-              🐯
-            </div>
-          </div>
-
-          <h1 style={styles.title}>
-            정글맞팔웹
-          </h1>
-
-          <div style={styles.titleAccent} />
-
-          <p style={styles.subtitle}>
-            정글 맞팔을 <strong style={styles.subtitleStrong}>더 쉽고 편하게</strong>
-            <span style={styles.subtitleLeaf}> 🌿</span>
-          </p>
+          <img
+            src="/jungle-follow-header.jpg"
+            alt="정글맞팔"
+            style={styles.heroImage}
+          />
         </div>
 
 
@@ -784,90 +768,19 @@ const styles = {
   },
 
   top: {
-    position: "relative",
     textAlign: "center",
-    marginBottom: "28px",
-    padding: "8px 0 4px",
+    marginBottom: "22px",
   },
 
-  brandBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "7px 15px",
-    borderRadius: "999px",
-    background: "linear-gradient(135deg, #e8f1d5 0%, #dcebbd 100%)",
-    color: "#607747",
-    fontSize: "10px",
-    fontWeight: "950",
-    letterSpacing: "1.8px",
-    boxShadow: "0 5px 16px rgba(93,116,66,0.08)",
-  },
-
-  logoWrap: {
-    position: "relative",
-    width: "82px",
-    height: "82px",
-    margin: "15px auto 8px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  logoGlow: {
-    position: "absolute",
-    width: "72px",
-    height: "72px",
+  heroImage: {
+    display: "block",
+    width: "100%",
+    maxWidth: "460px",
+    height: "auto",
+    margin: "0 auto",
     borderRadius: "26px",
-    background: "rgba(183,220,116,0.20)",
-    transform: "rotate(9deg)",
-  },
-
-  logoCircle: {
-    position: "relative",
-    width: "64px",
-    height: "64px",
-    borderRadius: "22px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "linear-gradient(145deg, #edf6dc 0%, #d7eaaa 100%)",
-    border: "1px solid rgba(154,190,93,0.22)",
-    fontSize: "34px",
-    boxShadow: "0 10px 26px rgba(91,112,62,0.12)",
-  },
-
-  title: {
-    margin: 0,
-    color: "#213421",
-    fontSize: "29px",
-    fontWeight: "950",
-    letterSpacing: "-1.5px",
-    lineHeight: "1.15",
-  },
-
-  titleAccent: {
-    width: "25px",
-    height: "3px",
-    margin: "8px auto 0",
-    borderRadius: "999px",
-    background: "#a9d95d",
-  },
-
-  subtitle: {
-    margin: "9px 0 0",
-    color: "#8a9184",
-    fontSize: "12px",
-    lineHeight: "1.5",
-  },
-
-  subtitleStrong: {
-    color: "#68775e",
-    fontWeight: "900",
-  },
-
-  subtitleLeaf: {
-    fontSize: "12px",
+    objectFit: "cover",
+    boxShadow: "0 12px 32px rgba(69, 91, 45, 0.10)",
   },
 
   profileCard: {
