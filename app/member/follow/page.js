@@ -876,7 +876,7 @@ export default function MemberFollowPage() {
 
 
                       {expandedLinks[item.platform] && (
-                        {isLoadingLinks ? (
+                        isLoadingLinks ? (
                         <div
                           style={
                             styles.linksLoading
@@ -925,7 +925,7 @@ export default function MemberFollowPage() {
                           ))}
 
                         </div>
-                      )}
+                      )
                       )}
 
                     </div>
