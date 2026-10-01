@@ -192,3 +192,143 @@ button:disabled { opacity: .6; }
     border-radius: 21px;
   }
 }
+/* 🐯 관리자 대시보드 */
+
+.dashboardPage {
+  justify-content: flex-start;
+  padding-top: 45px;
+}
+
+.dashboard {
+  width: 100%;
+  max-width: 520px;
+}
+
+.dashboardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.dashboardBadge {
+  display: inline-block;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: #eaf2d7;
+  color: #607746;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.dashboardTitle {
+  text-align: left;
+  margin: 12px 0 5px;
+  font-size: 28px;
+  color: #26352c;
+}
+
+.dashboardHello {
+  margin: 0;
+  color: #788474;
+  font-size: 14px;
+}
+
+.logoutButton {
+  width: auto;
+  height: 38px;
+  margin: 4px 0 0;
+  padding: 0 15px;
+  border-radius: 12px;
+  background: #fff;
+  color: #6f7d67;
+  border: 1px solid #dce4d3;
+  box-shadow: none;
+  font-size: 12px;
+}
+
+.dashboardMenu {
+  display: grid;
+  gap: 13px;
+}
+
+.dashboardMenuCard {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  padding: 19px 18px;
+  border: 1px solid #e0e7d7;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 25px rgba(72, 101, 54, 0.08);
+  color: #26352c;
+  text-decoration: none;
+}
+
+.dashboardMenuCard:hover {
+  transform: translateY(-1px);
+  border-color: #bdcda8;
+}
+
+.menuIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  background: #f1f5e5;
+  font-size: 23px;
+}
+
+.dashboardMenuCard strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 16px;
+}
+
+.dashboardMenuCard p {
+  margin: 0;
+  color: #84907e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.menuArrow {
+  margin-left: auto;
+  color: #8ca078;
+  font-size: 28px;
+  font-weight: 300;
+}
+
+.dashboardLoading {
+  margin: 0;
+  padding: 25px 0;
+  text-align: center;
+  color: #718a55;
+  font-weight: 800;
+}
+
+@media (max-width: 480px) {
+  .dashboardPage {
+    padding: 28px 17px;
+  }
+
+  .dashboardTitle {
+    font-size: 25px;
+  }
+
+  .dashboardMenuCard {
+    padding: 17px 15px;
+  }
+
+  .menuIcon {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+  }
+}
