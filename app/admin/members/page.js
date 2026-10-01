@@ -115,40 +115,48 @@ export default function AdminMembersPage() {
 
   async function checkAdmin() {
     const token = localStorage.getItem(
-      "jungle_follow_admin"
+      "jungle_follow_session"
     );
 
     if (!token) {
-      router.replace("/admin");
+      router.replace("/");
       return;
     }
 
-    setAdminToken(token);
-
     const { data, error } = await supabase.rpc(
-      "get_current_admin",
+      "get_current_member",
       {
         p_session_token: token,
       }
     );
 
-    if (error) {
-      localStorage.removeItem(
-        "jungle_follow_admin"
-      );
-      router.replace("/admin");
-      return;
-    }
-
-    const adminData = Array.isArray(data)
+    const currentMember = Array.isArray(data)
       ? data[0]
       : data;
 
-    const role =
-      adminData?.role ||
-      adminData?.admin_role ||
-      "";
+    if (error || !currentMember) {
+      localStorage.removeItem(
+        "jungle_follow_session"
+      );
+      localStorage.removeItem(
+        "jungle_follow_name"
+      );
+      router.replace("/");
+      return;
+    }
 
+    const role =
+      currentMember.admin_role || "";
+
+    if (
+      role !== "admin" &&
+      role !== "super_admin"
+    ) {
+      router.replace("/member");
+      return;
+    }
+
+    setAdminToken(token);
     setCurrentAdminRole(role);
 
     await refreshAll(token);
