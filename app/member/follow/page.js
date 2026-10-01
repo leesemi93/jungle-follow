@@ -482,18 +482,14 @@ export default function MemberFollowPage() {
             JUNGLE FOLLOW DAY
           </div>
 
-          <div style={styles.tiger}>
-            🐯
-          </div>
-
-          <h1 style={styles.title}>
+           <h1 style={styles.title}>
             맞팔데이
           </h1>
 
           <p style={styles.subtitle}>
             다른 회원님의 링크를 확인하고
             <br />
-            완료 여부를 선택해주세요 🌿
+            완료 여부를 선택해주세요
           </p>
 
         </div>
