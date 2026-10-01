@@ -9,6 +9,15 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+const PLATFORMS = [
+  "instagram",
+  "blog",
+  "naver_clip",
+  "youtube",
+  "tiktok",
+  "today_house",
+];
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -28,7 +37,10 @@ export async function POST(request) {
 
     if (!sessionToken) {
       return NextResponse.json(
-        { error: "관리자 로그인이 필요합니다." },
+        {
+          error:
+            "관리자 로그인이 필요합니다.",
+        },
         { status: 401 }
       );
     }
@@ -45,7 +57,7 @@ export async function POST(request) {
 
     if (
       targetType === "not_voted" &&
-      (!eventId || !platform)
+      (!eventId || !PLATFORMS.includes(platform))
     ) {
       return NextResponse.json(
         {
@@ -78,84 +90,109 @@ export async function POST(request) {
       privateKey
     );
 
-    let memberIds = null;
+    let subscriptions = [];
+    let memberCount = null;
 
-    // 미참여자만 선택한 경우
+    /*
+     * 미참여자만 발송
+     */
     if (targetType === "not_voted") {
-      const { data, error } =
-        await supabase.rpc(
-          "admin_get_platform_vote_status",
-          {
-            p_session_token: sessionToken,
-            p_event_id: eventId,
-            p_platform: platform,
-          }
-        );
+      const {
+        data: voteRows,
+        error: voteError,
+      } = await supabase.rpc(
+        "admin_get_platform_vote_status",
+        {
+          p_session_token: sessionToken,
+          p_event_id: eventId,
+          p_platform: platform,
+        }
+      );
 
-      if (error) {
+      if (voteError) {
         return NextResponse.json(
           {
             error:
-              error.message ||
+              voteError.message ||
               "미참여자 목록을 불러오지 못했습니다.",
           },
           { status: 500 }
         );
       }
 
-      memberIds = (data || [])
+      const memberIds = (voteRows || [])
         .filter(
           (row) =>
-            row.vote_status === "not_voted"
+            row.vote_status ===
+            "not_voted"
         )
-        .map((row) => row.member_id);
-    }
+        .map(
+          (row) => row.member_id
+        );
 
-    let subscriptions;
-    let error;
+      memberCount = memberIds.length;
 
-    if (targetType === "not_voted") {
-      const result =
-        await supabase.rpc(
+      if (memberIds.length > 0) {
+        const {
+          data,
+          error,
+        } = await supabase.rpc(
           "admin_get_push_subscriptions_for_send",
           {
-            p_session_token: sessionToken,
-            p_user_ids: memberIds || [],
+            p_session_token:
+              sessionToken,
+            p_user_ids:
+              memberIds,
           }
         );
 
-      subscriptions = result.data;
-      error = result.error;
-    } else {
-      const result =
-        await supabase.rpc(
-          "admin_get_push_subscriptions",
-          {
-            p_session_token: sessionToken,
-          }
-        );
+        if (error) {
+          return NextResponse.json(
+            {
+              error:
+                error.message ||
+                "미참여자의 알림 정보를 불러오지 못했습니다.",
+            },
+            { status: 500 }
+          );
+        }
 
-      subscriptions = result.data;
-      error = result.error;
+        subscriptions = data || [];
+      }
     }
 
-    if (error) {
-      console.error(
-        "push subscriptions error:",
-        error
-      );
-
-      return NextResponse.json(
+    /*
+     * 전체 회원 발송
+     */
+    else {
+      const {
+        data,
+        error,
+      } = await supabase.rpc(
+        "admin_get_push_subscriptions",
         {
-          error:
-            error.message ||
-            "알림 발송 대상을 불러오지 못했습니다.",
-        },
-        { status: 500 }
+          p_session_token:
+            sessionToken,
+        }
       );
+
+      if (error) {
+        return NextResponse.json(
+          {
+            error:
+              error.message ||
+              "알림 발송 대상을 불러오지 못했습니다.",
+          },
+          { status: 500 }
+        );
+      }
+
+      subscriptions = data || [];
     }
 
-    const targets = Array.isArray(subscriptions)
+    const targets = Array.isArray(
+      subscriptions
+    )
       ? subscriptions
       : [];
 
@@ -165,51 +202,63 @@ export async function POST(request) {
         sent: 0,
         failed: 0,
         total: 0,
+        memberCount,
         message:
-          targetType === "not_voted"
-            ? "해당 플랫폼 미참여자 중 알림 설정을 완료한 회원이 없습니다."
+          targetType ===
+          "not_voted"
+            ? "미참여자 중 알림 설정을 완료한 회원이 없습니다."
             : "알림을 받을 수 있도록 등록된 회원이 없습니다.",
       });
     }
 
-    const payload = JSON.stringify({
-      title,
-      body: message,
-      icon: "/jungle-follow-hero.png",
-      badge: "/jungle-follow-hero.png",
-      url,
-      tag: "jungle-follow-admin",
-    });
+    const payload =
+      JSON.stringify({
+        title,
+        body: message,
+        icon:
+          "/jungle-follow-hero.png",
+        badge:
+          "/jungle-follow-hero.png",
+        url,
+        tag:
+          "jungle-follow-admin",
+      });
 
     let sent = 0;
     let failed = 0;
 
     await Promise.all(
-      targets.map(async (target) => {
-        try {
-          await webpush.sendNotification(
-            {
-              endpoint: target.endpoint,
-              keys: {
-                p256dh: target.p256dh,
-                auth: target.auth,
+      targets.map(
+        async (target) => {
+          try {
+            await webpush.sendNotification(
+              {
+                endpoint:
+                  target.endpoint,
+                keys: {
+                  p256dh:
+                    target.p256dh,
+                  auth:
+                    target.auth,
+                },
               },
-            },
-            payload
-          );
+              payload
+            );
 
-          sent += 1;
-        } catch (error) {
-          failed += 1;
+            sent += 1;
+          } catch (error) {
+            failed += 1;
 
-          console.error(
-            "push send failed:",
-            target.subscription_id,
-            error?.statusCode,
-            error?.message
-          );
+            console.error(
+              "push send failed:",
+              target.id ||
+                target.subscription_id,
+              error?.statusCode,
+              error?.message
+            );
+          }
         }
-      })
+      )
     );
 
     return NextResponse.json({
@@ -217,11 +266,8 @@ export async function POST(request) {
       sent,
       failed,
       total: targets.length,
+      memberCount,
       targetType,
-      memberCount:
-        targetType === "not_voted"
-          ? memberIds?.length || 0
-          : null,
     });
   } catch (error) {
     console.error(
