@@ -11,7 +11,8 @@ const supabase = createClient(
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [adminName, setAdminName] = useState("");
+
+  const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,45 +20,88 @@ export default function AdminDashboard() {
   }, []);
 
   async function checkAdmin() {
-    const token = localStorage.getItem("jungle_follow_admin");
-
-    if (!token) {
-      router.replace("/admin");
-      return;
-    }
-
-    const { data, error } = await supabase.rpc("get_current_admin", {
-      p_session_token: token,
-    });
-
-    if (error || !data?.length) {
-      localStorage.removeItem("jungle_follow_admin");
-      router.replace("/admin");
-      return;
-    }
-
-    const admin = data[0];
-
-    setAdminName(
-      admin.kakao_nickname ||
-      admin.nickname ||
-      "관리자"
+    const token = localStorage.getItem(
+      "jungle_follow_session"
     );
 
+    // 회원 로그인이 안 되어 있으면 메인으로
+    if (!token) {
+      router.replace("/");
+      return;
+    }
+
+    // 회원 세션 + 관리자 권한 확인
+    const { data, error } = await supabase.rpc(
+      "get_current_member",
+      {
+        p_session_token: token,
+      }
+    );
+
+    const currentMember = Array.isArray(data)
+      ? data[0]
+      : data;
+
+    // 회원 세션 자체가 유효하지 않음
+    if (error || !currentMember) {
+      localStorage.removeItem(
+        "jungle_follow_session"
+      );
+
+      localStorage.removeItem(
+        "jungle_follow_name"
+      );
+
+      router.replace("/");
+      return;
+    }
+
+    // 일반 회원이면 관리자 화면 접근 차단
+    if (
+      currentMember.admin_role !== "admin" &&
+      currentMember.admin_role !== "super_admin"
+    ) {
+      router.replace("/member");
+      return;
+    }
+
+    setMember(currentMember);
     setLoading(false);
   }
 
+  function goMemberHome() {
+    router.push("/member");
+  }
+
   async function logout() {
-    const token = localStorage.getItem("jungle_follow_admin");
+    const token = localStorage.getItem(
+      "jungle_follow_session"
+    );
 
     if (token) {
-      await supabase.rpc("logout_admin", {
-        p_session_token: token,
-      });
+      try {
+        await supabase.rpc("logout_member", {
+          p_session_token: token,
+        });
+      } catch (error) {
+        console.error(error);
+      }
     }
 
-    localStorage.removeItem("jungle_follow_admin");
-    router.replace("/admin");
+    localStorage.removeItem(
+      "jungle_follow_session"
+    );
+
+    localStorage.removeItem(
+      "jungle_follow_name"
+    );
+
+    // 예전 관리자 로그인 흔적도 정리
+    localStorage.removeItem(
+      "jungle_follow_admin"
+    );
+
+    router.replace("/");
   }
 
   if (loading) {
@@ -83,20 +127,21 @@ export default function AdminDashboard() {
             </span>
 
             <h1 className="dashboardTitle">
-              정글맞팔 관리 🐯
+              관리자 메뉴 🐯
             </h1>
 
             <p className="dashboardHello">
-              {adminName}님, 안녕하세요 💚
+              {member?.kakao_nickname || "관리자"}님,
+              안녕하세요 💚
             </p>
           </div>
 
           <button
             type="button"
             className="logoutButton"
-            onClick={logout}
+            onClick={goMemberHome}
           >
-            로그아웃
+            회원 홈
           </button>
         </div>
 
@@ -106,59 +151,106 @@ export default function AdminDashboard() {
             href="/admin/members"
             className="dashboardMenuCard"
           >
-            <span className="menuIcon">👥</span>
+            <span className="menuIcon">
+              👥
+            </span>
+
             <div>
-              <strong>회원 관리</strong>
+              <strong>
+                회원 관리
+              </strong>
+
               <p>
-                회원 등록 · 퇴장 · 재입장 · 일시정지
+                가입 승인 · 입장 · 퇴장 · 플랫폼 관리
               </p>
             </div>
-            <span className="menuArrow">›</span>
+
+            <span className="menuArrow">
+              ›
+            </span>
           </a>
 
           <a
             href="/admin/events"
             className="dashboardMenuCard"
           >
-            <span className="menuIcon">🌿</span>
+            <span className="menuIcon">
+              🌿
+            </span>
+
             <div>
-              <strong>맞팔데이 관리</strong>
+              <strong>
+                맞팔데이 관리
+              </strong>
+
               <p>
-                이번 달 맞팔데이 생성 · 참여자 관리
+                월별 맞팔데이 · 플랫폼별 참여 현황
               </p>
             </div>
-            <span className="menuArrow">›</span>
+
+            <span className="menuArrow">
+              ›
+            </span>
           </a>
 
           <a
             href="/admin/status"
             className="dashboardMenuCard"
           >
-            <span className="menuIcon">📊</span>
+            <span className="menuIcon">
+              📊
+            </span>
+
             <div>
-              <strong>참여 현황</strong>
+              <strong>
+                참여 현황
+              </strong>
+
               <p>
-                투표 현황 · 미참여자 확인
+                참여 · 제한 · 미참여 확인
               </p>
             </div>
-            <span className="menuArrow">›</span>
+
+            <span className="menuArrow">
+              ›
+            </span>
           </a>
 
           <a
             href="/admin/platforms"
             className="dashboardMenuCard"
           >
-            <span className="menuIcon">📱</span>
+            <span className="menuIcon">
+              📱
+            </span>
+
             <div>
-              <strong>플랫폼별 현황</strong>
+              <strong>
+                플랫폼별 현황
+              </strong>
+
               <p>
-                인스타 · 블로그 · 클립 등 확인
+                인스타그램 · 블로그 · 클립 · 유튜브 · 틱톡 · 오늘의집
               </p>
             </div>
-            <span className="menuArrow">›</span>
+
+            <span className="menuArrow">
+              ›
+            </span>
           </a>
 
         </div>
+
+        <button
+          type="button"
+          className="logoutButton"
+          onClick={logout}
+          style={{
+            marginTop: "22px",
+          }}
+        >
+          로그아웃
+        </button>
 
       </section>
     </main>
