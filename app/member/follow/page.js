@@ -590,17 +590,33 @@ export default function MemberFollowPage() {
                 </strong>
               </div>
 
-              <span
-                style={
-                  event.is_open
-                    ? styles.openBadge
-                    : styles.closedBadge
-                }
-              >
-                {event.is_open
-                  ? "🟢 지금 참여 가능"
-                  : "마감"}
-              </span>
+              <div style={styles.eventActions}>
+                <span
+                  style={
+                    event.is_open
+                      ? styles.openBadge
+                      : styles.closedBadge
+                  }
+                >
+                  {event.is_open
+                    ? "🟢 지금 참여 가능"
+                    : "마감"}
+                </span>
+
+                {event.is_open && (
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={saveVotes}
+                    style={{
+                      ...styles.eventSaveButton,
+                      opacity: saving ? 0.6 : 1,
+                    }}
+                  >
+                    {saving ? "저장 중..." : "저장하기 💚"}
+                  </button>
+                )}
+              </div>
 
             </div>
 
@@ -1093,31 +1109,9 @@ export default function MemberFollowPage() {
             })}
 
 
-            {/* SAVE */}
-
-            {event.is_open ? (
-              <button
-                type="button"
-                disabled={saving}
-                onClick={saveVotes}
-                style={{
-                  ...styles.saveButton,
-                  opacity:
-                    saving ? 0.6 : 1,
-                }}
-              >
-                {saving
-                  ? "저장 중..."
-                  : "완료 상태 저장하기 💚"}
-              </button>
-            ) : (
-              <div
-                style={
-                  styles.closedCard
-                }
-              >
-                이번 달 맞팔데이 투표가
-                마감되었어요 🌿
+            {!event.is_open && (
+              <div style={styles.closedCard}>
+                이번 달 맞팔데이 투표가 마감되었어요 🌿
               </div>
             )}
 
@@ -1297,6 +1291,25 @@ const styles = {
 
   eventTitle: {
     fontSize: "17px",
+  },
+
+  eventActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    flexShrink: 0,
+  },
+
+  eventSaveButton: {
+    padding: "7px 10px",
+    border: "none",
+    borderRadius: "999px",
+    background: "#a9d95d",
+    color: "#304225",
+    fontSize: "9px",
+    fontWeight: "900",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
   },
 
   openBadge: {
