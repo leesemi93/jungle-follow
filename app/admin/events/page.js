@@ -97,14 +97,8 @@ export default function EventsPage() {
 
       if (
         filter === "notParticipant" &&
-        member.is_participant
-      ) {
-        return false;
-      }
-
-      if (
-        filter === "notParticipant" &&
-        member.member_status !== "active"
+        (member.is_participant ||
+          member.member_status !== "active")
       ) {
         return false;
       }
@@ -158,21 +152,14 @@ export default function EventsPage() {
 
     const loadedEvents = await loadEvents(token);
 
-    if (loadedEvents) {
-      const event = loadedEvents.find(
-        (item) =>
-          Number(item.year) ===
-            currentKoreaDate.year &&
-          Number(item.month) ===
-            currentKoreaDate.month
-      );
+    const event = loadedEvents.find(
+      (item) =>
+        Number(item.year) === currentKoreaDate.year &&
+        Number(item.month) === currentKoreaDate.month
+    );
 
-      if (event) {
-        await loadEventMembers(
-          token,
-          event.id
-        );
-      }
+    if (event) {
+      await loadEventMembers(token, event.id);
     }
 
     setLoading(false);
@@ -246,10 +233,8 @@ export default function EventsPage() {
 
     const event = list.find(
       (item) =>
-        Number(item.year) ===
-          currentKoreaDate.year &&
-        Number(item.month) ===
-          currentKoreaDate.month
+        Number(item.year) === currentKoreaDate.year &&
+        Number(item.month) === currentKoreaDate.month
     );
 
     if (event) {
@@ -299,7 +284,6 @@ export default function EventsPage() {
     );
 
     await refreshEverything();
-
     setEventLoading(false);
   }
 
@@ -334,7 +318,7 @@ export default function EventsPage() {
     }
 
     setMessage(
-      "현재 입장 중인 회원을 모두 추가했어요 💚"
+      "입장 중인 회원을 모두 추가했어요 💚"
     );
 
     await loadEventMembers(
@@ -371,7 +355,7 @@ export default function EventsPage() {
     }
 
     setMessage(
-      `${member.kakao_nickname}님을 맞팔데이에 추가했어요 💚`
+      `${member.kakao_nickname}님을 추가했어요 💚`
     );
 
     await loadEventMembers(
@@ -414,7 +398,7 @@ export default function EventsPage() {
     }
 
     setMessage(
-      `${member.kakao_nickname}님을 이번 맞팔데이에서 제외했어요.`
+      `${member.kakao_nickname}님을 제외했어요.`
     );
 
     await loadEventMembers(
@@ -430,13 +414,8 @@ export default function EventsPage() {
     const start = new Date(event.starts_at);
     const end = new Date(event.ends_at);
 
-    if (now < start) {
-      return "예정";
-    }
-
-    if (now >= end) {
-      return "마감";
-    }
+    if (now < start) return "예정";
+    if (now >= end) return "마감";
 
     return "진행중";
   }
@@ -496,7 +475,6 @@ export default function EventsPage() {
         )}
 
         <section className="memberAdminCard">
-
           <div className="memberListTop">
             <div>
               <h2>
@@ -532,8 +510,8 @@ export default function EventsPage() {
           ) : !currentEvent ? (
             <div
               style={{
-                padding: "28px 0 4px",
                 textAlign: "center",
+                padding: "28px 0 5px",
               }}
             >
               <div
@@ -545,22 +523,18 @@ export default function EventsPage() {
                 🐯
               </div>
 
-              <h3
-                style={{
-                  margin: "0 0 8px",
-                }}
-              >
+              <h3>
                 아직 이번 달 맞팔데이가 없어요
               </h3>
 
               <p
                 style={{
-                  margin: "0 0 24px",
                   fontSize: "13px",
                   opacity: 0.65,
+                  marginBottom: "22px",
                 }}
               >
-                맞팔데이를 먼저 생성해주세요.
+                맞팔데이를 생성해주세요.
               </p>
 
               <button
@@ -571,83 +545,78 @@ export default function EventsPage() {
               </button>
             </div>
           ) : (
-            <>
+            <div
+              style={{
+                marginTop: "18px",
+                padding: "18px",
+                borderRadius: "18px",
+                background: "#f7f8ef",
+              }}
+            >
               <div
                 style={{
-                  marginTop: "18px",
-                  padding: "18px",
-                  borderRadius: "18px",
-                  background: "#f7f8ef",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "12px",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: "12px",
-                    alignItems: "center",
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: "800",
-                        color: "#799458",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      MONTHLY FOLLOW DAY
-                    </div>
-
-                    <strong
-                      style={{
-                        fontSize: "17px",
-                      }}
-                    >
-                      {currentEvent.year}년{" "}
-                      {currentEvent.month}월 맞팔데이
-                    </strong>
-                  </div>
-
-                  <span
-                    className="memberStatus active"
-                  >
-                    {getEventStatus(
-                      currentEvent
-                    )}
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    marginTop: "16px",
-                    paddingTop: "14px",
-                    borderTop:
-                      "1px solid #e3e8d8",
-                  }}
-                >
-                  <small
+                <div>
+                  <div
                     style={{
-                      display: "block",
-                      marginBottom: "4px",
-                      opacity: 0.6,
+                      fontSize: "11px",
+                      fontWeight: "800",
+                      color: "#789456",
+                      marginBottom: "5px",
                     }}
                   >
-                    투표 기간
-                  </small>
+                    MONTHLY FOLLOW DAY
+                  </div>
 
-                  <strong>
-                    {currentEvent.month}월 1일
-                    00:00 ~{" "}
-                    {currentEvent.month}월 3일
-                    23:59
+                  <strong
+                    style={{
+                      fontSize: "17px",
+                    }}
+                  >
+                    {currentEvent.year}년{" "}
+                    {currentEvent.month}월 맞팔데이
                   </strong>
                 </div>
-              </div>
-            </>
-          )}
 
+                <span className="memberStatus active">
+                  {getEventStatus(
+                    currentEvent
+                  )}
+                </span>
+              </div>
+
+              <div
+                style={{
+                  marginTop: "16px",
+                  paddingTop: "14px",
+                  borderTop:
+                    "1px solid #e2e7d8",
+                }}
+              >
+                <small
+                  style={{
+                    display: "block",
+                    opacity: 0.6,
+                    marginBottom: "5px",
+                  }}
+                >
+                  투표 기간
+                </small>
+
+                <strong>
+                  {currentEvent.month}월 1일
+                  00:00 ~{" "}
+                  {currentEvent.month}월 3일
+                  23:59
+                </strong>
+              </div>
+            </div>
+          )}
         </section>
 
         {currentEvent && (
@@ -732,9 +701,7 @@ export default function EventsPage() {
                     : "memberFilter"
                 }
                 onClick={() =>
-                  setFilter(
-                    "notParticipant"
-                  )
+                  setFilter("notParticipant")
                 }
               >
                 미참여
@@ -744,7 +711,6 @@ export default function EventsPage() {
             {memberLoading ? (
               <div className="emptyMembers">
                 <span>🌿</span>
-
                 <strong>
                   회원 목록 불러오는 중...
                 </strong>
@@ -752,14 +718,12 @@ export default function EventsPage() {
             ) : filteredMembers.length === 0 ? (
               <div className="emptyMembers">
                 <span>🐯</span>
-
                 <strong>
                   표시할 회원이 없어요.
                 </strong>
               </div>
             ) : (
               <div className="membersList">
-
                 {filteredMembers.map(
                   (member) => (
                     <div
@@ -773,7 +737,6 @@ export default function EventsPage() {
                       </div>
 
                       <div className="memberInfo">
-
                         <div className="memberNameRow">
                           <strong>
                             {
@@ -804,7 +767,6 @@ export default function EventsPage() {
                         )}
 
                         <div className="memberActions">
-
                           {member.is_participant ? (
                             <button
                               type="button"
@@ -814,9 +776,7 @@ export default function EventsPage() {
                                 member.member_id
                               }
                               onClick={() =>
-                                removeMember(
-                                  member
-                                )
+                                removeMember(member)
                               }
                             >
                               제외
@@ -836,16 +796,13 @@ export default function EventsPage() {
                               추가
                             </button>
                           )}
-
                         </div>
                       </div>
                     </div>
                   )
                 )}
-
               </div>
             )}
-
           </section>
         )}
 
