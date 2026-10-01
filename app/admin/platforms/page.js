@@ -578,25 +578,21 @@ export default function AdminPlatformsPage() {
             </div>
 
             {isInstagram && (
-              <div style={styles.instagramFollowCard}>
-                <div>
+              <button
+                type="button"
+                onClick={openInstagramFollowAccount}
+                style={styles.instagramFollowCard}
+              >
+                <span style={styles.instagramAccountWrap}>
                   <span style={styles.instagramSmall}>
                     인스타그램 맞팔계정
                   </span>
-
                   <strong style={styles.instagramAccount}>
                     @{INSTAGRAM_FOLLOW_ACCOUNT}
                   </strong>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={openInstagramFollowAccount}
-                  style={styles.instagramOpenButton}
-                >
-                  계정 열기 ↗
-                </button>
-              </div>
+                </span>
+                <span style={styles.instagramArrow}>↗</span>
+              </button>
             )}
 
             <div style={styles.countGrid}>
@@ -982,6 +978,7 @@ const styles = {
   },
 
   instagramFollowCard: {
+    width: "100%",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -991,6 +988,15 @@ const styles = {
     background: "#edf5df",
     border: "1px solid #d8e8bd",
     marginBottom: "12px",
+    textAlign: "left",
+    cursor: "pointer",
+  },
+
+  instagramAccountWrap: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "2px",
+    minWidth: 0,
   },
 
   instagramSmall: {
@@ -1006,16 +1012,18 @@ const styles = {
     color: "#40552f",
   },
 
-  instagramOpenButton: {
+  instagramArrow: {
     flexShrink: 0,
-    border: "none",
-    borderRadius: "11px",
+    width: "28px",
+    height: "28px",
+    borderRadius: "50%",
     background: "#fff",
-    padding: "9px 10px",
-    color: "#5f744c",
-    fontSize: "9px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#60754e",
+    fontSize: "13px",
     fontWeight: "900",
-    cursor: "pointer",
   },
 
   countGrid: {
