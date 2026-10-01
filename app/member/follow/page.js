@@ -16,27 +16,22 @@ const PLATFORM_INFO = {
     label: "인스타그램",
     icon: "📷",
   },
-
   blog: {
     label: "블로그",
     icon: "📝",
   },
-
   naver_clip: {
     label: "네이버 클립",
     icon: "🎬",
   },
-
   youtube: {
     label: "유튜브",
     icon: "▶️",
   },
-
   tiktok: {
     label: "틱톡",
     icon: "🎵",
   },
-
   today_house: {
     label: "오늘의집",
     icon: "🏠",
@@ -66,6 +61,9 @@ export default function MemberFollowPage() {
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] =
     useState("");
+
+  const [showInstallGuide, setShowInstallGuide] =
+    useState(false);
 
   useEffect(() => {
     initialize();
@@ -133,7 +131,6 @@ export default function MemberFollowPage() {
       setErrorMessage(
         eventResult.error.message
       );
-
       setLoading(false);
       return;
     }
@@ -149,7 +146,6 @@ export default function MemberFollowPage() {
       setErrorMessage(
         platformResult.error.message
       );
-
       setLoading(false);
       return;
     }
@@ -194,7 +190,6 @@ export default function MemberFollowPage() {
       setErrorMessage(
         voteResult.error.message
       );
-
       return;
     }
 
@@ -211,7 +206,6 @@ export default function MemberFollowPage() {
     });
 
     setSelections(nextSelections);
-
     setOriginalSelections(
       nextSelections
     );
@@ -347,25 +341,13 @@ export default function MemberFollowPage() {
               {
                 p_session_token:
                   token,
-
                 p_event_id:
                   event.event_id,
-
                 p_platform:
                   key,
-
                 p_account_value:
                   platform.account_value ||
                   "",
-
-                /*
-                 * DB에는 기존 구조인
-                 * participate / restricted
-                 * 로 저장
-                 *
-                 * 화면에서는 participate를
-                 * "완료"로 표시
-                 */
                 p_vote_status:
                   selectedStatus,
               }
@@ -381,10 +363,8 @@ export default function MemberFollowPage() {
               {
                 p_session_token:
                   token,
-
                 p_event_id:
                   event.event_id,
-
                 p_platform:
                   key,
               }
@@ -443,15 +423,6 @@ export default function MemberFollowPage() {
       value,
       "_blank",
       "noopener,noreferrer"
-    );
-  }
-
-  function getParticipantLinks(
-    platform
-  ) {
-    return (
-      participantLinks[platform] ||
-      []
     );
   }
 
@@ -577,7 +548,6 @@ export default function MemberFollowPage() {
             <div style={styles.eventCard}>
 
               <div>
-
                 <div style={styles.eventLabel}>
                   FOLLOW DAY
                 </div>
@@ -586,7 +556,6 @@ export default function MemberFollowPage() {
                   {event.event_year}년{" "}
                   {event.event_month}월
                 </strong>
-
               </div>
 
               <span
@@ -607,7 +576,6 @@ export default function MemberFollowPage() {
             {/* PERIOD */}
 
             <div style={styles.periodCard}>
-
               <strong>
                 📅 참여 기간
               </strong>
@@ -615,7 +583,6 @@ export default function MemberFollowPage() {
               <span>
                 매월 1일 00:00 ~ 3일 23:59
               </span>
-
             </div>
 
 
@@ -642,9 +609,9 @@ export default function MemberFollowPage() {
                 "instagram";
 
               const links =
-                getParticipantLinks(
+                participantLinks[
                   item.platform
-                );
+                ] || [];
 
               const isLoadingLinks =
                 linksLoading[
@@ -734,7 +701,6 @@ export default function MemberFollowPage() {
                           styles.instagramAccountButton
                         }
                       >
-
                         <strong>
                           @
                           {
@@ -745,7 +711,6 @@ export default function MemberFollowPage() {
                         <span>
                           계정 열기 ↗
                         </span>
-
                       </button>
 
                       <p
@@ -754,17 +719,15 @@ export default function MemberFollowPage() {
                         }
                       >
                         위 맞팔계정을 확인한 뒤
-                        맞팔을 완료하셨다면
+                        맞팔을 완료하셨다면{" "}
                         <b>
-                          {" "}
                           맞팔완료
                         </b>
                         를 눌러주세요.
                         <br />
                         팔로우 제한 등이 있는
-                        경우에는
+                        경우에는{" "}
                         <b>
-                          {" "}
                           제한
                         </b>
                         을 선택해주세요.
@@ -792,7 +755,11 @@ export default function MemberFollowPage() {
                           다른 참여자 링크
                         </strong>
 
-                        <span>
+                        <span
+                          style={
+                            styles.participantCount
+                          }
+                        >
                           {links.length}명
                         </span>
                       </div>
@@ -863,13 +830,21 @@ export default function MemberFollowPage() {
                                     }
                                   >
 
-                                    <strong>
+                                    <strong
+                                      style={
+                                        styles.participantName
+                                      }
+                                    >
                                       {
                                         person.kakao_nickname
                                       }
                                     </strong>
 
-                                    <span>
+                                    <span
+                                      style={
+                                        styles.participantInstagram
+                                      }
+                                    >
                                       @
                                       {
                                         person.instagram_id
@@ -914,8 +889,6 @@ export default function MemberFollowPage() {
                     }
                   >
 
-                    {/* 완료 */}
-
                     <button
                       type="button"
                       disabled={
@@ -955,8 +928,6 @@ export default function MemberFollowPage() {
 
                     </button>
 
-
-                    {/* 제한 */}
 
                     <button
                       type="button"
@@ -1084,8 +1055,7 @@ export default function MemberFollowPage() {
               </strong>
 
               <p>
-                인스타그램은
-                {" "}
+                인스타그램은{" "}
                 <b>
                   @{INSTAGRAM_FOLLOW_ACCOUNT}
                 </b>
@@ -1098,14 +1068,15 @@ export default function MemberFollowPage() {
                 다른 플랫폼은
                 다른 참여자들의 링크를
                 확인한 후 실제로 확인을
-                완료하셨다면
-                <b> 완료</b>를 선택해주세요.
+                완료하셨다면{" "}
+                <b>완료</b>를
+                선택해주세요.
               </p>
 
               <p>
                 링크 확인이 어렵거나
-                참여할 수 없는 경우에는
-                <b> 제한</b>을 선택해주세요.
+                참여할 수 없는 경우에는{" "}
+                <b>제한</b>을 선택해주세요.
               </p>
 
             </div>
@@ -1355,7 +1326,7 @@ const styles = {
     fontSize: "10px",
   },
 
-  participantHeader span: {
+  participantCount: {
     color: "#94a08d",
     fontSize: "9px",
   },
@@ -1419,11 +1390,11 @@ const styles = {
     gap: "2px",
   },
 
-  participantNameAreaStrong: {
+  participantName: {
     fontSize: "10px",
   },
 
-  participantNameAreaSpan: {
+  participantInstagram: {
     color: "#969d91",
     fontSize: "8px",
     overflow: "hidden",
