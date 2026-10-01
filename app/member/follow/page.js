@@ -581,7 +581,7 @@ export default function MemberFollowPage() {
 
               <div>
                 <div style={styles.eventLabel}>
-                  🌱 FOLLOW DAY
+                  FOLLOW DAY
                 </div>
 
                 <strong style={styles.eventTitle}>
@@ -599,7 +599,7 @@ export default function MemberFollowPage() {
                   }
                 >
                   {event.is_open
-                    ? "● 지금 참여 가능"
+                    ? "● 참여 가능"
                     : "마감"}
                 </span>
 
@@ -613,7 +613,7 @@ export default function MemberFollowPage() {
                       opacity: saving ? 0.6 : 1,
                     }}
                   >
-                    {saving ? "저장 중..." : "▣ 저장하기 ♡"}
+                    {saving ? "저장 중..." : "저장하기 ♡"}
                   </button>
                 )}
               </div>
@@ -1274,59 +1274,60 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: "12px",
-    padding: "18px 16px",
+    gap: "14px",
+    padding: "20px 18px",
     borderRadius: "22px",
-    background: "#fffefb",
-    border: "1px solid #e7e7df",
+    background: "#ffffff",
+    border: "1px solid #e5e7df",
     marginBottom: "10px",
-    boxShadow: "0 7px 18px rgba(64, 82, 48, 0.06)",
+    boxShadow: "0 8px 22px rgba(55, 73, 43, 0.07)",
   },
 
   eventLabel: {
-    color: "#91a683",
+    color: "#718a6d",
     fontSize: "8px",
     fontWeight: "900",
-    marginBottom: "6px",
-    letterSpacing: "0.5px",
+    marginBottom: "7px",
+    letterSpacing: "1px",
   },
 
   eventTitle: {
-    fontSize: "18px",
+    fontSize: "19px",
     fontWeight: "950",
-    letterSpacing: "-0.05em",
-    color: "#293a28",
-    paddingBottom: "2px",
-    boxShadow: "inset 0 -7px 0 #edf5dc",
+    letterSpacing: "-0.055em",
+    color: "#20351f",
+    padding: "0 2px 2px 0",
+    boxShadow: "inset 0 -6px 0 #eef5e2",
   },
 
   eventActions: {
     display: "flex",
     alignItems: "center",
-    gap: "6px",
+    gap: "8px",
     flexShrink: 0,
   },
 
   eventSaveButton: {
-    padding: "10px 13px",
-    border: "1px solid #98cb50",
+    padding: "10px 15px",
+    border: "1px solid #9dce59",
     borderRadius: "999px",
-    background: "linear-gradient(180deg, #b9e877 0%, #a7db5c 100%)",
-    color: "#304225",
+    background: "#a9dd5d",
+    color: "#27401f",
     fontSize: "9px",
-    fontWeight: "900",
+    fontWeight: "950",
     cursor: "pointer",
     whiteSpace: "nowrap",
-    boxShadow: "0 5px 12px rgba(122, 164, 62, 0.16)",
+    boxShadow: "0 5px 12px rgba(122, 164, 62, 0.14)",
   },
 
   openBadge: {
-    padding: "8px 10px",
+    padding: "8px 11px",
     borderRadius: "999px",
-    background: "#f0f7e5",
-    color: "#57923b",
+    background: "#f0f6e8",
+    color: "#4e8a38",
     fontSize: "9px",
     fontWeight: "950",
+    whiteSpace: "nowrap",
   },
 
   closedBadge: {
@@ -1341,13 +1342,15 @@ const styles = {
   periodCard: {
     display: "flex",
     justifyContent: "space-between",
+    alignItems: "center",
     gap: "10px",
-    padding: "12px 15px",
-    borderRadius: "15px",
-    background: "#eff4e7",
-    color: "#66745c",
-    fontSize: "10px",
+    padding: "11px 14px",
+    borderRadius: "14px",
+    background: "#f1f5eb",
+    color: "#60715c",
+    fontSize: "9px",
     marginBottom: "13px",
+    border: "1px solid #edf0e8",
   },
 
   todoCard: {
