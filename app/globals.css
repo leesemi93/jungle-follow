@@ -139,3 +139,56 @@ button:disabled { opacity: .6; }
   .card { padding: 30px 21px; border-radius: 26px; }
   h1 { font-size: 29px; }
 }
+/* 🌿 정글맞팔웹 메인 디자인 */
+
+.prettyCard {
+  max-width: 440px;
+  padding: 14px 18px 26px;
+  overflow: hidden;
+  border: 1px solid #e4ead8;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 20px 55px rgba(72, 101, 54, 0.15);
+}
+
+.heroFrame {
+  overflow: hidden;
+  border-radius: 24px;
+  background: #f7f4e8;
+  margin-bottom: 10px;
+}
+
+.heroImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.loginForm {
+  padding: 0 5px;
+}
+
+.prettyCard input,
+.prettyCard .inputWrap {
+  background: #fffef9;
+}
+
+.prettyCard button {
+  background: linear-gradient(135deg, #6f8f4f, #8eaa62);
+  box-shadow: 0 10px 22px rgba(94, 126, 68, 0.24);
+}
+
+.prettyCard .notice {
+  margin-top: 18px;
+}
+
+@media (max-width: 480px) {
+  .prettyCard {
+    padding: 11px 13px 23px;
+    border-radius: 28px;
+  }
+
+  .heroFrame {
+    border-radius: 21px;
+  }
+}
