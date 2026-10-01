@@ -363,12 +363,6 @@ export default function MemberPage() {
     router.replace("/");
   }
 
-  function goAdmin() {
-    if (!hasAdminAccess) return;
-
-    router.push("/admin/dashboard");
-  }
-
   const isSuperAdmin =
     member?.admin_role ===
     "super_admin";
@@ -378,6 +372,12 @@ export default function MemberPage() {
 
   const hasAdminAccess =
     isSuperAdmin || isAdmin;
+
+  function goAdmin() {
+    if (!hasAdminAccess) return;
+
+    router.push("/admin/dashboard");
+  }
 
   if (loading) {
     return (
@@ -401,7 +401,7 @@ export default function MemberPage() {
     <main style={styles.page}>
       <section style={styles.container}>
 
-        {/* 관리자 빠른 메뉴 */}
+        {/* 관리자 모드 */}
 
         {hasAdminAccess && (
           <button
@@ -409,7 +409,7 @@ export default function MemberPage() {
             onClick={goAdmin}
             style={styles.adminQuickButton}
           >
-            👑 관리자
+            👑 관리자 모드
           </button>
         )}
 
@@ -751,23 +751,30 @@ const styles = {
     position: "relative",
   },
 
-  /* 관리자 오른쪽 위 */
+  /* 관리자 모드 - 오른쪽 위 모서리 */
 
   adminQuickButton: {
-    position: "absolute",
-    top: "-18px",
-    right: "0",
-    padding: "8px 12px",
-    border: "1px solid #dfd0ee",
+    position: "fixed",
+    top: "10px",
+    right: "10px",
+    width: "auto",
+    minWidth: "0",
+    maxWidth: "calc(100vw - 20px)",
+    margin: "0",
+    padding: "6px 9px",
+    border: "1px solid #e2d5ee",
     borderRadius: "999px",
-    background: "#ffffff",
-    color: "#66477e",
-    fontSize: "10px",
-    fontWeight: "950",
+    background:
+      "rgba(255,255,255,0.94)",
+    color: "#76558f",
+    fontSize: "9px",
+    lineHeight: "1",
+    fontWeight: "900",
     boxShadow:
-      "0 5px 15px rgba(104,72,135,0.10)",
+      "0 3px 10px rgba(90,70,110,0.08)",
     cursor: "pointer",
-    zIndex: 20,
+    zIndex: 9999,
+    whiteSpace: "nowrap",
   },
 
   top: {
@@ -894,8 +901,6 @@ const styles = {
     fontWeight: "950",
   },
 
-  /* 맞팔데이 */
-
   sectionCard: {
     padding: "22px 20px",
     borderRadius: "25px",
@@ -960,8 +965,6 @@ const styles = {
     fontWeight: "950",
     cursor: "pointer",
   },
-
-  /* 모바일 / 알림 */
 
   phoneCard: {
     padding: "21px 20px",
