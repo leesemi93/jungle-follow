@@ -936,10 +936,13 @@ export default function AdminMembersPage() {
     });
   }, [members, filter, search]);
 
-  const activeCount = members.filter(
-    (member) =>
-      member.status !== "inactive"
-  ).length;
+  const activeCount = members.filter((member) => {
+    if (member.status === "inactive") return false;
+
+    const role = memberRoles[member.id] || "member";
+
+    return role !== "admin" && role !== "super_admin";
+  }).length;
 
   const inactiveCount = members.filter(
     (member) =>
