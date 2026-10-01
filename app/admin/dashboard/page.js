@@ -1252,15 +1252,18 @@ export default function AdminDashboard() {
                 }
               }}
               style={{
-                padding: "10px 14px",
+                padding: "7px 10px",
                 border: "1px solid #b9cf91",
-                borderRadius: "12px",
+                borderRadius: "9px",
                 background: "#eaf4d9",
                 color: "#4f6839",
-                fontSize: "11px",
+                fontSize: "9px",
                 fontWeight: "950",
                 cursor: "pointer",
-                boxShadow: "0 4px 10px rgba(84, 108, 58, 0.10)",
+                boxShadow: "0 3px 7px rgba(84, 108, 58, 0.08)",
+                width: "auto",
+                minWidth: "0",
+                flex: "0 0 auto",
               }}
             >
               🔄 새로고침
