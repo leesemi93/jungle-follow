@@ -50,6 +50,18 @@ export default function MemberPage() {
   const [showInstallGuide, setShowInstallGuide] =
     useState(false);
 
+  const [showPlatformManager, setShowPlatformManager] =
+    useState(false);
+  const [platformLinks, setPlatformLinks] = useState({
+    blog: "",
+    naver_clip: "",
+    youtube: "",
+    tiktok: "",
+    today_house: "",
+  });
+  const [platformSaving, setPlatformSaving] = useState("");
+  const [platformMessage, setPlatformMessage] = useState("");
+
   useEffect(() => {
     loadMember();
   }, []);
@@ -94,9 +106,66 @@ export default function MemberPage() {
 
     setMember(currentMember);
 
-    await checkNotificationStatus(token);
+    await Promise.all([
+      checkNotificationStatus(token),
+      loadMyPlatforms(token),
+    ]);
 
     setLoading(false);
+  }
+
+  async function loadMyPlatforms(token) {
+    const { data, error } = await supabase.rpc(
+      "get_my_follow_platforms",
+      { p_session_token: token }
+    );
+
+    if (error) {
+      console.error("플랫폼 조회 오류:", error);
+      return;
+    }
+
+    const next = {
+      blog: "",
+      naver_clip: "",
+      youtube: "",
+      tiktok: "",
+      today_house: "",
+    };
+
+    (Array.isArray(data) ? data : []).forEach((item) => {
+      if (Object.prototype.hasOwnProperty.call(next, item.platform)) {
+        next[item.platform] = item.account_value || "";
+      }
+    });
+
+    setPlatformLinks(next);
+  }
+
+  async function saveMyPlatform(platform) {
+    const token = localStorage.getItem("jungle_follow_session");
+    if (!token) return;
+
+    setPlatformSaving(platform);
+    setPlatformMessage("");
+
+    const { error } = await supabase.rpc(
+      "member_set_my_platform_link",
+      {
+        p_session_token: token,
+        p_platform: platform,
+        p_account_value: platformLinks[platform] || "",
+      }
+    );
+
+    if (error) {
+      setPlatformMessage(error.message);
+    } else {
+      setPlatformMessage("저장되었습니다 💚");
+      await loadMyPlatforms(token);
+    }
+
+    setPlatformSaving("");
   }
 
   async function checkNotificationStatus(token) {
@@ -678,6 +747,70 @@ export default function MemberPage() {
         </div>
 
 
+        {/* MY PLATFORM MANAGER */}
+
+        <div style={styles.platformManagerCard}>
+          <button
+            type="button"
+            onClick={() => setShowPlatformManager(!showPlatformManager)}
+            style={styles.platformManagerToggle}
+          >
+            <span>🌿 내 플랫폼 관리</span>
+            <span>{showPlatformManager ? "▲" : "▼"}</span>
+          </button>
+
+          {showPlatformManager && (
+            <div style={styles.platformManagerBody}>
+              {[
+                ["blog", "📝", "블로그"],
+                ["naver_clip", "🎬", "네이버 클립"],
+                ["youtube", "▶️", "유튜브"],
+                ["tiktok", "🎵", "틱톡"],
+                ["today_house", "🏠", "오늘의집"],
+              ].map(([key, icon, label]) => (
+                <div key={key} style={styles.platformEditRow}>
+                  <div style={styles.platformEditTitle}>
+                    <span>{icon} {label}</span>
+                    <span style={platformLinks[key] ? styles.registeredBadge : styles.emptyBadge}>
+                      {platformLinks[key] ? "✓ 등록됨" : "+ 추가"}
+                    </span>
+                  </div>
+                  <div style={styles.platformInputRow}>
+                    <input
+                      value={platformLinks[key]}
+                      onChange={(e) =>
+                        setPlatformLinks((prev) => ({
+                          ...prev,
+                          [key]: e.target.value,
+                        }))
+                      }
+                      placeholder="링크를 입력해주세요"
+                      style={styles.platformInput}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => saveMyPlatform(key)}
+                      disabled={platformSaving === key}
+                      style={styles.platformSaveButton}
+                    >
+                      {platformSaving === key ? "저장중" : "저장"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <div style={styles.platformHelp}>
+                링크를 비우고 저장하면 해당 플랫폼이 삭제돼요.
+              </div>
+
+              {platformMessage && (
+                <div style={styles.platformMessage}>{platformMessage}</div>
+              )}
+            </div>
+          )}
+        </div>
+
+
         {/* NOTICE */}
 
         <div style={styles.notice}>
@@ -1122,5 +1255,100 @@ const styles = {
     color: "#778072",
     fontSize: "13px",
     fontWeight: "800",
+  },
+
+  platformManagerCard: {
+    marginTop: "10px",
+    marginBottom: "16px",
+    borderRadius: "20px",
+    background: "#ffffff",
+    border: "1px solid #e6e7df",
+    overflow: "hidden",
+    boxShadow: "0 6px 18px rgba(67, 86, 52, 0.05)",
+  },
+  platformManagerToggle: {
+    width: "100%",
+    padding: "15px 17px",
+    border: "none",
+    background: "#ffffff",
+    color: "#43583a",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    fontSize: "12px",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+  platformManagerBody: {
+    padding: "0 14px 14px",
+  },
+  platformEditRow: {
+    padding: "12px 0",
+    borderTop: "1px solid #edf0e8",
+  },
+  platformEditTitle: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "8px",
+    color: "#3f4f39",
+    fontSize: "10px",
+    fontWeight: "850",
+  },
+  registeredBadge: {
+    padding: "4px 7px",
+    borderRadius: "999px",
+    background: "#edf6df",
+    color: "#607b45",
+    fontSize: "8px",
+    fontWeight: "900",
+  },
+  emptyBadge: {
+    padding: "4px 7px",
+    borderRadius: "999px",
+    background: "#f4f4f0",
+    color: "#8b8f86",
+    fontSize: "8px",
+    fontWeight: "900",
+  },
+  platformInputRow: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) 54px",
+    gap: "7px",
+  },
+  platformInput: {
+    minWidth: 0,
+    padding: "10px 11px",
+    borderRadius: "11px",
+    border: "1px solid #dde5d4",
+    background: "#fafbf8",
+    color: "#3d4938",
+    fontSize: "10px",
+    outline: "none",
+  },
+  platformSaveButton: {
+    border: "none",
+    borderRadius: "11px",
+    background: "#a9d95d",
+    color: "#314426",
+    fontSize: "9px",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+  platformHelp: {
+    marginTop: "7px",
+    color: "#8a9085",
+    fontSize: "8px",
+    lineHeight: "1.5",
+  },
+  platformMessage: {
+    marginTop: "9px",
+    padding: "9px",
+    borderRadius: "10px",
+    background: "#edf6df",
+    color: "#59733e",
+    fontSize: "9px",
+    fontWeight: "850",
+    textAlign: "center",
   },
 };
