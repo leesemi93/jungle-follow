@@ -58,6 +58,9 @@ export default function MemberFollowPage() {
   const [linksLoading, setLinksLoading] =
     useState({});
 
+  const [expandedLinks, setExpandedLinks] =
+    useState({});
+
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] =
     useState("");
@@ -843,17 +846,37 @@ export default function MemberFollowPage() {
                           다른 참여자 링크
                         </strong>
 
-                        <span
-                          style={
-                            styles.participantCount
-                          }
-                        >
-                          {links.length}명
-                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={styles.participantCount}>
+                            {links.length}명
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedLinks((prev) => ({
+                                ...prev,
+                                [item.platform]: !prev[item.platform],
+                              }))
+                            }
+                            style={{
+                              padding: "6px 9px",
+                              borderRadius: "9px",
+                              border: "1px solid #d8e5c8",
+                              background: "#ffffff",
+                              color: "#60744e",
+                              fontSize: "9px",
+                              fontWeight: "900",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {expandedLinks[item.platform] ? "접어두기 ▲" : "펼치기 ▼"}
+                          </button>
+                        </div>
                       </div>
 
 
-                      {isLoadingLinks ? (
+                      {expandedLinks[item.platform] && (
+                        {isLoadingLinks ? (
                         <div
                           style={
                             styles.linksLoading
@@ -902,6 +925,7 @@ export default function MemberFollowPage() {
                           ))}
 
                         </div>
+                      )}
                       )}
 
                     </div>
