@@ -298,8 +298,14 @@ export default function AdminPlatformsPage() {
     );
   }, [members, statusTab]);
 
+  const adminCount = members.filter(
+    (item) => item.vote_status === "admin"
+  ).length;
+
   function getStatusCount(key) {
-    if (key === "all") return counts.total_members;
+    if (key === "all") return members.length || counts.total_members;
+
+    if (key === "admin") return adminCount;
 
     if (key === "participate") {
       return counts.participate_count;
@@ -602,6 +608,15 @@ export default function AdminPlatformsPage() {
                 </span>
                 <strong style={styles.countNumber}>
                   {counts.total_members}
+                </strong>
+              </div>
+
+              <div style={styles.countCard}>
+                <span style={styles.countLabel}>
+                  관리자
+                </span>
+                <strong style={styles.countNumber}>
+                  {adminCount}
                 </strong>
               </div>
 
@@ -1028,7 +1043,7 @@ const styles = {
 
   countGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
     gap: "7px",
     marginBottom: "12px",
   },
