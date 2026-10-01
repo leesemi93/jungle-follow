@@ -946,6 +946,12 @@ export default function AdminMembersPage() {
       member.status === "inactive"
   ).length;
 
+  const adminCount = members.filter((member) => {
+    const role = memberRoles[member.id] || "member";
+
+    return role === "admin" || role === "super_admin";
+  }).length;
+
   return (
     <main
       className="page dashboardPage"
@@ -1179,7 +1185,7 @@ export default function AdminMembersPage() {
               </div>
 
               <div style={subText}>
-                입장 {activeCount}명 · 퇴장{" "}
+                관리자 {adminCount}명 · 입장 {activeCount}명 · 퇴장{" "}
                 {inactiveCount}명
               </div>
             </div>
