@@ -586,19 +586,22 @@ export default function AdminStatusPage() {
             </div>
 
             {isInstagram && (
-              <div style={styles.instagramFollowCard}>
-                <span style={styles.instagramSmall}>
-                  인스타그램 맞팔계정
+              <button
+                type="button"
+                onClick={openInstagramFollowAccount}
+                style={styles.instagramFollowCard}
+              >
+                <span style={styles.instagramAccountWrap}>
+                  <span style={styles.instagramSmall}>
+                    인스타그램 맞팔계정
+                  </span>
+                  <strong style={styles.instagramAccountText}>
+                    @{INSTAGRAM_FOLLOW_ACCOUNT}
+                  </strong>
                 </span>
 
-                <button
-                  type="button"
-                  onClick={openInstagramFollowAccount}
-                  style={styles.instagramAccountButton}
-                >
-                  @{INSTAGRAM_FOLLOW_ACCOUNT} ↗
-                </button>
-              </div>
+                <span style={styles.instagramArrow}>↗</span>
+              </button>
             )}
 
             <div style={styles.countGrid}>
@@ -984,15 +987,25 @@ const styles = {
   },
 
   instagramFollowCard: {
+    width: "100%",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     gap: "12px",
-    padding: "15px 16px",
-    borderRadius: "18px",
+    padding: "13px 15px",
+    borderRadius: "16px",
     background: "#edf5df",
     border: "1px solid #d8e8bd",
     marginBottom: "12px",
+    textAlign: "left",
+    cursor: "pointer",
+  },
+
+  instagramAccountWrap: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "2px",
+    minWidth: 0,
   },
 
   instagramSmall: {
@@ -1000,20 +1013,27 @@ const styles = {
     color: "#718163",
     fontSize: "9px",
     fontWeight: "900",
-    marginBottom: "3px",
   },
 
-  instagramAccountButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    width: "fit-content",
-    border: "none",
-    background: "transparent",
-    padding: "0",
+  instagramAccountText: {
     color: "#40552f",
     fontSize: "13px",
     fontWeight: "950",
-    cursor: "pointer",
+  },
+
+  instagramArrow: {
+    flexShrink: 0,
+    width: "28px",
+    height: "28px",
+    borderRadius: "50%",
+    background: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#60754e",
+    fontSize: "13px",
+    fontWeight: "900",
+    boxShadow: "0 3px 10px rgba(66, 84, 50, 0.08)",
   },
 
   countGrid: {
