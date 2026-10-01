@@ -60,6 +60,7 @@ export default function AdminMembersPage() {
   const [members, setMembers] = useState([]);
   const [memberRoles, setMemberRoles] = useState({});
   const [pushStatus, setPushStatus] = useState({});
+  const [expandedMemberId, setExpandedMemberId] = useState(null);
 
   const [requests, setRequests] = useState([]);
 
@@ -1600,15 +1601,36 @@ export default function AdminMembersPage() {
                       </div>
 
                       {!isInactive && (
+                        <>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedMemberId(
+                              expandedMemberId === member.id ? null : member.id
+                            )
+                          }
+                          style={{
+                            ...softButton,
+                            width: "100%",
+                            marginTop: "12px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <span>회원 관리 메뉴</span>
+                          <span>
+                            {expandedMemberId === member.id ? "▲ 접기" : "▼ 펼치기"}
+                          </span>
+                        </button>
+
+                        {expandedMemberId === member.id && (
                         <div
                           style={{
-                            display:
-                              "flex",
-                            flexWrap:
-                              "wrap",
+                            display: "flex",
+                            flexWrap: "wrap",
                             gap: "7px",
-                            marginTop:
-                              "12px",
+                            marginTop: "8px",
                           }}
                         >
                           <button
@@ -1725,6 +1747,8 @@ export default function AdminMembersPage() {
                             </button>
                           )}
                         </div>
+                        )}
+                        </>
                       )}
 
                       {isInactive && (
