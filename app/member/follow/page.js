@@ -581,7 +581,7 @@ export default function MemberFollowPage() {
 
               <div>
                 <div style={styles.eventLabel}>
-                  FOLLOW DAY
+                  🌱 FOLLOW DAY
                 </div>
 
                 <strong style={styles.eventTitle}>
@@ -599,7 +599,7 @@ export default function MemberFollowPage() {
                   }
                 >
                   {event.is_open
-                    ? "🟢 지금 참여 가능"
+                    ? "● 지금 참여 가능"
                     : "마감"}
                 </span>
 
@@ -613,7 +613,7 @@ export default function MemberFollowPage() {
                       opacity: saving ? 0.6 : 1,
                     }}
                   >
-                    {saving ? "저장 중..." : "저장하기 💚"}
+                    {saving ? "저장 중..." : "▣ 저장하기 ♡"}
                   </button>
                 )}
               </div>
@@ -1274,23 +1274,30 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: "10px",
-    padding: "15px",
-    borderRadius: "18px",
-    background: "#fff",
-    border: "1px solid #e7e6dc",
-    marginBottom: "8px",
+    gap: "12px",
+    padding: "18px 16px",
+    borderRadius: "22px",
+    background: "#fffefb",
+    border: "1px solid #e7e7df",
+    marginBottom: "10px",
+    boxShadow: "0 7px 18px rgba(64, 82, 48, 0.06)",
   },
 
   eventLabel: {
-    color: "#91a46f",
-    fontSize: "9px",
-    fontWeight: "950",
-    marginBottom: "4px",
+    color: "#91a683",
+    fontSize: "8px",
+    fontWeight: "900",
+    marginBottom: "6px",
+    letterSpacing: "0.5px",
   },
 
   eventTitle: {
-    fontSize: "17px",
+    fontSize: "18px",
+    fontWeight: "950",
+    letterSpacing: "-0.05em",
+    color: "#293a28",
+    paddingBottom: "2px",
+    boxShadow: "inset 0 -7px 0 #edf5dc",
   },
 
   eventActions: {
@@ -1301,22 +1308,23 @@ const styles = {
   },
 
   eventSaveButton: {
-    padding: "7px 10px",
-    border: "none",
+    padding: "10px 13px",
+    border: "1px solid #98cb50",
     borderRadius: "999px",
-    background: "#a9d95d",
+    background: "linear-gradient(180deg, #b9e877 0%, #a7db5c 100%)",
     color: "#304225",
     fontSize: "9px",
     fontWeight: "900",
     cursor: "pointer",
     whiteSpace: "nowrap",
+    boxShadow: "0 5px 12px rgba(122, 164, 62, 0.16)",
   },
 
   openBadge: {
-    padding: "6px 9px",
+    padding: "8px 10px",
     borderRadius: "999px",
-    background: "#e7f4d3",
-    color: "#5d773e",
+    background: "#f0f7e5",
+    color: "#57923b",
     fontSize: "9px",
     fontWeight: "950",
   },
