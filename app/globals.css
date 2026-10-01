@@ -1,3 +1,5 @@
+@import url("https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css");
+
 * {
   box-sizing: border-box;
 }
@@ -9,7 +11,7 @@ body {
 }
 
 body {
-  font-family: "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "NanumSquareRound", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   color: #26352c;
   background: #f7f2e7;
   letter-spacing: -0.035em;
@@ -30,9 +32,13 @@ b,
 h1,
 h2,
 h3 {
-  font-family: "Arial Rounded MT Bold", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
-  letter-spacing: -0.055em;
+  font-family: "NanumSquareRoundExtraBold", "NanumSquareRound", "Apple SD Gothic Neo", sans-serif;
+  letter-spacing: -0.045em;
   font-weight: 800;
+}
+
+button {
+  font-family: "NanumSquareRoundBold", "NanumSquareRound", "Apple SD Gothic Neo", sans-serif;
 }
 
 /* =========================
