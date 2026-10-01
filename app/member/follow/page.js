@@ -159,8 +159,7 @@ export default function MemberFollowPage() {
         ? platformResult.data
         : [];
 
-    const visiblePlatformRows =
-      isAdminMember ? [] : platformRows;
+    const visiblePlatformRows = platformRows;
 
     setPlatforms(visiblePlatformRows);
 
@@ -169,7 +168,9 @@ export default function MemberFollowPage() {
         token,
         currentEvent.event_id
       );
+    }
 
+    if (currentEvent?.event_id) {
       await loadParticipantLinks(
         token,
         currentEvent.event_id,
