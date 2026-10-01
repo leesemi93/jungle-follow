@@ -59,6 +59,7 @@ export default function AdminMembersPage() {
 
   const [members, setMembers] = useState([]);
   const [memberRoles, setMemberRoles] = useState({});
+  const [pushStatus, setPushStatus] = useState({});
 
   const [requests, setRequests] = useState([]);
 
@@ -188,6 +189,7 @@ export default function AdminMembersPage() {
       loadMembers(token),
       loadRequests(token),
       loadMemberRoles(token),
+      loadPushStatus(token),
     ]);
   }
 
@@ -277,6 +279,33 @@ export default function AdminMembersPage() {
     });
 
     setMemberRoles(roleMap);
+  }
+
+  async function loadPushStatus(token = adminToken) {
+    if (!token) return;
+
+    const { data, error } = await supabase.rpc(
+      "admin_get_member_push_status",
+      {
+        p_session_token: token,
+      }
+    );
+
+    if (error) {
+      console.error("알림 설정 상태 조회 오류:", error);
+      return;
+    }
+
+    const statusMap = {};
+
+    (data || []).forEach((item) => {
+      statusMap[item.member_id] = {
+        enabled: Boolean(item.notification_enabled),
+        count: Number(item.subscription_count || 0),
+      };
+    });
+
+    setPushStatus(statusMap);
   }
 
   async function approveRequest(request) {
@@ -917,6 +946,23 @@ export default function AdminMembersPage() {
         return false;
       }
 
+      const notificationEnabled =
+        Boolean(pushStatus[member.id]?.enabled);
+
+      if (
+        filter === "notification_on" &&
+        !notificationEnabled
+      ) {
+        return false;
+      }
+
+      if (
+        filter === "notification_off" &&
+        notificationEnabled
+      ) {
+        return false;
+      }
+
       if (!keyword) return true;
 
       const nickname = (
@@ -934,7 +980,7 @@ export default function AdminMembersPage() {
         instagram.includes(keyword)
       );
     });
-  }, [members, filter, search]);
+  }, [members, filter, search, pushStatus]);
 
   const activeCount = members.filter((member) => {
     if (member.status === "inactive") return false;
@@ -954,6 +1000,18 @@ export default function AdminMembersPage() {
 
     return role === "admin" || role === "super_admin";
   }).length;
+
+  const notificationOnCount = members.filter(
+    (member) =>
+      member.status !== "inactive" &&
+      Boolean(pushStatus[member.id]?.enabled)
+  ).length;
+
+  const notificationOffCount = members.filter(
+    (member) =>
+      member.status !== "inactive" &&
+      !Boolean(pushStatus[member.id]?.enabled)
+  ).length;
 
   return (
     <main
@@ -1190,6 +1248,9 @@ export default function AdminMembersPage() {
               <div style={subText}>
                 관리자 {adminCount}명 · 입장 {activeCount}명 · 퇴장{" "}
                 {inactiveCount}명
+                <br />
+                🔔 알림 ON {notificationOnCount}명 · 🔕 알림 OFF{" "}
+                {notificationOffCount}명
               </div>
             </div>
 
@@ -1336,6 +1397,8 @@ export default function AdminMembersPage() {
               ["all", "전체"],
               ["active", "입장"],
               ["inactive", "퇴장"],
+              ["notification_on", "🔔 알림 ON"],
+              ["notification_off", "🔕 알림 OFF"],
             ].map(([key, label]) => (
               <button
                 key={key}
@@ -1473,6 +1536,25 @@ export default function AdminMembersPage() {
                               {isInactive
                                 ? "퇴장"
                                 : "입장"}
+                            </span>
+
+                            <span
+                              style={{
+                                padding: "4px 8px",
+                                borderRadius: "999px",
+                                background: pushStatus[member.id]?.enabled
+                                  ? "#e8f5dc"
+                                  : "#f1f1ed",
+                                color: pushStatus[member.id]?.enabled
+                                  ? "#58763d"
+                                  : "#85877f",
+                                fontSize: "9px",
+                                fontWeight: "900",
+                              }}
+                            >
+                              {pushStatus[member.id]?.enabled
+                                ? "🔔 알림 ON"
+                                : "🔕 알림 OFF"}
                             </span>
 
                             {isSuperAdmin && (
