@@ -392,10 +392,6 @@ export default function MemberFollowPage() {
       });
 
       setMessage("저장완료 💚");
-
-      window.setTimeout(() => {
-        setMessage("");
-      }, 1800);
     } catch (error) {
       setErrorMessage(
         error?.message ||
@@ -1131,6 +1127,13 @@ export default function MemberFollowPage() {
                 <div style={styles.saveToast}>
                   <div style={styles.saveToastIcon}>✓</div>
                   <div style={styles.saveToastText}>{message}</div>
+                  <button
+                    type="button"
+                    onClick={() => setMessage("")}
+                    style={styles.saveToastClose}
+                  >
+                    확인
+                  </button>
                 </div>
               </div>
             )}
@@ -1820,6 +1823,19 @@ const styles = {
     color: "#3e5532",
     fontSize: "14px",
     fontWeight: "900",
+  },
+
+  saveToastClose: {
+    width: "100%",
+    marginTop: "14px",
+    padding: "10px 14px",
+    border: "none",
+    borderRadius: "11px",
+    background: "#a9d95d",
+    color: "#314426",
+    fontSize: "11px",
+    fontWeight: "900",
+    cursor: "pointer",
   },
 
   saveSuccessBox: {
