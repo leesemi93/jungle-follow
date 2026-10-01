@@ -94,6 +94,22 @@ export default function AdminMembersPage() {
   const [editingMemberId, setEditingMemberId] =
     useState(null);
 
+  const [profileEditingId, setProfileEditingId] =
+    useState(null);
+  const [profileNickname, setProfileNickname] =
+    useState("");
+  const [profileInstagram, setProfileInstagram] =
+    useState("");
+  const [profileSaving, setProfileSaving] =
+    useState(false);
+
+  const [historyMemberId, setHistoryMemberId] =
+    useState(null);
+  const [profileHistory, setProfileHistory] =
+    useState([]);
+  const [historyLoading, setHistoryLoading] =
+    useState(false);
+
   const [editingLinks, setEditingLinks] =
     useState(EMPTY_LINKS);
 
@@ -624,6 +640,99 @@ export default function AdminMembersPage() {
     await refreshAll(adminToken);
 
     setActionLoadingId(null);
+  }
+
+  function openProfileEditor(member) {
+    if (profileEditingId === member.id) {
+      setProfileEditingId(null);
+      return;
+    }
+
+    setProfileEditingId(member.id);
+    setProfileNickname(member.kakao_nickname || "");
+    setProfileInstagram(member.instagram_id || "");
+    setHistoryMemberId(null);
+  }
+
+  async function saveProfile(member) {
+    const nickname = profileNickname.trim();
+    const instagram = normalizeInstagram(profileInstagram);
+
+    if (!nickname || !instagram) {
+      setErrorMessage("닉네임과 인스타그램 아이디를 모두 입력해주세요.");
+      return;
+    }
+
+    setProfileSaving(true);
+    setMessage("");
+    setErrorMessage("");
+
+    const { error } = await supabase.rpc(
+      "admin_update_member_profile",
+      {
+        p_session_token: adminToken,
+        p_member_id: member.id,
+        p_kakao_nickname: nickname,
+        p_instagram_id: instagram,
+      }
+    );
+
+    if (error) {
+      setErrorMessage(error.message || "회원정보 수정 중 오류가 발생했습니다.");
+      setProfileSaving(false);
+      return;
+    }
+
+    setProfileEditingId(null);
+    setMessage(`${nickname}님의 회원정보를 수정했습니다. 💚`);
+    await refreshAll(adminToken);
+    setProfileSaving(false);
+  }
+
+  async function openProfileHistory(member) {
+    if (historyMemberId === member.id) {
+      setHistoryMemberId(null);
+      setProfileHistory([]);
+      return;
+    }
+
+    setHistoryMemberId(member.id);
+    setProfileEditingId(null);
+    setHistoryLoading(true);
+    setProfileHistory([]);
+    setMessage("");
+    setErrorMessage("");
+
+    const { data, error } = await supabase.rpc(
+      "admin_get_member_profile_history",
+      {
+        p_session_token: adminToken,
+        p_member_id: member.id,
+      }
+    );
+
+    if (error) {
+      setErrorMessage(error.message || "변경내역을 불러오지 못했습니다.");
+      setHistoryMemberId(null);
+      setHistoryLoading(false);
+      return;
+    }
+
+    setProfileHistory(data || []);
+    setHistoryLoading(false);
+  }
+
+  function formatHistoryDate(value) {
+    if (!value) return "-";
+
+    return new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(value));
   }
 
   async function makeAdmin(member) {
@@ -1289,6 +1398,14 @@ export default function AdminMembersPage() {
                     editingMemberId ===
                     member.id;
 
+                  const isProfileEditing =
+                    profileEditingId ===
+                    member.id;
+
+                  const isHistoryOpen =
+                    historyMemberId ===
+                    member.id;
+
                   return (
                     <div
                       key={member.id}
@@ -1403,6 +1520,30 @@ export default function AdminMembersPage() {
                               "12px",
                           }}
                         >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openProfileEditor(member)
+                            }
+                            style={softButton}
+                          >
+                            {isProfileEditing
+                              ? "수정 닫기"
+                              : "회원정보 수정"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openProfileHistory(member)
+                            }
+                            style={softButton}
+                          >
+                            {isHistoryOpen
+                              ? "내역 닫기"
+                              : "변경내역"}
+                          </button>
+
                           <button
                             type="button"
                             onClick={() =>
@@ -1522,6 +1663,120 @@ export default function AdminMembersPage() {
                               ? "처리 중..."
                               : "재입장"}
                           </button>
+                        </div>
+                      )}
+
+                      {isProfileEditing && (
+                        <div style={editorBox}>
+                          <div style={formTitle}>
+                            회원정보 수정
+                          </div>
+
+                          <div style={fieldLabel}>
+                            카카오톡 닉네임
+                          </div>
+                          <input
+                            value={profileNickname}
+                            onChange={(event) =>
+                              setProfileNickname(event.target.value)
+                            }
+                            style={inputStyle}
+                          />
+
+                          <div
+                            style={{
+                              ...fieldLabel,
+                              marginTop: "10px",
+                            }}
+                          >
+                            인스타그램 아이디
+                          </div>
+                          <input
+                            value={profileInstagram}
+                            onChange={(event) =>
+                              setProfileInstagram(event.target.value)
+                            }
+                            style={inputStyle}
+                          />
+
+                          <button
+                            type="button"
+                            disabled={profileSaving}
+                            onClick={() => saveProfile(member)}
+                            style={mainButton}
+                          >
+                            {profileSaving
+                              ? "저장 중..."
+                              : "변경사항 저장"}
+                          </button>
+                        </div>
+                      )}
+
+                      {isHistoryOpen && (
+                        <div style={editorBox}>
+                          <div style={formTitle}>
+                            회원정보 변경내역
+                          </div>
+
+                          {historyLoading ? (
+                            <div style={centerText}>
+                              변경내역 불러오는 중...
+                            </div>
+                          ) : profileHistory.length === 0 ? (
+                            <div style={centerText}>
+                              아직 변경내역이 없습니다.
+                            </div>
+                          ) : (
+                            <div
+                              style={{
+                                display: "grid",
+                                gap: "9px",
+                                marginTop: "10px",
+                              }}
+                            >
+                              {profileHistory.map((history) => (
+                                <div
+                                  key={history.history_id}
+                                  style={historyCard}
+                                >
+                                  <div style={historyDate}>
+                                    {formatHistoryDate(history.created_at)}
+                                    {history.changed_by_nickname
+                                      ? ` · ${history.changed_by_nickname}`
+                                      : ""}
+                                  </div>
+
+                                  {history.old_kakao_nickname !==
+                                    history.new_kakao_nickname && (
+                                    <div style={historyLine}>
+                                      <b>닉네임</b>{" "}
+                                      {history.old_kakao_nickname || "-"}
+                                      {" → "}
+                                      {history.new_kakao_nickname || "-"}
+                                    </div>
+                                  )}
+
+                                  {normalizeInstagram(
+                                    history.old_instagram_id
+                                  ) !==
+                                    normalizeInstagram(
+                                      history.new_instagram_id
+                                    ) && (
+                                    <div style={historyLine}>
+                                      <b>인스타</b>{" "}
+                                      @{normalizeInstagram(
+                                        history.old_instagram_id
+                                      )}
+                                      {" → "}
+                                      @{normalizeInstagram(
+                                        history.new_instagram_id
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -1750,6 +2005,26 @@ const subText = {
   marginTop: "5px",
   fontSize: "13px",
   color: "#76806f",
+};
+
+const historyCard = {
+  padding: "11px 12px",
+  borderRadius: "14px",
+  background: "#fff",
+  border: "1px solid #e6e5db",
+};
+
+const historyDate = {
+  fontSize: "10px",
+  fontWeight: "800",
+  color: "#8a8f82",
+  marginBottom: "6px",
+};
+
+const historyLine = {
+  fontSize: "12px",
+  lineHeight: 1.7,
+  color: "#4f5949",
 };
 
 const successBox = {
