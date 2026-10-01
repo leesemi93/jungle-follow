@@ -1612,10 +1612,14 @@ export default function AdminMembersPage() {
                           style={{
                             ...softButton,
                             width: "100%",
-                            marginTop: "12px",
+                            marginTop: "8px",
+                            padding: "8px 11px",
+                            minHeight: "36px",
+                            borderRadius: "11px",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
+                            fontSize: "11px",
                           }}
                         >
                           <span>회원 관리 메뉴</span>
