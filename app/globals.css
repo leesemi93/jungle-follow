@@ -9,9 +9,28 @@ body {
 }
 
 body {
-  font-family: Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-family: "Pretendard Variable", Pretendard, "SUIT Variable", SUIT, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   color: #26352c;
   background: #f7f2e7;
+  letter-spacing: -0.025em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: -0.025em;
+}
+
+strong,
+b,
+h1,
+h2,
+h3 {
+  letter-spacing: -0.045em;
 }
 
 /* =========================
