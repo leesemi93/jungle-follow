@@ -1,4 +1,18 @@
-@import url("https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css");
+@font-face {
+  font-family: "JungleCute";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Cafe24SsurroundAir/Cafe24SsurroundAir.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JungleCute";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Cafe24Ssurround/Cafe24Ssurround.woff2") format("woff2");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 * {
   box-sizing: border-box;
@@ -11,7 +25,7 @@ body {
 }
 
 body {
-  font-family: "NanumSquareRound", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-family: "JungleCute", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   color: #26352c;
   background: #f7f2e7;
   letter-spacing: -0.035em;
@@ -32,13 +46,13 @@ b,
 h1,
 h2,
 h3 {
-  font-family: "NanumSquareRoundExtraBold", "NanumSquareRound", "Apple SD Gothic Neo", sans-serif;
+  font-family: "JungleCute", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   letter-spacing: -0.045em;
   font-weight: 800;
 }
 
 button {
-  font-family: "NanumSquareRoundBold", "NanumSquareRound", "Apple SD Gothic Neo", sans-serif;
+  font-family: "JungleCute", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 }
 
 /* =========================
