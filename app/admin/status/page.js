@@ -579,22 +579,16 @@ export default function AdminStatusPage() {
 
             {isInstagram && (
               <div style={styles.instagramFollowCard}>
-                <div>
-                  <span style={styles.instagramSmall}>
-                    인스타그램 맞팔계정
-                  </span>
-
-                  <strong style={styles.instagramAccount}>
-                    @{INSTAGRAM_FOLLOW_ACCOUNT}
-                  </strong>
-                </div>
+                <span style={styles.instagramSmall}>
+                  인스타그램 맞팔계정
+                </span>
 
                 <button
                   type="button"
                   onClick={openInstagramFollowAccount}
-                  style={styles.instagramOpenButton}
+                  style={styles.instagramAccountButton}
                 >
-                  계정 열기 ↗
+                  @{INSTAGRAM_FOLLOW_ACCOUNT} ↗
                 </button>
               </div>
             )}
@@ -1001,20 +995,16 @@ const styles = {
     marginBottom: "3px",
   },
 
-  instagramAccount: {
-    fontSize: "13px",
-    color: "#40552f",
-  },
-
-  instagramOpenButton: {
-    flexShrink: 0,
+  instagramAccountButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    width: "fit-content",
     border: "none",
-    borderRadius: "11px",
-    background: "#fff",
-    padding: "9px 10px",
-    color: "#5f744c",
-    fontSize: "9px",
-    fontWeight: "900",
+    background: "transparent",
+    padding: "0",
+    color: "#40552f",
+    fontSize: "13px",
+    fontWeight: "950",
     cursor: "pointer",
   },
 
