@@ -139,13 +139,19 @@ export default function MembersPage() {
     setSaving(false);
   }
 
-  async function pauseMember(member) {
+  async function restrictMember(member) {
     const reason = window.prompt(
-      `${member.kakao_nickname}님 일시정지 사유를 입력해주세요.`,
-      ""
+      `${member.kakao_nickname}님의 제한 사유를 입력해주세요.`,
+      "인스타 제한"
     );
 
     if (reason === null) return;
+
+    const ok = window.confirm(
+      `${member.kakao_nickname}님을 제한 상태로 변경할까요?`
+    );
+
+    if (!ok) return;
 
     setActionLoading(member.id);
     setMessage("");
@@ -155,57 +161,26 @@ export default function MembersPage() {
       {
         p_session_token: adminToken,
         p_member_id: member.id,
-        p_reason: reason.trim() || null,
+        p_reason:
+          reason.trim() || "인스타 제한",
       }
     );
 
     if (error) {
       setMessage(
-        `일시정지 실패: ${error.message}`
+        `제한 처리 실패: ${error.message}`
       );
+
       setActionLoading("");
       return;
     }
 
     setMessage(
-      `${member.kakao_nickname}님 일시정지 완료`
+      `${member.kakao_nickname}님 제한 처리 완료`
     );
 
     await loadMembers(adminToken);
-    setActionLoading("");
-  }
 
-  async function resumeMember(member) {
-    const ok = window.confirm(
-      `${member.kakao_nickname}님의 활동을 재개할까요?`
-    );
-
-    if (!ok) return;
-
-    setActionLoading(member.id);
-    setMessage("");
-
-    const { error } = await supabase.rpc(
-      "resume_member",
-      {
-        p_session_token: adminToken,
-        p_member_id: member.id,
-      }
-    );
-
-    if (error) {
-      setMessage(
-        `활동 재개 실패: ${error.message}`
-      );
-      setActionLoading("");
-      return;
-    }
-
-    setMessage(
-      `${member.kakao_nickname}님 활동 재개 완료 💚`
-    );
-
-    await loadMembers(adminToken);
     setActionLoading("");
   }
 
@@ -247,6 +222,7 @@ export default function MembersPage() {
       setMessage(
         `퇴장 처리 실패: ${error.message}`
       );
+
       setActionLoading("");
       return;
     }
@@ -256,6 +232,7 @@ export default function MembersPage() {
     );
 
     await loadMembers(adminToken);
+
     setActionLoading("");
   }
 
@@ -289,6 +266,7 @@ export default function MembersPage() {
       setMessage(
         `재입장 실패: ${error.message}`
       );
+
       setActionLoading("");
       return;
     }
@@ -298,6 +276,7 @@ export default function MembersPage() {
     );
 
     await loadMembers(adminToken);
+
     setActionLoading("");
   }
 
@@ -337,7 +316,7 @@ export default function MembersPage() {
 
   function getStatusText(status) {
     if (status === "active") return "활동중";
-    if (status === "paused") return "일시정지";
+    if (status === "paused") return "제한";
     if (status === "inactive") return "퇴장";
 
     return status || "-";
@@ -361,11 +340,9 @@ export default function MembersPage() {
 
   return (
     <main className="page dashboardPage">
-
       <section className="dashboard">
 
         <div className="memberPageHeader">
-
           <button
             type="button"
             className="backButton"
@@ -389,15 +366,12 @@ export default function MembersPage() {
               정글맞팔 회원을 등록하고 관리해요.
             </p>
           </div>
-
         </div>
 
         <section className="memberAdminCard">
-
           <h2>새 회원 등록</h2>
 
           <form onSubmit={addMember}>
-
             <label>카톡방 닉네임</label>
 
             <input
@@ -444,7 +418,6 @@ export default function MembersPage() {
                 ? "등록 중..."
                 : "회원 등록하기"}
             </button>
-
           </form>
 
           {message && (
@@ -452,13 +425,10 @@ export default function MembersPage() {
               {message}
             </p>
           )}
-
         </section>
 
         <section className="memberAdminCard">
-
           <div className="memberListTop">
-
             <div>
               <h2>회원 목록</h2>
 
@@ -477,7 +447,6 @@ export default function MembersPage() {
             >
               ↻ 새로고침
             </button>
-
           </div>
 
           <div className="memberSearchWrap">
@@ -493,7 +462,6 @@ export default function MembersPage() {
           </div>
 
           <div className="memberFilters">
-
             <button
               type="button"
               className={
@@ -533,7 +501,7 @@ export default function MembersPage() {
                 setFilter("paused")
               }
             >
-              일시정지
+              제한
             </button>
 
             <button
@@ -549,7 +517,6 @@ export default function MembersPage() {
             >
               퇴장
             </button>
-
           </div>
 
           {listError && (
@@ -559,43 +526,34 @@ export default function MembersPage() {
           )}
 
           {listLoading ? (
-
             <div className="emptyMembers">
               <span>🌿</span>
               <strong>
                 회원 목록 불러오는 중...
               </strong>
             </div>
-
           ) : filteredMembers.length === 0 ? (
-
             <div className="emptyMembers">
               <span>🐯</span>
               <strong>
                 표시할 회원이 없어요.
               </strong>
             </div>
-
           ) : (
-
             <div className="membersList">
-
               {filteredMembers.map(
                 (member) => (
                   <div
                     className="memberItem"
                     key={member.id}
                   >
-
                     <div className="memberAvatar">
                       {member.kakao_nickname
                         ?.charAt(0) || "🌿"}
                     </div>
 
                     <div className="memberInfo">
-
                       <div className="memberNameRow">
-
                         <strong>
                           {member.kakao_nickname}
                         </strong>
@@ -609,7 +567,6 @@ export default function MembersPage() {
                             member.status
                           )}
                         </span>
-
                       </div>
 
                       <p>
@@ -624,8 +581,7 @@ export default function MembersPage() {
 
                       <div className="memberActions">
 
-                        {member.status ===
-                          "active" && (
+                        {member.status === "active" && (
                           <>
                             <button
                               type="button"
@@ -635,10 +591,10 @@ export default function MembersPage() {
                                 member.id
                               }
                               onClick={() =>
-                                pauseMember(member)
+                                restrictMember(member)
                               }
                             >
-                              일시정지
+                              제한
                             </button>
 
                             <button
@@ -657,41 +613,23 @@ export default function MembersPage() {
                           </>
                         )}
 
-                        {member.status ===
-                          "paused" && (
-                          <>
-                            <button
-                              type="button"
-                              className="memberAction resume"
-                              disabled={
-                                actionLoading ===
-                                member.id
-                              }
-                              onClick={() =>
-                                resumeMember(member)
-                              }
-                            >
-                              활동 재개
-                            </button>
-
-                            <button
-                              type="button"
-                              className="memberAction leave"
-                              disabled={
-                                actionLoading ===
-                                member.id
-                              }
-                              onClick={() =>
-                                leaveMember(member)
-                              }
-                            >
-                              퇴장
-                            </button>
-                          </>
+                        {member.status === "paused" && (
+                          <button
+                            type="button"
+                            className="memberAction leave"
+                            disabled={
+                              actionLoading ===
+                              member.id
+                            }
+                            onClick={() =>
+                              leaveMember(member)
+                            }
+                          >
+                            퇴장
+                          </button>
                         )}
 
-                        {member.status ===
-                          "inactive" && (
+                        {member.status === "inactive" && (
                           <button
                             type="button"
                             className="memberAction rejoin"
@@ -708,21 +646,15 @@ export default function MembersPage() {
                         )}
 
                       </div>
-
                     </div>
-
                   </div>
                 )
               )}
-
             </div>
-
           )}
-
         </section>
 
       </section>
-
     </main>
   );
 }
