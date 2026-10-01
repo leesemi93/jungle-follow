@@ -602,7 +602,9 @@ export default function MemberFollowPage() {
                     ? "● 참여 가능"
                     : "마감"}
                 </span>
+              </div>
 
+              <div style={styles.eventSaveArea}>
                 {event.is_open && (
                   <button
                     type="button"
@@ -613,7 +615,7 @@ export default function MemberFollowPage() {
                       opacity: saving ? 0.6 : 1,
                     }}
                   >
-                    {saving ? "저장 중..." : "저장하기 ♡"}
+                    {saving ? "저장 중..." : "투표 저장하기 ♡"}
                   </button>
                 )}
               </div>
@@ -1271,10 +1273,10 @@ const styles = {
   },
 
   eventCard: {
-    display: "flex",
-    justifyContent: "space-between",
+    display: "grid",
+    gridTemplateColumns: "1.15fr 0.75fr 1fr",
     alignItems: "center",
-    gap: "14px",
+    gap: "10px",
     padding: "20px 18px",
     borderRadius: "22px",
     background: "#ffffff",
@@ -1303,8 +1305,15 @@ const styles = {
   eventActions: {
     display: "flex",
     alignItems: "center",
-    gap: "8px",
-    flexShrink: 0,
+    justifyContent: "center",
+    minWidth: 0,
+  },
+
+  eventSaveArea: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    minWidth: 0,
   },
 
   eventSaveButton: {
