@@ -53,12 +53,12 @@ export default function AdminEventsPage() {
       { key: "all", label: "전체" },
       {
         key: "participate",
-        label: isInstagram ? "맞팔완료" : "참여",
+        label: isInstagram ? "맞팔완료" : "완료",
       },
       { key: "restricted", label: "제한" },
       {
         key: "not_voted",
-        label: isInstagram ? "미투표" : "미참여",
+        label: isInstagram ? "미투표" : "미완료",
       },
     ],
     [isInstagram]
@@ -314,14 +314,14 @@ export default function AdminEventsPage() {
 
   function getStatusLabel(status) {
     if (status === "participate") {
-      return isInstagram ? "맞팔완료" : "참여";
+      return isInstagram ? "맞팔완료" : "완료";
     }
 
     if (status === "restricted") {
       return "제한";
     }
 
-    return isInstagram ? "미투표" : "미참여";
+    return isInstagram ? "미투표" : "미완료";
   }
 
   function statusStyle(status) {
@@ -611,7 +611,7 @@ export default function AdminEventsPage() {
 
               <div style={styles.countCard}>
                 <span style={styles.countLabel}>
-                  {isInstagram ? "맞팔완료" : "참여"}
+                  {isInstagram ? "맞팔완료" : "완료"}
                 </span>
                 <strong style={styles.countNumber}>
                   {counts.participate_count}
@@ -629,7 +629,7 @@ export default function AdminEventsPage() {
 
               <div style={styles.countCard}>
                 <span style={styles.countLabel}>
-                  {isInstagram ? "미투표" : "미참여"}
+                  {isInstagram ? "미투표" : "미완료"}
                 </span>
                 <strong style={styles.countNumber}>
                   {counts.not_voted_count}
