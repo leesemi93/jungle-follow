@@ -586,6 +586,74 @@ export default function MemberFollowPage() {
             </div>
 
 
+            {/* MY TODO SUMMARY */}
+
+            <div style={styles.todoCard}>
+              <div style={styles.todoTop}>
+                <div>
+                  <div style={styles.todoLabel}>
+                    MY FOLLOW
+                  </div>
+                  <strong style={styles.todoTitle}>
+                    내가 해야 할 곳
+                  </strong>
+                </div>
+
+                <span style={styles.todoCount}>
+                  {platforms.filter(
+                    (item) => !selections[item.platform]
+                  ).length}
+                  개 남음
+                </span>
+              </div>
+
+              <div style={styles.todoChips}>
+                {platforms.map((item) => {
+                  const info =
+                    PLATFORM_INFO[item.platform] || {
+                      label: item.platform,
+                      icon: "🌿",
+                    };
+
+                  const status =
+                    selections[item.platform];
+
+                  return (
+                    <div
+                      key={`todo-${item.platform}`}
+                      style={{
+                        ...styles.todoChip,
+                        ...(status
+                          ? styles.todoChipDone
+                          : styles.todoChipPending),
+                      }}
+                    >
+                      <span>{info.icon}</span>
+                      <span>{info.label}</span>
+                      <b style={styles.todoStatus}>
+                        {status === "participate"
+                          ? item.platform === "instagram"
+                            ? "맞팔완료"
+                            : "완료"
+                          : status === "restricted"
+                            ? "제한"
+                            : "해야함"}
+                      </b>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {platforms.every(
+                (item) => selections[item.platform]
+              ) && (
+                <div style={styles.todoAllDone}>
+                  💚 이번 달 해야 할 곳을 모두 선택했어요!
+                </div>
+              )}
+            </div>
+
+
             {/* PLATFORMS */}
 
             {platforms.map((item) => {
@@ -1168,6 +1236,94 @@ const styles = {
     color: "#66745c",
     fontSize: "10px",
     marginBottom: "13px",
+  },
+
+  todoCard: {
+    marginTop: "12px",
+    marginBottom: "12px",
+    padding: "14px",
+    borderRadius: "18px",
+    background: "#ffffff",
+    border: "1px solid #e1e7d9",
+    boxShadow: "0 7px 18px rgba(76, 96, 55, 0.06)",
+  },
+
+  todoTop: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "10px",
+    marginBottom: "11px",
+  },
+
+  todoLabel: {
+    marginBottom: "3px",
+    color: "#91a66f",
+    fontSize: "7px",
+    fontWeight: "950",
+    letterSpacing: "1.2px",
+  },
+
+  todoTitle: {
+    color: "#34432f",
+    fontSize: "13px",
+    fontWeight: "950",
+  },
+
+  todoCount: {
+    padding: "5px 9px",
+    borderRadius: "999px",
+    background: "#f1f6e8",
+    color: "#71845d",
+    fontSize: "9px",
+    fontWeight: "900",
+    whiteSpace: "nowrap",
+  },
+
+  todoChips: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "7px",
+  },
+
+  todoChip: {
+    minWidth: 0,
+    padding: "9px 10px",
+    borderRadius: "12px",
+    display: "grid",
+    gridTemplateColumns: "20px minmax(0, 1fr) auto",
+    alignItems: "center",
+    gap: "5px",
+    fontSize: "9px",
+    fontWeight: "850",
+  },
+
+  todoChipPending: {
+    background: "#fff9ed",
+    border: "1px solid #f1dfb6",
+    color: "#625944",
+  },
+
+  todoChipDone: {
+    background: "#f0f7e5",
+    border: "1px solid #dbe9c7",
+    color: "#526743",
+  },
+
+  todoStatus: {
+    fontSize: "8px",
+    whiteSpace: "nowrap",
+  },
+
+  todoAllDone: {
+    marginTop: "9px",
+    padding: "9px",
+    borderRadius: "11px",
+    background: "#eaf6d9",
+    color: "#56713e",
+    textAlign: "center",
+    fontSize: "9px",
+    fontWeight: "900",
   },
 
   platformCard: {
