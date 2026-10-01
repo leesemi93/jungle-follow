@@ -28,6 +28,7 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [actionLoading, setActionLoading] = useState("");
 
   useEffect(() => {
     checkAdmin();
@@ -95,12 +96,7 @@ export default function MembersPage() {
   async function addMember(e) {
     e.preventDefault();
 
-    if (!adminToken) {
-      setMessage(
-        "관리자 로그인 정보를 확인해주세요."
-      );
-      return;
-    }
+    if (!adminToken) return;
 
     setSaving(true);
     setMessage("");
@@ -143,6 +139,168 @@ export default function MembersPage() {
     setSaving(false);
   }
 
+  async function pauseMember(member) {
+    const reason = window.prompt(
+      `${member.kakao_nickname}님 일시정지 사유를 입력해주세요.`,
+      ""
+    );
+
+    if (reason === null) return;
+
+    setActionLoading(member.id);
+    setMessage("");
+
+    const { error } = await supabase.rpc(
+      "pause_member",
+      {
+        p_session_token: adminToken,
+        p_member_id: member.id,
+        p_reason: reason.trim() || null,
+      }
+    );
+
+    if (error) {
+      setMessage(
+        `일시정지 실패: ${error.message}`
+      );
+      setActionLoading("");
+      return;
+    }
+
+    setMessage(
+      `${member.kakao_nickname}님 일시정지 완료`
+    );
+
+    await loadMembers(adminToken);
+    setActionLoading("");
+  }
+
+  async function resumeMember(member) {
+    const ok = window.confirm(
+      `${member.kakao_nickname}님의 활동을 재개할까요?`
+    );
+
+    if (!ok) return;
+
+    setActionLoading(member.id);
+    setMessage("");
+
+    const { error } = await supabase.rpc(
+      "resume_member",
+      {
+        p_session_token: adminToken,
+        p_member_id: member.id,
+      }
+    );
+
+    if (error) {
+      setMessage(
+        `활동 재개 실패: ${error.message}`
+      );
+      setActionLoading("");
+      return;
+    }
+
+    setMessage(
+      `${member.kakao_nickname}님 활동 재개 완료 💚`
+    );
+
+    await loadMembers(adminToken);
+    setActionLoading("");
+  }
+
+  async function leaveMember(member) {
+    const reason = window.prompt(
+      `${member.kakao_nickname}님 퇴장 사유를 입력해주세요.`,
+      ""
+    );
+
+    if (reason === null) return;
+
+    const memoValue = window.prompt(
+      "관리자 메모가 있으면 입력해주세요.\n없으면 비워두고 확인을 눌러주세요.",
+      ""
+    );
+
+    if (memoValue === null) return;
+
+    const ok = window.confirm(
+      `${member.kakao_nickname}님을 퇴장 처리할까요?\n\n회원 기록은 삭제되지 않고 보관됩니다.`
+    );
+
+    if (!ok) return;
+
+    setActionLoading(member.id);
+    setMessage("");
+
+    const { error } = await supabase.rpc(
+      "leave_member",
+      {
+        p_session_token: adminToken,
+        p_member_id: member.id,
+        p_reason: reason.trim() || null,
+        p_memo: memoValue.trim() || null,
+      }
+    );
+
+    if (error) {
+      setMessage(
+        `퇴장 처리 실패: ${error.message}`
+      );
+      setActionLoading("");
+      return;
+    }
+
+    setMessage(
+      `${member.kakao_nickname}님 퇴장 처리 완료`
+    );
+
+    await loadMembers(adminToken);
+    setActionLoading("");
+  }
+
+  async function rejoinMember(member) {
+    const memoValue = window.prompt(
+      `${member.kakao_nickname}님 재입장 메모가 있으면 입력해주세요.`,
+      ""
+    );
+
+    if (memoValue === null) return;
+
+    const ok = window.confirm(
+      `${member.kakao_nickname}님을 재입장 처리할까요?`
+    );
+
+    if (!ok) return;
+
+    setActionLoading(member.id);
+    setMessage("");
+
+    const { error } = await supabase.rpc(
+      "rejoin_member",
+      {
+        p_session_token: adminToken,
+        p_member_id: member.id,
+        p_memo: memoValue.trim() || null,
+      }
+    );
+
+    if (error) {
+      setMessage(
+        `재입장 실패: ${error.message}`
+      );
+      setActionLoading("");
+      return;
+    }
+
+    setMessage(
+      `${member.kakao_nickname}님 재입장 완료 💚`
+    );
+
+    await loadMembers(adminToken);
+    setActionLoading("");
+  }
+
   const filteredMembers = useMemo(() => {
     const keyword = search
       .trim()
@@ -178,35 +336,15 @@ export default function MembersPage() {
   }, [members, search, filter]);
 
   function getStatusText(status) {
-    if (status === "active") {
-      return "활동중";
-    }
-
-    if (status === "paused") {
-      return "일시정지";
-    }
-
-    if (status === "inactive") {
-      return "퇴장";
-    }
+    if (status === "active") return "활동중";
+    if (status === "paused") return "일시정지";
+    if (status === "inactive") return "퇴장";
 
     return status || "-";
   }
 
   function getStatusClass(status) {
-    if (status === "active") {
-      return "memberStatus active";
-    }
-
-    if (status === "paused") {
-      return "memberStatus paused";
-    }
-
-    if (status === "inactive") {
-      return "memberStatus inactive";
-    }
-
-    return "memberStatus";
+    return `memberStatus ${status || ""}`;
   }
 
   if (loading) {
@@ -223,9 +361,11 @@ export default function MembersPage() {
 
   return (
     <main className="page dashboardPage">
+
       <section className="dashboard">
 
         <div className="memberPageHeader">
+
           <button
             type="button"
             className="backButton"
@@ -249,15 +389,16 @@ export default function MembersPage() {
               정글맞팔 회원을 등록하고 관리해요.
             </p>
           </div>
+
         </div>
 
         <section className="memberAdminCard">
+
           <h2>새 회원 등록</h2>
 
           <form onSubmit={addMember}>
-            <label>
-              카톡방 닉네임
-            </label>
+
+            <label>카톡방 닉네임</label>
 
             <input
               value={nickname}
@@ -268,9 +409,7 @@ export default function MembersPage() {
               required
             />
 
-            <label>
-              인스타 아이디
-            </label>
+            <label>인스타 아이디</label>
 
             <div className="inputWrap">
               <span>@</span>
@@ -305,6 +444,7 @@ export default function MembersPage() {
                 ? "등록 중..."
                 : "회원 등록하기"}
             </button>
+
           </form>
 
           {message && (
@@ -312,11 +452,13 @@ export default function MembersPage() {
               {message}
             </p>
           )}
+
         </section>
 
         <section className="memberAdminCard">
 
           <div className="memberListTop">
+
             <div>
               <h2>회원 목록</h2>
 
@@ -335,6 +477,7 @@ export default function MembersPage() {
             >
               ↻ 새로고침
             </button>
+
           </div>
 
           <div className="memberSearchWrap">
@@ -350,6 +493,7 @@ export default function MembersPage() {
           </div>
 
           <div className="memberFilters">
+
             <button
               type="button"
               className={
@@ -405,6 +549,7 @@ export default function MembersPage() {
             >
               퇴장
             </button>
+
           </div>
 
           {listError && (
@@ -414,25 +559,25 @@ export default function MembersPage() {
           )}
 
           {listLoading ? (
+
             <div className="emptyMembers">
               <span>🌿</span>
               <strong>
                 회원 목록 불러오는 중...
               </strong>
             </div>
+
           ) : filteredMembers.length === 0 ? (
+
             <div className="emptyMembers">
               <span>🐯</span>
-
               <strong>
                 표시할 회원이 없어요.
               </strong>
-
-              <p>
-                검색어나 상태를 확인해주세요.
-              </p>
             </div>
+
           ) : (
+
             <div className="membersList">
 
               {filteredMembers.map(
@@ -441,14 +586,16 @@ export default function MembersPage() {
                     className="memberItem"
                     key={member.id}
                   >
+
                     <div className="memberAvatar">
                       {member.kakao_nickname
-                        ?.charAt(0)
-                        ?.toUpperCase() || "🌿"}
+                        ?.charAt(0) || "🌿"}
                     </div>
 
                     <div className="memberInfo">
+
                       <div className="memberNameRow">
+
                         <strong>
                           {member.kakao_nickname}
                         </strong>
@@ -462,6 +609,7 @@ export default function MembersPage() {
                             member.status
                           )}
                         </span>
+
                       </div>
 
                       <p>
@@ -470,20 +618,111 @@ export default function MembersPage() {
 
                       {member.admin_memo && (
                         <small>
-                          {member.admin_memo}
+                          메모: {member.admin_memo}
                         </small>
                       )}
+
+                      <div className="memberActions">
+
+                        {member.status ===
+                          "active" && (
+                          <>
+                            <button
+                              type="button"
+                              className="memberAction pause"
+                              disabled={
+                                actionLoading ===
+                                member.id
+                              }
+                              onClick={() =>
+                                pauseMember(member)
+                              }
+                            >
+                              일시정지
+                            </button>
+
+                            <button
+                              type="button"
+                              className="memberAction leave"
+                              disabled={
+                                actionLoading ===
+                                member.id
+                              }
+                              onClick={() =>
+                                leaveMember(member)
+                              }
+                            >
+                              퇴장
+                            </button>
+                          </>
+                        )}
+
+                        {member.status ===
+                          "paused" && (
+                          <>
+                            <button
+                              type="button"
+                              className="memberAction resume"
+                              disabled={
+                                actionLoading ===
+                                member.id
+                              }
+                              onClick={() =>
+                                resumeMember(member)
+                              }
+                            >
+                              활동 재개
+                            </button>
+
+                            <button
+                              type="button"
+                              className="memberAction leave"
+                              disabled={
+                                actionLoading ===
+                                member.id
+                              }
+                              onClick={() =>
+                                leaveMember(member)
+                              }
+                            >
+                              퇴장
+                            </button>
+                          </>
+                        )}
+
+                        {member.status ===
+                          "inactive" && (
+                          <button
+                            type="button"
+                            className="memberAction rejoin"
+                            disabled={
+                              actionLoading ===
+                              member.id
+                            }
+                            onClick={() =>
+                              rejoinMember(member)
+                            }
+                          >
+                            재입장
+                          </button>
+                        )}
+
+                      </div>
+
                     </div>
+
                   </div>
                 )
               )}
 
             </div>
+
           )}
 
         </section>
 
       </section>
+
     </main>
   );
 }
