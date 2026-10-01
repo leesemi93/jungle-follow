@@ -332,3 +332,103 @@ button:disabled { opacity: .6; }
     height: 44px;
   }
 }
+/* 👥 회원 관리 */
+
+.memberPageHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.backButton {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  margin: 2px 0 0;
+  padding: 0;
+  border-radius: 13px;
+  background: #ffffff;
+  color: #61754d;
+  border: 1px solid #dce5d1;
+  box-shadow: none;
+  font-size: 21px;
+}
+
+.memberPageTitle {
+  text-align: left;
+  margin: 9px 0 4px;
+  font-size: 27px;
+}
+
+.memberAdminCard {
+  margin-bottom: 16px;
+  padding: 22px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #e0e7d7;
+  box-shadow: 0 8px 25px rgba(72, 101, 54, 0.08);
+}
+
+.memberAdminCard h2 {
+  margin: 0 0 18px;
+  font-size: 18px;
+}
+
+.memberAdminCard small {
+  color: #929c8c;
+  font-weight: 500;
+}
+
+.memberListTitle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.memberListTitle h2 {
+  margin-bottom: 5px;
+}
+
+.memberListTitle p {
+  margin: 0;
+  color: #899483;
+  font-size: 12px;
+}
+
+.comingBadge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef4df;
+  color: #718657;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.emptyMembers {
+  margin-top: 22px;
+  padding: 25px 15px;
+  border-radius: 17px;
+  background: #f8f8f1;
+  text-align: center;
+}
+
+.emptyMembers span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 27px;
+}
+
+.emptyMembers strong {
+  display: block;
+  font-size: 14px;
+}
+
+.emptyMembers p {
+  margin: 7px 0 0;
+  color: #8a9484;
+  font-size: 12px;
+  line-height: 1.6;
+}
