@@ -18,6 +18,14 @@ export async function POST(request) {
     const message = String(body?.message || "").trim();
     const url = String(body?.url || "/member").trim();
 
+    const targetType =
+      body?.targetType === "not_voted"
+        ? "not_voted"
+        : "all";
+
+    const eventId = body?.eventId || null;
+    const platform = body?.platform || null;
+
     if (!sessionToken) {
       return NextResponse.json(
         { error: "관리자 로그인이 필요합니다." },
@@ -27,7 +35,23 @@ export async function POST(request) {
 
     if (!title || !message) {
       return NextResponse.json(
-        { error: "알림 제목과 내용을 입력해주세요." },
+        {
+          error:
+            "알림 제목과 내용을 입력해주세요.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      targetType === "not_voted" &&
+      (!eventId || !platform)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "미참여자 발송은 맞팔데이와 플랫폼을 선택해주세요.",
+        },
         { status: 400 }
       );
     }
@@ -54,17 +78,70 @@ export async function POST(request) {
       privateKey
     );
 
-    const { data: subscriptions, error } =
-      await supabase.rpc(
-        "admin_get_push_subscriptions",
-        {
-          p_session_token: sessionToken,
-        }
-      );
+    let memberIds = null;
+
+    // 미참여자만 선택한 경우
+    if (targetType === "not_voted") {
+      const { data, error } =
+        await supabase.rpc(
+          "admin_get_platform_vote_status",
+          {
+            p_session_token: sessionToken,
+            p_event_id: eventId,
+            p_platform: platform,
+          }
+        );
+
+      if (error) {
+        return NextResponse.json(
+          {
+            error:
+              error.message ||
+              "미참여자 목록을 불러오지 못했습니다.",
+          },
+          { status: 500 }
+        );
+      }
+
+      memberIds = (data || [])
+        .filter(
+          (row) =>
+            row.vote_status === "not_voted"
+        )
+        .map((row) => row.member_id);
+    }
+
+    let subscriptions;
+    let error;
+
+    if (targetType === "not_voted") {
+      const result =
+        await supabase.rpc(
+          "admin_get_push_subscriptions_for_send",
+          {
+            p_session_token: sessionToken,
+            p_user_ids: memberIds || [],
+          }
+        );
+
+      subscriptions = result.data;
+      error = result.error;
+    } else {
+      const result =
+        await supabase.rpc(
+          "admin_get_push_subscriptions",
+          {
+            p_session_token: sessionToken,
+          }
+        );
+
+      subscriptions = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error(
-        "admin_get_push_subscriptions:",
+        "push subscriptions error:",
         error
       );
 
@@ -89,7 +166,9 @@ export async function POST(request) {
         failed: 0,
         total: 0,
         message:
-          "알림을 받을 수 있도록 등록된 회원이 없습니다.",
+          targetType === "not_voted"
+            ? "해당 플랫폼 미참여자 중 알림 설정을 완료한 회원이 없습니다."
+            : "알림을 받을 수 있도록 등록된 회원이 없습니다.",
       });
     }
 
@@ -138,6 +217,11 @@ export async function POST(request) {
       sent,
       failed,
       total: targets.length,
+      targetType,
+      memberCount:
+        targetType === "not_voted"
+          ? memberIds?.length || 0
+          : null,
     });
   } catch (error) {
     console.error(
