@@ -9,34 +9,36 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+const INSTAGRAM_FOLLOW_ACCOUNT = "_jungle_room__";
+
 const PLATFORM_INFO = {
   instagram: {
-    name: "인스타그램",
+    label: "인스타그램",
     icon: "📷",
   },
   blog: {
-    name: "블로그",
+    label: "블로그",
     icon: "📝",
   },
   naver_clip: {
-    name: "네이버 클립",
+    label: "네이버 클립",
     icon: "🎬",
   },
   youtube: {
-    name: "유튜브",
+    label: "유튜브",
     icon: "▶️",
   },
   tiktok: {
-    name: "틱톡",
+    label: "틱톡",
     icon: "🎵",
   },
   today_house: {
-    name: "오늘의집",
+    label: "오늘의집",
     icon: "🏠",
   },
 };
 
-export default function FollowPage() {
+export default function MemberFollowPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -44,18 +46,18 @@ export default function FollowPage() {
 
   const [member, setMember] = useState(null);
   const [event, setEvent] = useState(null);
-
   const [platforms, setPlatforms] = useState([]);
-  const [votes, setVotes] = useState({});
+  const [selections, setSelections] = useState({});
+  const [originalSelections, setOriginalSelections] = useState({});
 
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    loadPage();
+    initialize();
   }, []);
 
-  async function loadPage() {
+  async function initialize() {
     setLoading(true);
     setErrorMessage("");
 
@@ -68,170 +70,137 @@ export default function FollowPage() {
       return;
     }
 
-    // -----------------------------------------
-    // 1. 회원 확인
-    // -----------------------------------------
-
-    const {
-      data: memberData,
-      error: memberError,
-    } = await supabase.rpc(
-      "get_current_member",
-      {
+    const [
+      memberResult,
+      eventResult,
+      platformResult,
+    ] = await Promise.all([
+      supabase.rpc("get_current_member", {
         p_session_token: token,
-      }
-    );
+      }),
 
-    const currentMember = Array.isArray(
-      memberData
-    )
-      ? memberData[0]
-      : memberData;
+      supabase.rpc("get_current_follow_event", {
+        p_session_token: token,
+      }),
 
-    if (memberError || !currentMember) {
+      supabase.rpc("get_my_follow_platforms", {
+        p_session_token: token,
+      }),
+    ]);
+
+    if (memberResult.error) {
       localStorage.removeItem(
         "jungle_follow_session"
-      );
-
-      localStorage.removeItem(
-        "jungle_follow_name"
       );
 
       router.replace("/");
       return;
     }
 
-    setMember(currentMember);
+    const currentMember = Array.isArray(
+      memberResult.data
+    )
+      ? memberResult.data[0]
+      : memberResult.data;
 
-    // -----------------------------------------
-    // 2. 이번 달 이벤트
-    // -----------------------------------------
+    setMember(currentMember || null);
 
-    const {
-      data: eventData,
-      error: eventError,
-    } = await supabase.rpc(
-      "get_current_follow_event",
-      {
-        p_session_token: token,
-      }
-    );
-
-    if (eventError) {
-      setErrorMessage(eventError.message);
+    if (eventResult.error) {
+      setErrorMessage(eventResult.error.message);
       setLoading(false);
       return;
     }
 
     const currentEvent = Array.isArray(
-      eventData
+      eventResult.data
     )
-      ? eventData[0]
-      : eventData;
+      ? eventResult.data[0]
+      : eventResult.data;
 
-    if (!currentEvent) {
-      setEvent(null);
-      setLoading(false);
-      return;
-    }
+    setEvent(currentEvent || null);
 
-    setEvent(currentEvent);
-
-    // -----------------------------------------
-    // 3. 내 플랫폼
-    // -----------------------------------------
-
-    const {
-      data: platformData,
-      error: platformError,
-    } = await supabase.rpc(
-      "get_my_follow_platforms",
-      {
-        p_session_token: token,
-      }
-    );
-
-    if (platformError) {
+    if (platformResult.error) {
       setErrorMessage(
-        "플랫폼 정보를 불러오지 못했어요. " +
-          platformError.message
+        platformResult.error.message
       );
 
       setLoading(false);
       return;
     }
 
-    const myPlatforms = Array.isArray(
-      platformData
+    const platformRows = Array.isArray(
+      platformResult.data
     )
-      ? platformData
+      ? platformResult.data
       : [];
 
-    setPlatforms(myPlatforms);
+    setPlatforms(platformRows);
 
-    // -----------------------------------------
-    // 4. 기존 투표 불러오기
-    // -----------------------------------------
-
-    const {
-      data: voteData,
-      error: voteError,
-    } = await supabase.rpc(
-      "get_my_follow_votes",
-      {
-        p_session_token: token,
-        p_event_id: currentEvent.event_id,
-      }
-    );
-
-    if (voteError) {
-      setErrorMessage(
-        "기존 참여내역을 불러오지 못했어요. " +
-          voteError.message
+    if (currentEvent?.event_id) {
+      const voteResult = await supabase.rpc(
+        "get_my_follow_votes",
+        {
+          p_session_token: token,
+          p_event_id: currentEvent.event_id,
+        }
       );
 
-      setLoading(false);
-      return;
+      if (voteResult.error) {
+        setErrorMessage(
+          voteResult.error.message
+        );
+      } else {
+        const voteRows = Array.isArray(
+          voteResult.data
+        )
+          ? voteResult.data
+          : [];
+
+        const nextSelections = {};
+
+        voteRows.forEach((vote) => {
+          nextSelections[vote.platform] =
+            vote.vote_status;
+        });
+
+        setSelections(nextSelections);
+        setOriginalSelections(nextSelections);
+      }
     }
 
-    const voteMap = {};
-
-    (voteData || []).forEach((item) => {
-      voteMap[item.platform] =
-        item.vote_status || "participate";
-    });
-
-    setVotes(voteMap);
     setLoading(false);
   }
 
-  // -----------------------------------------
-  // 참여 / 제한 선택
-  // -----------------------------------------
-
-  function selectVote(platform, status) {
+  function choose(platform, status) {
     if (!event?.is_open) return;
 
     setMessage("");
     setErrorMessage("");
 
-    setVotes((prev) => ({
+    setSelections((prev) => ({
       ...prev,
       [platform]: status,
     }));
   }
 
-  // -----------------------------------------
-  // 전체 저장
-  // -----------------------------------------
+  function clearChoice(platform) {
+    if (!event?.is_open) return;
 
-  async function saveAll() {
-    if (!event?.is_open) {
-      setErrorMessage(
-        "현재는 맞팔데이 참여기간이 아니에요."
-      );
-      return;
-    }
+    setMessage("");
+    setErrorMessage("");
+
+    setSelections((prev) => {
+      const next = { ...prev };
+
+      delete next[platform];
+
+      return next;
+    });
+  }
+
+  async function saveVotes() {
+    if (!event?.event_id) return;
+    if (!event?.is_open) return;
 
     const token = localStorage.getItem(
       "jungle_follow_session"
@@ -247,50 +216,56 @@ export default function FollowPage() {
     setErrorMessage("");
 
     try {
-      for (const item of platforms) {
-        const status = votes[item.platform];
+      for (const platform of platforms) {
+        const key = platform.platform;
 
-        // 선택하지 않은 플랫폼은 기존 투표 삭제
-        if (!status) {
+        const selectedStatus =
+          selections[key];
+
+        const originalStatus =
+          originalSelections[key];
+
+        if (selectedStatus) {
           const { error } = await supabase.rpc(
-            "delete_follow_vote",
+            "save_follow_vote",
             {
               p_session_token: token,
               p_event_id: event.event_id,
-              p_platform: item.platform,
+              p_platform: key,
+              p_account_value:
+                platform.account_value || "",
+              p_vote_status:
+                selectedStatus,
             }
           );
 
           if (error) {
             throw error;
           }
+        } else if (originalStatus) {
+          const { error } = await supabase.rpc(
+            "delete_follow_vote",
+            {
+              p_session_token: token,
+              p_event_id: event.event_id,
+              p_platform: key,
+            }
+          );
 
-          continue;
-        }
-
-        const { error } = await supabase.rpc(
-          "save_follow_vote",
-          {
-            p_session_token: token,
-            p_event_id: event.event_id,
-            p_platform: item.platform,
-            p_account_value:
-              item.account_value || "",
-            p_vote_status: status,
+          if (error) {
+            throw error;
           }
-        );
-
-        if (error) {
-          throw error;
         }
       }
+
+      setOriginalSelections({
+        ...selections,
+      });
 
       setMessage(
         "맞팔데이 선택이 저장되었어요 💚"
       );
     } catch (error) {
-      console.error(error);
-
       setErrorMessage(
         error?.message ||
           "저장 중 오류가 발생했어요."
@@ -300,21 +275,37 @@ export default function FollowPage() {
     setSaving(false);
   }
 
-  function clearVote(platform) {
-    if (!event?.is_open) return;
-
-    setVotes((prev) => {
-      const next = { ...prev };
-      delete next[platform];
-      return next;
-    });
-
-    setMessage("");
+  function openInstagramFollowAccount() {
+    window.open(
+      `https://www.instagram.com/${INSTAGRAM_FOLLOW_ACCOUNT}/`,
+      "_blank",
+      "noopener,noreferrer"
+    );
   }
 
-  // -----------------------------------------
-  // 로딩
-  // -----------------------------------------
+  function openPlatformAccount(item) {
+    if (item.platform === "instagram") {
+      openInstagramFollowAccount();
+      return;
+    }
+
+    let value = item.account_value;
+
+    if (!value) return;
+
+    if (
+      !value.startsWith("http://") &&
+      !value.startsWith("https://")
+    ) {
+      value = `https://${value}`;
+    }
+
+    window.open(
+      value,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
 
   if (loading) {
     return (
@@ -325,9 +316,9 @@ export default function FollowPage() {
               🐯
             </div>
 
-            <div style={styles.loadingText}>
+            <p style={styles.loadingText}>
               맞팔데이 불러오는 중...
-            </div>
+            </p>
           </div>
         </section>
       </main>
@@ -337,9 +328,6 @@ export default function FollowPage() {
   return (
     <main style={styles.page}>
       <section style={styles.container}>
-
-        {/* 뒤로가기 */}
-
         <button
           type="button"
           style={styles.backButton}
@@ -347,14 +335,12 @@ export default function FollowPage() {
             router.push("/member")
           }
         >
-          ← 회원 홈
+          ← 홈으로
         </button>
 
-        {/* 상단 */}
-
         <div style={styles.header}>
-          <div style={styles.badge}>
-            MONTHLY FOLLOW
+          <div style={styles.topBadge}>
+            JUNGLE FOLLOW DAY
           </div>
 
           <div style={styles.tiger}>
@@ -366,65 +352,84 @@ export default function FollowPage() {
           </h1>
 
           <p style={styles.subtitle}>
-            참여할 플랫폼을 선택해주세요 🌿
+            참여할 플랫폼을 확인해주세요 🌿
           </p>
         </div>
 
-        {/* 회원 */}
+        {member && (
+          <div style={styles.memberCard}>
+            <div>
+              <strong>
+                {member.kakao_nickname}
+              </strong>
 
-        <div style={styles.memberCard}>
-          <div>
-            <strong style={styles.memberName}>
-              {member?.kakao_nickname}
-            </strong>
-
-            <div style={styles.memberInstagram}>
-              @{member?.instagram_id}
+              <span style={styles.memberId}>
+                @{member.instagram_id}
+              </span>
             </div>
+
+            <span style={styles.memberBadge}>
+              MEMBER
+            </span>
           </div>
+        )}
 
-          {event && (
-            <div style={styles.monthBadge}>
-              {event.event_year}년{" "}
-              {event.event_month}월
-            </div>
-          )}
-        </div>
+        {errorMessage && (
+          <div style={styles.errorBox}>
+            {errorMessage}
+          </div>
+        )}
 
-        {/* 이벤트 없음 */}
+        {message && (
+          <div style={styles.successBox}>
+            {message}
+          </div>
+        )}
 
-        {!event && (
+        {!event ? (
           <div style={styles.emptyCard}>
             <div style={styles.emptyIcon}>
               🌿
             </div>
 
             <strong>
-              이번 달 맞팔데이가 아직
-              생성되지 않았어요.
+              현재 진행 중인 맞팔데이가 없어요.
             </strong>
 
-            <p>
-              관리자에게 문의해주세요.
+            <p style={styles.emptyText}>
+              다음 맞팔데이를 기다려주세요 💚
             </p>
           </div>
-        )}
-
-        {/* 이벤트 있음 */}
-
-        {event && (
+        ) : (
           <>
-            <div
-              style={
-                event.is_open
-                  ? styles.openNotice
-                  : styles.closedNotice
-              }
-            >
-              <strong>
+            <div style={styles.eventCard}>
+              <div>
+                <div style={styles.eventLabel}>
+                  FOLLOW DAY
+                </div>
+
+                <strong style={styles.eventTitle}>
+                  {event.event_year}년{" "}
+                  {event.event_month}월
+                </strong>
+              </div>
+
+              <span
+                style={
+                  event.is_open
+                    ? styles.openBadge
+                    : styles.closedBadge
+                }
+              >
                 {event.is_open
                   ? "🟢 지금 참여 가능"
-                  : "🔒 참여 마감"}
+                  : "마감"}
+              </span>
+            </div>
+
+            <div style={styles.periodCard}>
+              <strong>
+                📅 참여 기간
               </strong>
 
               <span>
@@ -432,196 +437,237 @@ export default function FollowPage() {
               </span>
             </div>
 
-            {platforms.length === 0 ? (
-              <div style={styles.emptyCard}>
-                등록된 플랫폼이 없어요.
-              </div>
-            ) : (
-              <div style={styles.platformList}>
-                {platforms.map((item) => {
-                  const info =
-                    PLATFORM_INFO[
-                      item.platform
-                    ] || {
-                      name: item.platform,
-                      icon: "🌿",
-                    };
+            {platforms.map((item) => {
+              const info =
+                PLATFORM_INFO[item.platform] ||
+                {
+                  label: item.platform,
+                  icon: "🌿",
+                };
 
-                  const selected =
-                    votes[item.platform];
+              const selected =
+                selections[item.platform];
 
-                  return (
-                    <div
-                      key={item.platform}
-                      style={styles.platformCard}
-                    >
-                      <div
-                        style={
-                          styles.platformTop
-                        }
-                      >
-                        <div
-                          style={
-                            styles.platformIcon
-                          }
-                        >
-                          {info.icon}
-                        </div>
+              const isInstagram =
+                item.platform === "instagram";
 
-                        <div
-                          style={
-                            styles.platformInfo
-                          }
-                        >
-                          <strong
-                            style={
-                              styles.platformName
-                            }
-                          >
-                            {info.name}
-                          </strong>
-
-                          <div
-                            style={
-                              styles.accountValue
-                            }
-                          >
-                            {item.platform ===
-                            "instagram"
-                              ? `@${
-                                  item.account_value ||
-                                  member?.instagram_id
-                                }`
-                              : item.account_value}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        style={
-                          styles.voteButtons
-                        }
-                      >
-                        <button
-                          type="button"
-                          disabled={
-                            !event.is_open
-                          }
-                          onClick={() =>
-                            selectVote(
-                              item.platform,
-                              "participate"
-                            )
-                          }
-                          style={{
-                            ...styles.voteButton,
-
-                            ...(selected ===
-                            "participate"
-                              ? styles.participateSelected
-                              : {}),
-                          }}
-                        >
-                          ✓ 참여
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={
-                            !event.is_open
-                          }
-                          onClick={() =>
-                            selectVote(
-                              item.platform,
-                              "restricted"
-                            )
-                          }
-                          style={{
-                            ...styles.voteButton,
-
-                            ...(selected ===
-                            "restricted"
-                              ? styles.restrictedSelected
-                              : {}),
-                          }}
-                        >
-                          제한
-                        </button>
-                      </div>
-
-                      {event.is_open &&
-                        selected && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              clearVote(
-                                item.platform
-                              )
-                            }
-                            style={
-                              styles.cancelButton
-                            }
-                          >
-                            선택 취소
-                          </button>
-                        )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {message && (
-              <div style={styles.successBox}>
-                {message}
-              </div>
-            )}
-
-            {errorMessage && (
-              <div style={styles.errorBox}>
-                {errorMessage}
-              </div>
-            )}
-
-            {event.is_open &&
-              platforms.length > 0 && (
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={saveAll}
-                  style={{
-                    ...styles.saveButton,
-
-                    opacity: saving
-                      ? 0.65
-                      : 1,
-                  }}
+              return (
+                <div
+                  key={item.platform}
+                  style={styles.platformCard}
                 >
-                  {saving
-                    ? "저장 중..."
-                    : "선택 저장하기"}
-                </button>
-              )}
+                  <div style={styles.platformTop}>
+                    <div style={styles.platformTitleArea}>
+                      <div style={styles.platformIcon}>
+                        {info.icon}
+                      </div>
+
+                      <div>
+                        <strong style={styles.platformTitle}>
+                          {info.label}
+                        </strong>
+
+                        <div style={styles.platformAccount}>
+                          {isInstagram
+                            ? `내 계정 @${item.account_value?.replace(
+                                /^@/,
+                                ""
+                              )}`
+                            : item.account_value}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {isInstagram && (
+                    <div style={styles.instagramBox}>
+                      <div style={styles.instagramLabel}>
+                        인스타그램 맞팔계정
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={
+                          openInstagramFollowAccount
+                        }
+                        style={styles.instagramAccountButton}
+                      >
+                        <strong>
+                          @{INSTAGRAM_FOLLOW_ACCOUNT}
+                        </strong>
+
+                        <span>
+                          계정 열기 ↗
+                        </span>
+                      </button>
+
+                      <p style={styles.instagramGuide}>
+                        위 맞팔계정을 확인한 뒤
+                        맞팔을 완료하셨다면
+                        <b> 맞팔완료</b>를 눌러주세요.
+                        팔로우 제한이 있는 경우에는
+                        <b> 제한</b>을 선택해주세요.
+                      </p>
+                    </div>
+                  )}
+
+                  {!isInstagram &&
+                    item.account_value && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openPlatformAccount(
+                            item
+                          )
+                        }
+                        style={styles.linkButton}
+                      >
+                        내 {info.label} 링크 열기 ↗
+                      </button>
+                    )}
+
+                  <div style={styles.choiceGrid}>
+                    <button
+                      type="button"
+                      disabled={!event.is_open}
+                      onClick={() =>
+                        choose(
+                          item.platform,
+                          "participate"
+                        )
+                      }
+                      style={{
+                        ...styles.choiceButton,
+
+                        ...(selected ===
+                        "participate"
+                          ? styles.choiceButtonActive
+                          : {}),
+                      }}
+                    >
+                      <span style={styles.choiceEmoji}>
+                        {isInstagram
+                          ? "🤝"
+                          : "💚"}
+                      </span>
+
+                      <strong>
+                        {isInstagram
+                          ? "맞팔완료"
+                          : "참여"}
+                      </strong>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={!event.is_open}
+                      onClick={() =>
+                        choose(
+                          item.platform,
+                          "restricted"
+                        )
+                      }
+                      style={{
+                        ...styles.choiceButton,
+
+                        ...(selected ===
+                        "restricted"
+                          ? styles.restrictedButtonActive
+                          : {}),
+                      }}
+                    >
+                      <span style={styles.choiceEmoji}>
+                        🚫
+                      </span>
+
+                      <strong>
+                        제한
+                      </strong>
+                    </button>
+                  </div>
+
+                  <div style={styles.currentChoice}>
+                    현재 선택:{" "}
+                    <strong>
+                      {!selected
+                        ? isInstagram
+                          ? "미투표"
+                          : "미참여"
+                        : selected ===
+                          "participate"
+                        ? isInstagram
+                          ? "맞팔완료"
+                          : "참여"
+                        : "제한"}
+                    </strong>
+                  </div>
+
+                  {selected &&
+                    event.is_open && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          clearChoice(
+                            item.platform
+                          )
+                        }
+                        style={styles.clearButton}
+                      >
+                        선택 취소
+                      </button>
+                    )}
+                </div>
+              );
+            })}
+
+            {event.is_open ? (
+              <button
+                type="button"
+                disabled={saving}
+                onClick={saveVotes}
+                style={{
+                  ...styles.saveButton,
+                  opacity: saving ? 0.6 : 1,
+                }}
+              >
+                {saving
+                  ? "저장 중..."
+                  : "선택 저장하기 💚"}
+              </button>
+            ) : (
+              <div style={styles.closedCard}>
+                이번 달 맞팔데이 투표가
+                마감되었어요 🌿
+              </div>
+            )}
+
+            <div style={styles.guideCard}>
+              <strong>
+                🐯 꼭 확인해주세요
+              </strong>
+
+              <p>
+                인스타그램은{" "}
+                <b>
+                  @{INSTAGRAM_FOLLOW_ACCOUNT}
+                </b>{" "}
+                계정을 기준으로 맞팔을
+                진행합니다.
+                <br />
+                맞팔을 완료한 경우{" "}
+                <b>맞팔완료</b>, 팔로우 제한
+                등이 있는 경우 <b>제한</b>을
+                선택해주세요.
+              </p>
+
+              <p>
+                블로그 · 네이버 클립 · 유튜브 ·
+                틱톡 · 오늘의집은 기존처럼
+                참여 여부를 선택해주세요.
+              </p>
+            </div>
           </>
         )}
-
-        <div style={styles.guide}>
-          <strong>
-            🌿 참여 안내
-          </strong>
-
-          <p>
-            <b>참여</b>는 이번 달 해당
-            플랫폼 맞팔에 참여하는 경우예요.
-            <br />
-            <b>제한</b>은 이번 달 해당
-            플랫폼 참여가 어려운 경우예요.
-            <br />
-            선택하지 않으면 미참여로
-            처리됩니다.
-          </p>
-        </div>
-
       </section>
     </main>
   );
@@ -631,14 +677,14 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #f5f1e7 0%, #faf8f1 52%, #edf4e4 100%)",
-    padding: "24px 16px 60px",
+      "linear-gradient(180deg, #f5f1e7 0%, #faf8f1 48%, #edf4e4 100%)",
+    padding: "24px 15px 60px",
     color: "#273426",
   },
 
   container: {
     width: "100%",
-    maxWidth: "460px",
+    maxWidth: "520px",
     margin: "0 auto",
   },
 
@@ -648,254 +694,348 @@ const styles = {
     color: "#718064",
     fontSize: "12px",
     fontWeight: "900",
-    cursor: "pointer",
     padding: "8px 2px",
+    cursor: "pointer",
   },
 
   header: {
     textAlign: "center",
-    margin: "15px 0 24px",
+    margin: "14px 0 22px",
   },
 
-  badge: {
+  topBadge: {
     display: "inline-block",
-    background: "#e4edce",
-    color: "#6f8150",
     padding: "6px 11px",
     borderRadius: "999px",
-    fontSize: "10px",
+    background: "#e4edce",
+    color: "#708252",
+    fontSize: "9px",
     fontWeight: "950",
     letterSpacing: "1.3px",
   },
 
   tiger: {
-    fontSize: "40px",
-    marginTop: "13px",
+    fontSize: "39px",
+    marginTop: "12px",
   },
 
   title: {
     margin: "5px 0 0",
-    fontSize: "29px",
+    fontSize: "28px",
     fontWeight: "950",
-    letterSpacing: "-1px",
   },
 
   subtitle: {
     margin: "6px 0 0",
     color: "#7c8577",
-    fontSize: "13px",
+    fontSize: "12px",
   },
 
   memberCard: {
     display: "flex",
-    justifyContent: "space-between",
     alignItems: "center",
-    gap: "10px",
+    justifyContent: "space-between",
+    padding: "14px 16px",
+    borderRadius: "18px",
     background: "#fff",
     border: "1px solid #ebe9df",
-    borderRadius: "20px",
-    padding: "16px",
     marginBottom: "12px",
+    fontSize: "13px",
   },
 
-  memberName: {
-    fontSize: "15px",
-  },
-
-  memberInstagram: {
+  memberId: {
+    display: "block",
     marginTop: "3px",
-    color: "#81877e",
-    fontSize: "11px",
-  },
-
-  monthBadge: {
-    background: "#edf4df",
-    color: "#64784b",
-    borderRadius: "999px",
-    padding: "7px 10px",
+    color: "#858b81",
     fontSize: "10px",
-    fontWeight: "900",
   },
 
-  openNotice: {
+  memberBadge: {
+    padding: "5px 8px",
+    borderRadius: "999px",
+    background: "#edf4df",
+    color: "#62764e",
+    fontSize: "8px",
+    fontWeight: "950",
+  },
+
+  eventCard: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     gap: "10px",
-    padding: "13px 14px",
-    borderRadius: "16px",
-    background: "#edf6df",
-    color: "#58703f",
-    fontSize: "11px",
-    marginBottom: "12px",
+    padding: "17px",
+    borderRadius: "20px",
+    background: "#fff",
+    border: "1px solid #e7e6dc",
+    marginBottom: "8px",
   },
 
-  closedNotice: {
+  eventLabel: {
+    color: "#91a46f",
+    fontSize: "9px",
+    fontWeight: "950",
+    marginBottom: "4px",
+  },
+
+  eventTitle: {
+    fontSize: "17px",
+  },
+
+  openBadge: {
+    padding: "6px 9px",
+    borderRadius: "999px",
+    background: "#e7f4d3",
+    color: "#5d773e",
+    fontSize: "9px",
+    fontWeight: "950",
+  },
+
+  closedBadge: {
+    padding: "6px 9px",
+    borderRadius: "999px",
+    background: "#efefec",
+    color: "#777b74",
+    fontSize: "9px",
+    fontWeight: "950",
+  },
+
+  periodCard: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     gap: "10px",
-    padding: "13px 14px",
-    borderRadius: "16px",
-    background: "#f1f0ec",
-    color: "#777a73",
-    fontSize: "11px",
-    marginBottom: "12px",
-  },
-
-  platformList: {
-    display: "grid",
-    gap: "10px",
+    padding: "12px 15px",
+    borderRadius: "15px",
+    background: "#eff4e7",
+    color: "#66745c",
+    fontSize: "10px",
+    marginBottom: "13px",
   },
 
   platformCard: {
+    padding: "16px",
+    borderRadius: "21px",
     background: "#fff",
     border: "1px solid #e7e6dc",
-    borderRadius: "21px",
-    padding: "16px",
+    marginBottom: "11px",
   },
 
   platformTop: {
     display: "flex",
     alignItems: "center",
-    gap: "11px",
+    justifyContent: "space-between",
+  },
+
+  platformTitleArea: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    minWidth: 0,
   },
 
   platformIcon: {
-    width: "42px",
-    height: "42px",
-    borderRadius: "14px",
-    background: "#f0f5e5",
+    width: "39px",
+    height: "39px",
+    borderRadius: "13px",
+    background: "#f0f4e8",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "19px",
+    fontSize: "17px",
     flexShrink: 0,
   },
 
-  platformInfo: {
-    minWidth: 0,
-    flex: 1,
+  platformTitle: {
+    fontSize: "13px",
   },
 
-  platformName: {
-    fontSize: "14px",
-  },
-
-  accountValue: {
+  platformAccount: {
     marginTop: "3px",
-    color: "#848980",
-    fontSize: "10px",
+    color: "#898e85",
+    fontSize: "9px",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
 
-  voteButtons: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "8px",
-    marginTop: "14px",
+  instagramBox: {
+    marginTop: "13px",
+    padding: "13px",
+    borderRadius: "15px",
+    background: "#f3f7ea",
   },
 
-  voteButton: {
-    border: "1px solid #dfe4d7",
-    background: "#fafbf8",
-    color: "#737b6d",
-    borderRadius: "13px",
-    padding: "12px 8px",
-    fontSize: "12px",
+  instagramLabel: {
+    marginBottom: "7px",
+    color: "#718162",
+    fontSize: "9px",
     fontWeight: "950",
+  },
+
+  instagramAccountButton: {
+    width: "100%",
+    border: "none",
+    borderRadius: "12px",
+    padding: "11px",
+    background: "#fff",
+    color: "#536547",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "8px",
+    fontSize: "10px",
     cursor: "pointer",
   },
 
-  participateSelected: {
-    background: "#a9d95d",
-    border: "1px solid #a9d95d",
-    color: "#2d3b24",
+  instagramGuide: {
+    margin: "9px 2px 0",
+    color: "#76816d",
+    fontSize: "9px",
+    lineHeight: "1.6",
   },
 
-  restrictedSelected: {
-    background: "#eee7f7",
-    border: "1px solid #d8c8e8",
-    color: "#73588c",
-  },
-
-  cancelButton: {
+  linkButton: {
     width: "100%",
-    marginTop: "8px",
+    marginTop: "12px",
+    padding: "10px",
+    border: "none",
+    borderRadius: "12px",
+    background: "#f4f6ef",
+    color: "#69765e",
+    fontSize: "9px",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+
+  choiceGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "8px",
+    marginTop: "13px",
+  },
+
+  choiceButton: {
+    minHeight: "65px",
+    border: "1px solid #e2e5dc",
+    borderRadius: "15px",
+    background: "#fafbf8",
+    color: "#747b70",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "4px",
+    fontSize: "11px",
+    cursor: "pointer",
+  },
+
+  choiceButtonActive: {
+    background: "#eaf5d7",
+    border: "1px solid #aacf69",
+    color: "#4f6b36",
+  },
+
+  restrictedButtonActive: {
+    background: "#eee7f6",
+    border: "1px solid #cbb5df",
+    color: "#715787",
+  },
+
+  choiceEmoji: {
+    fontSize: "17px",
+  },
+
+  currentChoice: {
+    marginTop: "10px",
+    color: "#7a8175",
+    fontSize: "9px",
+    textAlign: "center",
+  },
+
+  clearButton: {
+    width: "100%",
+    marginTop: "7px",
     border: "none",
     background: "transparent",
-    color: "#a0a39d",
-    fontSize: "10px",
+    color: "#9a9d97",
+    fontSize: "9px",
+    textDecoration: "underline",
     cursor: "pointer",
   },
 
   saveButton: {
     width: "100%",
-    marginTop: "16px",
+    padding: "15px",
+    marginTop: "5px",
     border: "none",
-    borderRadius: "17px",
-    padding: "16px",
+    borderRadius: "16px",
     background: "#a9d95d",
-    color: "#2b3922",
-    fontSize: "14px",
+    color: "#2d3b24",
+    fontSize: "13px",
     fontWeight: "950",
     cursor: "pointer",
-    boxShadow:
-      "0 8px 20px rgba(123,163,64,0.18)",
   },
 
-  successBox: {
-    marginTop: "13px",
-    padding: "13px",
-    borderRadius: "14px",
-    background: "#edf6df",
-    color: "#59733e",
-    fontSize: "12px",
-    fontWeight: "900",
+  guideCard: {
+    marginTop: "14px",
+    padding: "16px",
+    borderRadius: "18px",
+    background: "#f1f4e9",
+    color: "#687263",
+    fontSize: "10px",
+    lineHeight: "1.7",
+  },
+
+  closedCard: {
+    padding: "15px",
+    borderRadius: "16px",
+    background: "#eeeeeb",
+    color: "#777c73",
     textAlign: "center",
+    fontSize: "11px",
+    fontWeight: "900",
   },
 
   errorBox: {
-    marginTop: "13px",
+    marginBottom: "12px",
     padding: "13px",
     borderRadius: "14px",
     background: "#fff0ed",
     color: "#a84d43",
     fontSize: "11px",
-    fontWeight: "800",
   },
 
-  guide: {
-    marginTop: "16px",
-    padding: "16px",
-    borderRadius: "18px",
-    background: "#f1f4e9",
-    color: "#687263",
+  successBox: {
+    marginBottom: "12px",
+    padding: "13px",
+    borderRadius: "14px",
+    background: "#edf6df",
+    color: "#59733e",
     fontSize: "11px",
-    lineHeight: "1.7",
+    fontWeight: "900",
   },
 
   emptyCard: {
-    padding: "28px 20px",
+    padding: "30px 20px",
+    borderRadius: "23px",
     background: "#fff",
-    border: "1px solid #ebe9df",
-    borderRadius: "22px",
     textAlign: "center",
-    color: "#70786b",
-    fontSize: "12px",
   },
 
   emptyIcon: {
-    fontSize: "30px",
-    marginBottom: "10px",
+    fontSize: "31px",
+    marginBottom: "9px",
+  },
+
+  emptyText: {
+    color: "#858b81",
+    fontSize: "11px",
   },
 
   loadingCard: {
     marginTop: "100px",
     padding: "35px",
-    borderRadius: "26px",
+    borderRadius: "25px",
     background: "#fff",
     textAlign: "center",
   },
@@ -905,9 +1045,7 @@ const styles = {
   },
 
   loadingText: {
-    marginTop: "10px",
     color: "#7c8477",
-    fontSize: "12px",
-    fontWeight: "800",
+    fontSize: "11px",
   },
 };
