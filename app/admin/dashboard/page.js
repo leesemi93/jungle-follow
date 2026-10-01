@@ -147,9 +147,11 @@ export default function AdminDashboard() {
       return;
     }
 
-    setJoinRequestCount(
-      Array.isArray(data) ? data.length : 0
-    );
+    const pendingCount = (Array.isArray(data) ? data : []).filter(
+      (item) => item.status === "pending"
+    ).length;
+
+    setJoinRequestCount(pendingCount);
   }
 
   async function loadEvents(token) {
