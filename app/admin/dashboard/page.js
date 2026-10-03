@@ -582,54 +582,6 @@ export default function AdminDashboard() {
             </span>
           </a>
 
-
-          <a
-            href="/admin/status"
-            className="dashboardMenuCard"
-          >
-            <span className="menuIcon">
-              📊
-            </span>
-
-            <div>
-              <strong>
-                참여 현황
-              </strong>
-
-              <p>
-                참여 · 제한 · 미참여 확인
-              </p>
-            </div>
-
-            <span className="menuArrow">
-              ›
-            </span>
-          </a>
-
-
-          <a
-            href="/admin/platforms"
-            className="dashboardMenuCard"
-          >
-            <span className="menuIcon">
-              📱
-            </span>
-
-            <div>
-              <strong>
-                플랫폼별 현황
-              </strong>
-
-              <p>
-                인스타그램 · 블로그 · 클립 · 유튜브 · 틱톡 · 오늘의집
-              </p>
-            </div>
-
-            <span className="menuArrow">
-              ›
-            </span>
-          </a>
-
         </div>
 
 
