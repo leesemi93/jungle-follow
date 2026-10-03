@@ -34,6 +34,7 @@ export default function MemberPage() {
 
   const [loading, setLoading] = useState(true);
   const [member, setMember] = useState(null);
+  const [followEvent, setFollowEvent] = useState(null);
 
   const [notificationLoading, setNotificationLoading] =
     useState(false);
@@ -114,9 +115,25 @@ export default function MemberPage() {
     await Promise.all([
       checkNotificationStatus(token),
       loadMyPlatforms(token),
+      loadFollowEvent(token),
     ]);
 
     setLoading(false);
+  }
+
+  async function loadFollowEvent(token) {
+    const { data, error } = await supabase.rpc(
+      "get_current_follow_event",
+      { p_session_token: token }
+    );
+
+    if (error) {
+      console.error("맞팔데이 상태 조회 오류:", error);
+      return;
+    }
+
+    const currentEvent = Array.isArray(data) ? data[0] : data;
+    setFollowEvent(currentEvent || null);
   }
 
   async function loadMyPlatforms(token) {
@@ -788,7 +805,9 @@ export default function MemberPage() {
               )
             }
           >
-            맞팔데이 참여하기
+            {followEvent?.late_completion_open && !followEvent?.is_open
+              ? "⏰ 지각 완료하기"
+              : "맞팔데이 참여하기"}
           </button>
 
         </div>
