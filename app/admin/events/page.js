@@ -278,42 +278,6 @@ export default function AdminEventsPage() {
     setCreating(false);
   }
 
-  async function toggleLateCompletion() {
-    if (!selectedEvent) return;
-
-    const token = localStorage.getItem("jungle_follow_session");
-    if (!token) {
-      router.replace("/");
-      return;
-    }
-
-    const nextOpen = !selectedEvent.late_completion_open;
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    const { error } = await supabase.rpc(
-      "admin_set_late_completion",
-      {
-        p_session_token: token,
-        p_event_id: selectedEvent.id,
-        p_open: nextOpen,
-      }
-    );
-
-    if (error) {
-      setErrorMessage(error.message || "지각 완료 상태 변경에 실패했어요.");
-      return;
-    }
-
-    setSuccessMessage(
-      nextOpen
-        ? "지각 완료 기간을 열었어요 ⏰"
-        : "지각 완료 기간을 마감했어요 💚"
-    );
-
-    await loadEvents(token);
-  }
-
   async function refresh() {
     if (!selectedEventId) return;
 
@@ -689,28 +653,15 @@ export default function AdminEventsPage() {
                 <div style={styles.lateControl}>
                   <div>
                     <strong style={styles.lateControlTitle}>
-                      ⏰ 지각 완료
+                      ⏰ 지각 완료 자동 운영
                     </strong>
                     <div style={styles.lateControlText}>
+                      매월 4일 10:00 ~ 5일 23:59<br />
                       {selectedEvent?.late_completion_open
-                        ? "현재 지각 완료를 받고 있어요."
-                        : "미완료자의 지각 완료를 열 수 있어요."}
+                        ? "현재 지각 완료 기간이에요."
+                        : "시간에 맞춰 자동으로 열리고 마감돼요."}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={toggleLateCompletion}
-                    style={{
-                      ...styles.lateControlButton,
-                      ...(selectedEvent?.late_completion_open
-                        ? styles.lateControlButtonClose
-                        : {}),
-                    }}
-                  >
-                    {selectedEvent?.late_completion_open
-                      ? "지각 완료 마감"
-                      : "지각 완료 열기"}
-                  </button>
                 </div>
               )}
 
