@@ -62,6 +62,11 @@ export default function MemberPage() {
   const [platformSaving, setPlatformSaving] = useState("");
   const [platformMessage, setPlatformMessage] = useState("");
 
+  const [showLeftMembers, setShowLeftMembers] = useState(false);
+  const [leftMembers, setLeftMembers] = useState([]);
+  const [leftMembersLoading, setLeftMembersLoading] = useState(false);
+  const [leftMembersError, setLeftMembersError] = useState("");
+
   useEffect(() => {
     loadMember();
   }, []);
@@ -140,6 +145,37 @@ export default function MemberPage() {
     });
 
     setPlatformLinks(next);
+  }
+
+  async function loadLeftMembers() {
+    const token = localStorage.getItem("jungle_follow_session");
+    if (!token) return;
+
+    setLeftMembersLoading(true);
+    setLeftMembersError("");
+
+    const { data, error } = await supabase.rpc(
+      "get_member_left_members",
+      { p_session_token: token }
+    );
+
+    if (error) {
+      setLeftMembersError("퇴장자 리스트를 불러오지 못했어요.");
+      setLeftMembersLoading(false);
+      return;
+    }
+
+    setLeftMembers(Array.isArray(data) ? data : []);
+    setLeftMembersLoading(false);
+  }
+
+  async function toggleLeftMembers() {
+    const next = !showLeftMembers;
+    setShowLeftMembers(next);
+
+    if (next && leftMembers.length === 0) {
+      await loadLeftMembers();
+    }
   }
 
   async function saveMyPlatform(platform) {
@@ -828,6 +864,46 @@ export default function MemberPage() {
         </div>
 
 
+        {/* LEFT MEMBERS */}
+
+        <div style={styles.leftMembersCard}>
+          <button
+            type="button"
+            onClick={toggleLeftMembers}
+            style={styles.leftMembersToggle}
+          >
+            <span>🚪 퇴장자 리스트</span>
+            <span>{showLeftMembers ? "▲" : "▼"}</span>
+          </button>
+
+          {showLeftMembers && (
+            <div style={styles.leftMembersBody}>
+              {leftMembersLoading ? (
+                <div style={styles.leftMembersEmpty}>불러오는 중...</div>
+              ) : leftMembersError ? (
+                <div style={styles.leftMembersError}>{leftMembersError}</div>
+              ) : leftMembers.length === 0 ? (
+                <div style={styles.leftMembersEmpty}>퇴장자가 없어요.</div>
+              ) : (
+                leftMembers.map((item, index) => (
+                  <div
+                    key={item.member_id || item.id || index}
+                    style={styles.leftMemberRow}
+                  >
+                    <strong style={styles.leftMemberName}>
+                      {item.kakao_nickname}
+                    </strong>
+                    <span style={styles.leftMemberInstagram}>
+                      @{String(item.instagram_id || "").replace(/^@/, "")}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+
         {/* NOTICE */}
 
         <div style={styles.notice}>
@@ -1220,6 +1296,70 @@ const styles = {
     color: "#a05047",
     fontSize: "10px",
     lineHeight: "1.5",
+  },
+
+  leftMembersCard: {
+    marginTop: "10px",
+    marginBottom: "14px",
+    borderRadius: "20px",
+    background: "#ffffff",
+    border: "1px solid #e6e7df",
+    overflow: "hidden",
+    boxShadow: "0 6px 18px rgba(67, 86, 52, 0.05)",
+  },
+
+  leftMembersToggle: {
+    width: "100%",
+    padding: "15px 17px",
+    border: "none",
+    background: "#ffffff",
+    color: "#43583a",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    fontSize: "12px",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+
+  leftMembersBody: {
+    padding: "0 14px 14px",
+  },
+
+  leftMemberRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "10px",
+    padding: "11px 3px",
+    borderTop: "1px solid #edf0e8",
+  },
+
+  leftMemberName: {
+    color: "#3f4f39",
+    fontSize: "11px",
+    fontWeight: "900",
+  },
+
+  leftMemberInstagram: {
+    color: "#858d80",
+    fontSize: "10px",
+  },
+
+  leftMembersEmpty: {
+    padding: "15px 4px 5px",
+    borderTop: "1px solid #edf0e8",
+    color: "#8a9085",
+    fontSize: "10px",
+    textAlign: "center",
+  },
+
+  leftMembersError: {
+    padding: "12px",
+    borderTop: "1px solid #edf0e8",
+    color: "#a05047",
+    fontSize: "10px",
+    textAlign: "center",
   },
 
   notice: {
