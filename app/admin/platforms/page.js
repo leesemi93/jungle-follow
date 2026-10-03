@@ -33,6 +33,7 @@ export default function AdminPlatformsPage() {
 
   const [platform, setPlatform] = useState("instagram");
   const [statusTab, setStatusTab] = useState("all");
+  const [search, setSearch] = useState("");
 
   const [counts, setCounts] = useState({
     total_members: 0,
@@ -291,12 +292,49 @@ export default function AdminPlatformsPage() {
   );
 
   const filteredMembers = useMemo(() => {
-    if (statusTab === "all") return members;
+    const keyword = search
+      .trim()
+      .toLowerCase()
+      .replace(/^@/, "");
 
-    return members.filter(
-      (item) => item.vote_status === statusTab
-    );
-  }, [members, statusTab]);
+    return members
+      .filter((item) => {
+        if (
+          statusTab !== "all" &&
+          item.vote_status !== statusTab
+        ) {
+          return false;
+        }
+
+        if (!keyword) return true;
+
+        const nickname = (
+          item.kakao_nickname || ""
+        ).toLowerCase();
+
+        const instagram = (
+          item.instagram_id || ""
+        )
+          .toLowerCase()
+          .replace(/^@/, "");
+
+        const account = (
+          item.account_value || ""
+        ).toLowerCase();
+
+        return (
+          nickname.includes(keyword) ||
+          instagram.includes(keyword) ||
+          account.includes(keyword)
+        );
+      })
+      .sort((a, b) =>
+        (a.kakao_nickname || "").localeCompare(
+          b.kakao_nickname || "",
+          "ko-KR"
+        )
+      );
+  }, [members, statusTab, search]);
 
   const adminCount = members.filter(
     (item) => item.vote_status === "admin"
@@ -675,6 +713,27 @@ export default function AdminPlatformsPage() {
                   </button>
                 );
               })}
+            </div>
+
+            <div style={styles.searchWrap}>
+              <span style={styles.searchIcon}>⌕</span>
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="닉네임 · 인스타 아이디 검색"
+                style={styles.searchInput}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  style={styles.searchClear}
+                  aria-label="검색어 지우기"
+                >
+                  ×
+                </button>
+              )}
             </div>
 
             <div style={styles.listHeader}>
@@ -1103,6 +1162,46 @@ const styles = {
   statusCount: {
     marginLeft: "3px",
     fontSize: "9px",
+  },
+
+  searchWrap: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    marginBottom: "12px",
+  },
+
+  searchIcon: {
+    position: "absolute",
+    left: "13px",
+    color: "#829076",
+    fontSize: "18px",
+    pointerEvents: "none",
+  },
+
+  searchInput: {
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "12px 38px 12px 38px",
+    border: "1px solid #dfe5d6",
+    borderRadius: "15px",
+    background: "#fff",
+    color: "#3f4b39",
+    fontSize: "12px",
+    outline: "none",
+  },
+
+  searchClear: {
+    position: "absolute",
+    right: "10px",
+    width: "25px",
+    height: "25px",
+    border: "none",
+    borderRadius: "50%",
+    background: "#eef2e8",
+    color: "#718064",
+    fontSize: "16px",
+    cursor: "pointer",
   },
 
   listHeader: {
