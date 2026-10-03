@@ -647,6 +647,9 @@ export default function MemberFollowPage() {
                   <strong style={styles.todoTitle}>
                     내가 해야 할 곳
                   </strong>
+                  <div style={styles.todoGuide}>
+                    아래에서 아직 안 한 플랫폼을 확인해주세요
+                  </div>
                 </div>
 
                 <span style={styles.todoCount}>
@@ -680,14 +683,19 @@ export default function MemberFollowPage() {
                     >
                       <span>{info.icon}</span>
                       <span>{info.label}</span>
-                      <b style={styles.todoStatus}>
+                      <b
+                        style={{
+                          ...styles.todoStatus,
+                          ...(status
+                            ? styles.todoStatusDone
+                            : styles.todoStatusPending),
+                        }}
+                      >
                         {status === "participate"
-                          ? item.platform === "instagram"
-                            ? "맞팔완료"
-                            : "완료"
+                          ? "✓ 완료"
                           : status === "restricted"
-                            ? "제한"
-                            : "해야함"}
+                            ? "✓ 제한"
+                            : "맞팔하기 →"}
                       </b>
                     </div>
                   );
@@ -1393,19 +1401,27 @@ const styles = {
   },
 
   todoTitle: {
-    color: "#34432f",
-    fontSize: "13px",
+    color: "#263b21",
+    fontSize: "15px",
     fontWeight: "950",
   },
 
+  todoGuide: {
+    marginTop: "4px",
+    color: "#8a9283",
+    fontSize: "8px",
+    fontWeight: "700",
+  },
+
   todoCount: {
-    padding: "5px 9px",
+    padding: "7px 11px",
     borderRadius: "999px",
-    background: "#f1f6e8",
-    color: "#71845d",
-    fontSize: "9px",
-    fontWeight: "900",
+    background: "#a9d95d",
+    color: "#2f4923",
+    fontSize: "10px",
+    fontWeight: "950",
     whiteSpace: "nowrap",
+    boxShadow: "0 4px 10px rgba(126, 170, 62, 0.18)",
   },
 
   todoChips: {
@@ -1416,8 +1432,9 @@ const styles = {
 
   todoChip: {
     minWidth: 0,
-    padding: "9px 10px",
-    borderRadius: "12px",
+    minHeight: "42px",
+    padding: "10px 10px",
+    borderRadius: "13px",
     display: "grid",
     gridTemplateColumns: "20px minmax(0, 1fr) auto",
     alignItems: "center",
@@ -1427,20 +1444,33 @@ const styles = {
   },
 
   todoChipPending: {
-    background: "#fff9ed",
-    border: "1px solid #f1dfb6",
-    color: "#625944",
+    background: "#f0f8df",
+    border: "1.5px solid #a9d95d",
+    color: "#334b29",
+    boxShadow: "0 3px 9px rgba(126, 170, 62, 0.10)",
   },
 
   todoChipDone: {
-    background: "#f0f7e5",
-    border: "1px solid #dbe9c7",
-    color: "#526743",
+    background: "#f5f6f2",
+    border: "1px solid #e3e6de",
+    color: "#8a9085",
   },
 
   todoStatus: {
     fontSize: "8px",
     whiteSpace: "nowrap",
+    fontWeight: "950",
+  },
+
+  todoStatusPending: {
+    padding: "5px 7px",
+    borderRadius: "8px",
+    background: "#a9d95d",
+    color: "#2d4424",
+  },
+
+  todoStatusDone: {
+    color: "#8a9184",
   },
 
   todoAllDone: {
