@@ -1122,10 +1122,9 @@ export default function AdminMembersPage() {
     return role !== "admin" && role !== "super_admin";
   }).length;
 
-  const inactiveCount = members.filter(
-    (member) =>
-      member.status === "inactive"
-  ).length;
+  // 퇴장 수는 현재 회원 테이블의 inactive가 아니라
+  // 공개 퇴장자 리스트(left_member_list) 기준으로 표시해요.
+  const inactiveCount = leftMembers.length;
 
   const adminCount = members.filter((member) => {
     const role = memberRoles[member.id] || "member";
