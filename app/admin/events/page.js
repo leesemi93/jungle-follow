@@ -284,6 +284,33 @@ export default function AdminEventsPage() {
     await loadPlatformData(selectedEventId, platform);
   }
 
+  async function copyIncompleteNicknames() {
+    const incomplete = members.filter(
+      (item) => item.vote_status === "not_voted"
+    );
+
+    if (!incomplete.length) {
+      window.alert("미완료 회원이 없어요 💚");
+      return;
+    }
+
+    const text = incomplete
+      .map((item) => `@${item.kakao_nickname}`)
+      .join(" ");
+
+    try {
+      await navigator.clipboard.writeText(text);
+      window.alert(
+        `미완료 명단 ${incomplete.length}명 복사 완료 💚`
+      );
+    } catch (error) {
+      window.prompt(
+        "아래 명단을 복사해주세요.",
+        text
+      );
+    }
+  }
+
   const selectedEvent = useMemo(
     () =>
       events.find((item) => item.id === selectedEventId) ||
@@ -741,13 +768,23 @@ export default function AdminEventsPage() {
                 회원 명단
               </strong>
 
-              <button
-                type="button"
-                onClick={refresh}
-                style={styles.refreshButton}
-              >
-                새로고침
-              </button>
+              <div style={styles.listActions}>
+                <button
+                  type="button"
+                  onClick={copyIncompleteNicknames}
+                  style={styles.copyIncompleteButton}
+                >
+                  미완료 명단 복사
+                </button>
+
+                <button
+                  type="button"
+                  onClick={refresh}
+                  style={styles.refreshButton}
+                >
+                  새로고침
+                </button>
+              </div>
             </div>
 
             {listLoading ? (
@@ -1217,6 +1254,24 @@ const styles = {
     flexShrink: 0,
     whiteSpace: "nowrap",
     fontSize: "13px",
+  },
+
+  listActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+  },
+
+  copyIncompleteButton: {
+    border: "1px solid #cfe0b7",
+    borderRadius: "11px",
+    background: "#eaf4d7",
+    color: "#536b3d",
+    padding: "8px 10px",
+    fontSize: "9px",
+    fontWeight: "950",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
   },
 
   refreshButton: {
