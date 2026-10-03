@@ -206,6 +206,25 @@ export default function MemberPage() {
     }
   }
 
+  async function copyLeftMembers() {
+    if (leftMembers.length === 0) return;
+
+    const text = leftMembers
+      .map((item) => {
+        const nickname = item.kakao_nickname || "";
+        const instagram = String(item.instagram_id || "").replace(/^@/, "");
+        return `${nickname} | @${instagram}`;
+      })
+      .join("\n");
+
+    try {
+      await navigator.clipboard.writeText(text);
+      window.alert(`퇴장자 ${leftMembers.length}명 목록을 복사했어요. 💚`);
+    } catch (error) {
+      window.alert("복사에 실패했어요. 브라우저의 클립보드 권한을 확인해주세요.");
+    }
+  }
+
   async function saveMyPlatform(platform) {
     const token = localStorage.getItem("jungle_follow_session");
     if (!token) return;
@@ -908,6 +927,26 @@ export default function MemberPage() {
 
           {showLeftMembers && (
             <div style={styles.leftMembersBody}>
+              {!leftMembersLoading && !leftMembersError && leftMembers.length > 0 && (
+                <button
+                  type="button"
+                  onClick={copyLeftMembers}
+                  style={{
+                    width: "100%",
+                    marginBottom: "8px",
+                    padding: "9px 12px",
+                    border: "1px solid #dce7cf",
+                    borderRadius: "10px",
+                    background: "#f4f8ee",
+                    color: "#536642",
+                    fontSize: "11px",
+                    fontWeight: "900",
+                    cursor: "pointer",
+                  }}
+                >
+                  📋 퇴장자 전체 복사
+                </button>
+              )}
               {leftMembersLoading ? (
                 <div style={styles.leftMembersEmpty}>불러오는 중...</div>
               ) : leftMembersError ? (
