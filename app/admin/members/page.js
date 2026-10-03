@@ -77,6 +77,8 @@ export default function AdminMembersPage() {
 
   const [actionLoadingId, setActionLoadingId] =
     useState(null);
+  const [leaveFormMemberId, setLeaveFormMemberId] = useState(null);
+  const [leaveReason, setLeaveReason] = useState("");
 
   const [roleLoadingId, setRoleLoadingId] =
     useState(null);
@@ -653,60 +655,46 @@ export default function AdminMembersPage() {
     const role = memberRoles[member.id];
 
     if (role === "super_admin") {
-      window.alert(
-        "최고관리자는 퇴장 처리할 수 없습니다."
-      );
+      window.alert("최고관리자는 퇴장 처리할 수 없습니다.");
+      return;
+    }
+
+    if (!leaveReason.trim()) {
+      setErrorMessage("퇴장 사유를 입력해주세요.");
       return;
     }
 
     const confirmed = window.confirm(
-      `${member.kakao_nickname}님을 퇴장 처리할까요?\n\n회원 기록은 삭제되지 않습니다.`
+      `${member.kakao_nickname}님을 퇴장 처리할까요?\n\n퇴장 사유: ${leaveReason.trim()}`
     );
-
     if (!confirmed) return;
-
-    const reason =
-      window.prompt(
-        "퇴장 사유를 입력해주세요.\n(선택사항)"
-      ) || "";
 
     setActionLoadingId(member.id);
     setMessage("");
     setErrorMessage("");
 
-    const { error } = await supabase.rpc(
-      "leave_member",
-      {
-        p_session_token: adminToken,
-        p_member_id: member.id,
-        p_reason: reason.trim() || null,
-        p_memo: null,
-      }
-    );
+    const { error } = await supabase.rpc("leave_member", {
+      p_session_token: adminToken,
+      p_member_id: member.id,
+      p_reason: leaveReason.trim(),
+      p_memo: null,
+    });
 
     if (error) {
-      setErrorMessage(
-        error.message ||
-          "퇴장 처리 중 오류가 발생했습니다."
-      );
-
+      setErrorMessage(error.message || "퇴장 처리 중 오류가 발생했습니다.");
       setActionLoadingId(null);
       return;
     }
 
     if (editingMemberId === member.id) {
       setEditingMemberId(null);
-      setEditingLinks({
-        ...EMPTY_LINKS,
-      });
+      setEditingLinks({ ...EMPTY_LINKS });
     }
 
-    setMessage(
-      `${member.kakao_nickname}님을 퇴장 처리했습니다.`
-    );
-
+    setLeaveFormMemberId(null);
+    setLeaveReason("");
+    setMessage(`${member.kakao_nickname}님을 퇴장 처리했습니다.`);
     await refreshAll(adminToken);
-
     setActionLoadingId(null);
   }
 
@@ -1950,26 +1938,75 @@ export default function AdminMembersPage() {
                             )}
 
                           {!isSuperAdmin && (
-                            <button
-                              type="button"
-                              disabled={
-                                actionLoadingId ===
-                                member.id
-                              }
-                              onClick={() =>
-                                leaveMember(
-                                  member
-                                )
-                              }
-                              style={
-                                leaveButton
-                              }
-                            >
-                              {actionLoadingId ===
-                              member.id
-                                ? "처리 중..."
-                                : "퇴장"}
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                disabled={actionLoadingId === member.id}
+                                onClick={() => {
+                                  if (leaveFormMemberId === member.id) {
+                                    setLeaveFormMemberId(null);
+                                    setLeaveReason("");
+                                  } else {
+                                    setLeaveFormMemberId(member.id);
+                                    setLeaveReason("");
+                                    setErrorMessage("");
+                                  }
+                                }}
+                                style={leaveButton}
+                              >
+                                {leaveFormMemberId === member.id ? "퇴장 취소" : "퇴장"}
+                              </button>
+
+                              {leaveFormMemberId === member.id && (
+                                <div
+                                  style={{
+                                    width: "100%",
+                                    marginTop: "8px",
+                                    padding: "12px",
+                                    borderRadius: "12px",
+                                    background: "#fff7f7",
+                                    border: "1px solid #f0d4d4",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      fontSize: "11px",
+                                      fontWeight: "900",
+                                      color: "#a25757",
+                                      marginBottom: "7px",
+                                    }}
+                                  >
+                                    퇴장 사유
+                                  </div>
+                                  <textarea
+                                    value={leaveReason}
+                                    onChange={(event) => setLeaveReason(event.target.value)}
+                                    placeholder="퇴장 사유를 입력해주세요."
+                                    rows={3}
+                                    style={{
+                                      ...inputStyle,
+                                      width: "100%",
+                                      resize: "vertical",
+                                      margin: 0,
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={actionLoadingId === member.id}
+                                    onClick={() => leaveMember(member)}
+                                    style={{
+                                      ...leaveButton,
+                                      width: "100%",
+                                      marginTop: "8px",
+                                    }}
+                                  >
+                                    {actionLoadingId === member.id
+                                      ? "퇴장 처리 중..."
+                                      : "퇴장 처리"}
+                                  </button>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                         )}
