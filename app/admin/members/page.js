@@ -1792,6 +1792,24 @@ export default function AdminMembersPage() {
                               member.instagram_id
                             }
                           </div>
+
+                          {!isInactive && member.created_at && (
+                            <div
+                              style={{
+                                marginTop: "4px",
+                                fontSize: "10px",
+                                fontWeight: "800",
+                                color: "#85877f",
+                              }}
+                            >
+                              입장일 · {new Intl.DateTimeFormat("ko-KR", {
+                                timeZone: "Asia/Seoul",
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                              }).format(new Date(member.created_at)).replace(/\. /g, ".").replace(/\.$/, "")}
+                            </div>
+                          )}
                         </div>
                       </div>
 
