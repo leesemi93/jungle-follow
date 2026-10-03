@@ -559,7 +559,7 @@ export default function HomePage() {
             {/* 카카오톡 */}
 
             <label style={styles.label}>
-              카카오톡 닉네임
+              카톡방 닉네임
               <span style={styles.required}>
                 *
               </span>
