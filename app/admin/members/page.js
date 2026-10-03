@@ -929,58 +929,65 @@ export default function AdminMembersPage() {
       .toLowerCase()
       .replace(/^@/, "");
 
-    return members.filter((member) => {
-      const isInactive =
-        member.status === "inactive";
+    return members
+      .filter((member) => {
+        const isInactive =
+          member.status === "inactive";
 
-      if (
-        filter === "active" &&
-        isInactive
-      ) {
-        return false;
-      }
+        if (
+          filter === "active" &&
+          isInactive
+        ) {
+          return false;
+        }
 
-      if (
-        filter === "inactive" &&
-        !isInactive
-      ) {
-        return false;
-      }
+        if (
+          filter === "inactive" &&
+          !isInactive
+        ) {
+          return false;
+        }
 
-      const notificationEnabled =
-        Boolean(pushStatus[member.id]?.enabled);
+        const notificationEnabled =
+          Boolean(pushStatus[member.id]?.enabled);
 
-      if (
-        filter === "notification_on" &&
-        !notificationEnabled
-      ) {
-        return false;
-      }
+        if (
+          filter === "notification_on" &&
+          !notificationEnabled
+        ) {
+          return false;
+        }
 
-      if (
-        filter === "notification_off" &&
-        notificationEnabled
-      ) {
-        return false;
-      }
+        if (
+          filter === "notification_off" &&
+          notificationEnabled
+        ) {
+          return false;
+        }
 
-      if (!keyword) return true;
+        if (!keyword) return true;
 
-      const nickname = (
-        member.kakao_nickname || ""
-      ).toLowerCase();
+        const nickname = (
+          member.kakao_nickname || ""
+        ).toLowerCase();
 
-      const instagram = (
-        member.instagram_id || ""
-      )
-        .toLowerCase()
-        .replace(/^@/, "");
+        const instagram = (
+          member.instagram_id || ""
+        )
+          .toLowerCase()
+          .replace(/^@/, "");
 
-      return (
-        nickname.includes(keyword) ||
-        instagram.includes(keyword)
+        return (
+          nickname.includes(keyword) ||
+          instagram.includes(keyword)
+        );
+      })
+      .sort((a, b) =>
+        (a.kakao_nickname || "").localeCompare(
+          b.kakao_nickname || "",
+          "ko-KR"
+        )
       );
-    });
   }, [members, filter, search, pushStatus]);
 
   const activeCount = members.filter((member) => {
