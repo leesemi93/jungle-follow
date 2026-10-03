@@ -43,6 +43,7 @@ export default function MemberFollowPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editingVotes, setEditingVotes] = useState(false);
 
   const [member, setMember] = useState(null);
   const [event, setEvent] = useState(null);
@@ -392,6 +393,7 @@ export default function MemberFollowPage() {
       });
 
       setMessage("저장완료 💚");
+      setEditingVotes(false);
     } catch (error) {
       setErrorMessage(
         error?.message ||
@@ -606,17 +608,32 @@ export default function MemberFollowPage() {
 
               <div style={styles.eventSaveArea}>
                 {event.is_open && (
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={saveVotes}
-                    style={{
-                      ...styles.eventSaveButton,
-                      opacity: saving ? 0.6 : 1,
-                    }}
-                  >
-                    {saving ? "저장 중..." : "투표 저장하기 ♡"}
-                  </button>
+                  Object.keys(originalSelections).length > 0 && !editingVotes ? (
+                    <div style={styles.voteCompleteArea}>
+                      <div style={styles.voteCompleteBadge}>
+                        ✓ 투표 완료
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingVotes(true)}
+                        style={styles.revoteButton}
+                      >
+                        다시 투표하기
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={saveVotes}
+                      style={{
+                        ...styles.eventSaveButton,
+                        opacity: saving ? 0.6 : 1,
+                      }}
+                    >
+                      {saving ? "저장 중..." : "투표 저장하기 ♡"}
+                    </button>
+                  )
                 )}
               </div>
 
@@ -1322,6 +1339,37 @@ const styles = {
     alignItems: "center",
     justifyContent: "flex-end",
     minWidth: 0,
+  },
+
+  voteCompleteArea: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "5px",
+  },
+
+  voteCompleteBadge: {
+    minWidth: "118px",
+    padding: "13px 18px",
+    borderRadius: "999px",
+    background: "#e8f5d5",
+    border: "1px solid #cce6a5",
+    color: "#52743a",
+    fontSize: "11px",
+    fontWeight: "950",
+    textAlign: "center",
+    boxSizing: "border-box",
+  },
+
+  revoteButton: {
+    border: "none",
+    background: "transparent",
+    color: "#8a9183",
+    fontSize: "8px",
+    fontWeight: "800",
+    textDecoration: "underline",
+    cursor: "pointer",
+    padding: "1px 4px",
   },
 
   eventSaveButton: {
