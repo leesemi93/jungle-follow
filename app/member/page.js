@@ -893,9 +893,16 @@ export default function MemberPage() {
                     <strong style={styles.leftMemberName}>
                       {item.kakao_nickname}
                     </strong>
-                    <span style={styles.leftMemberInstagram}>
-                      @{String(item.instagram_id || "").replace(/^@/, "")}
-                    </span>
+                    <div style={styles.leftMemberInfo}>
+                      <span style={styles.leftMemberInstagram}>
+                        @{String(item.instagram_id || "").replace(/^@/, "")}
+                      </span>
+                      {item.leave_reason && (
+                        <span style={styles.leftMemberReason}>
+                          퇴장사유 · {item.leave_reason}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -1341,9 +1348,24 @@ const styles = {
     fontWeight: "900",
   },
 
+  leftMemberInfo: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: "3px",
+    minWidth: 0,
+  },
+
   leftMemberInstagram: {
     color: "#858d80",
     fontSize: "10px",
+  },
+
+  leftMemberReason: {
+    color: "#a16d66",
+    fontSize: "9px",
+    textAlign: "right",
+    wordBreak: "keep-all",
   },
 
   leftMembersEmpty: {
