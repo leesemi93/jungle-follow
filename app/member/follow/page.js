@@ -277,13 +277,21 @@ export default function MemberFollowPage() {
     setParticipantLinks(nextLinks);
   }
 
+  function canLateComplete(platform) {
+    return (
+      !event?.is_open &&
+      event?.late_completion_open &&
+      !originalSelections[platform]
+    );
+  }
+
   function choose(
     platform,
     status
   ) {
-    if (!event?.is_open) {
-      return;
-    }
+    const lateAllowed = canLateComplete(platform);
+    if (!event?.is_open && !lateAllowed) return;
+    if (lateAllowed && status !== "participate") return;
 
     setMessage("");
     setErrorMessage("");
@@ -318,7 +326,7 @@ export default function MemberFollowPage() {
       return;
     }
 
-    if (!event?.is_open) {
+    if (!event?.is_open && !event?.late_completion_open) {
       return;
     }
 
@@ -345,6 +353,9 @@ export default function MemberFollowPage() {
 
         const originalStatus =
           originalSelections[key];
+
+        const lateAllowed = canLateComplete(key);
+        if (!event.is_open && !lateAllowed) continue;
 
         if (selectedStatus) {
           const { error } =
@@ -607,8 +618,8 @@ export default function MemberFollowPage() {
               </div>
 
               <div style={styles.eventSaveArea}>
-                {event.is_open && (
-                  Object.keys(originalSelections).length > 0 && !editingVotes ? (
+                {(event.is_open || event.late_completion_open) && (
+                  event.is_open && Object.keys(originalSelections).length > 0 && !editingVotes ? (
                     <div style={styles.voteCompleteArea}>
                       <div style={styles.voteCompleteBadge}>
                         ✓ 투표 완료
@@ -631,7 +642,11 @@ export default function MemberFollowPage() {
                         opacity: saving ? 0.6 : 1,
                       }}
                     >
-                      {saving ? "저장 중..." : "투표 저장하기 ♡"}
+                      {saving
+                        ? "저장 중..."
+                        : !event.is_open && event.late_completion_open
+                          ? "지각 완료 저장하기 ⏰"
+                          : "투표 저장하기 ♡"}
                     </button>
                   )
                 )}
@@ -730,6 +745,13 @@ export default function MemberFollowPage() {
 
 
             {/* PLATFORMS */}
+
+            {!event.is_open && event.late_completion_open && (
+              <div style={styles.lateNotice}>
+                ⏰ 맞팔데이는 마감됐지만 지각 완료 기간이에요.<br />
+                <strong>아직 미완료인 플랫폼만 완료할 수 있어요.</strong>
+              </div>
+            )}
 
             {platforms.map((item) => {
 
@@ -1013,7 +1035,8 @@ export default function MemberFollowPage() {
                     <button
                       type="button"
                       disabled={
-                        !event.is_open
+                        !event.is_open &&
+                        !canLateComplete(item.platform)
                       }
                       onClick={() =>
                         choose(
@@ -1042,9 +1065,11 @@ export default function MemberFollowPage() {
                       </span>
 
                       <strong>
-                        {isInstagram
-                          ? "맞팔완료"
-                          : "완료"}
+                        {!event.is_open && canLateComplete(item.platform)
+                          ? "지각 완료하기"
+                          : isInstagram
+                            ? "맞팔완료"
+                            : "완료"}
                       </strong>
 
                     </button>
@@ -1783,6 +1808,18 @@ const styles = {
     fontWeight: "900",
     textAlign: "right",
     whiteSpace: "nowrap",
+  },
+
+  lateNotice: {
+    marginBottom: "12px",
+    padding: "12px 14px",
+    borderRadius: "16px",
+    background: "#fff8df",
+    border: "1px solid #eadca8",
+    color: "#786637",
+    fontSize: "10px",
+    lineHeight: 1.6,
+    textAlign: "center",
   },
 
   choiceGrid: {
