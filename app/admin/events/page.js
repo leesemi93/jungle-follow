@@ -33,6 +33,7 @@ export default function AdminEventsPage() {
 
   const [platform, setPlatform] = useState("instagram");
   const [statusTab, setStatusTab] = useState("all");
+  const [search, setSearch] = useState("");
 
   const [counts, setCounts] = useState({
     total_members: 0,
@@ -291,15 +292,58 @@ export default function AdminEventsPage() {
   );
 
   const filteredMembers = useMemo(() => {
-    if (statusTab === "all") return members;
+    const keyword = search
+      .trim()
+      .toLowerCase()
+      .replace(/^@/, "");
 
-    return members.filter(
-      (item) => item.vote_status === statusTab
-    );
-  }, [members, statusTab]);
+    return members
+      .filter((item) => {
+        if (
+          statusTab !== "all" &&
+          item.vote_status !== statusTab
+        ) {
+          return false;
+        }
+
+        if (!keyword) return true;
+
+        const nickname = (
+          item.kakao_nickname || ""
+        ).toLowerCase();
+
+        const instagram = (
+          item.instagram_id || ""
+        )
+          .toLowerCase()
+          .replace(/^@/, "");
+
+        const account = (
+          item.account_value || ""
+        ).toLowerCase();
+
+        return (
+          nickname.includes(keyword) ||
+          instagram.includes(keyword) ||
+          account.includes(keyword)
+        );
+      })
+      .sort((a, b) =>
+        (a.kakao_nickname || "").localeCompare(
+          b.kakao_nickname || "",
+          "ko-KR"
+        )
+      );
+  }, [members, statusTab, search]);
+
+  const adminCount = members.filter(
+    (item) => item.vote_status === "admin"
+  ).length;
 
   function getStatusCount(key) {
-    if (key === "all") return counts.total_members;
+    if (key === "all") return members.length || counts.total_members;
+
+    if (key === "admin") return adminCount;
 
     if (key === "participate") {
       return counts.participate_count;
@@ -437,7 +481,7 @@ export default function AdminEventsPage() {
           </h1>
 
           <p style={styles.subtitle}>
-            플랫폼별 참여 현황을 확인해요 🌿
+            월별 맞팔데이와 플랫폼별 참여 현황을 한 곳에서 관리해요 🌿
           </p>
         </div>
 
@@ -578,25 +622,21 @@ export default function AdminEventsPage() {
             </div>
 
             {isInstagram && (
-              <div style={styles.instagramFollowCard}>
-                <div>
+              <button
+                type="button"
+                onClick={openInstagramFollowAccount}
+                style={styles.instagramFollowCard}
+              >
+                <span style={styles.instagramAccountWrap}>
                   <span style={styles.instagramSmall}>
                     인스타그램 맞팔계정
                   </span>
-
                   <strong style={styles.instagramAccount}>
                     @{INSTAGRAM_FOLLOW_ACCOUNT}
                   </strong>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={openInstagramFollowAccount}
-                  style={styles.instagramOpenButton}
-                >
-                  계정 열기 ↗
-                </button>
-              </div>
+                </span>
+                <span style={styles.instagramArrow}>↗</span>
+              </button>
             )}
 
             <div style={styles.countGrid}>
@@ -606,6 +646,15 @@ export default function AdminEventsPage() {
                 </span>
                 <strong style={styles.countNumber}>
                   {counts.total_members}
+                </strong>
+              </div>
+
+              <div style={styles.countCard}>
+                <span style={styles.countLabel}>
+                  관리자
+                </span>
+                <strong style={styles.countNumber}>
+                  {adminCount}
                 </strong>
               </div>
 
@@ -664,6 +713,27 @@ export default function AdminEventsPage() {
                   </button>
                 );
               })}
+            </div>
+
+            <div style={styles.searchWrap}>
+              <span style={styles.searchIcon}>⌕</span>
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="닉네임 · 인스타 아이디 검색"
+                style={styles.searchInput}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  style={styles.searchClear}
+                  aria-label="검색어 지우기"
+                >
+                  ×
+                </button>
+              )}
             </div>
 
             <div style={styles.listHeader}>
@@ -982,6 +1052,7 @@ const styles = {
   },
 
   instagramFollowCard: {
+    width: "100%",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -991,6 +1062,15 @@ const styles = {
     background: "#edf5df",
     border: "1px solid #d8e8bd",
     marginBottom: "12px",
+    textAlign: "left",
+    cursor: "pointer",
+  },
+
+  instagramAccountWrap: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "2px",
+    minWidth: 0,
   },
 
   instagramSmall: {
@@ -1006,21 +1086,23 @@ const styles = {
     color: "#40552f",
   },
 
-  instagramOpenButton: {
+  instagramArrow: {
     flexShrink: 0,
-    border: "none",
-    borderRadius: "11px",
+    width: "28px",
+    height: "28px",
+    borderRadius: "50%",
     background: "#fff",
-    padding: "9px 10px",
-    color: "#5f744c",
-    fontSize: "9px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#60754e",
+    fontSize: "13px",
     fontWeight: "900",
-    cursor: "pointer",
   },
 
   countGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
     gap: "7px",
     marginBottom: "12px",
   },
@@ -1080,6 +1162,46 @@ const styles = {
   statusCount: {
     marginLeft: "3px",
     fontSize: "9px",
+  },
+
+  searchWrap: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    marginBottom: "12px",
+  },
+
+  searchIcon: {
+    position: "absolute",
+    left: "13px",
+    color: "#829076",
+    fontSize: "18px",
+    pointerEvents: "none",
+  },
+
+  searchInput: {
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "12px 38px 12px 38px",
+    border: "1px solid #dfe5d6",
+    borderRadius: "15px",
+    background: "#fff",
+    color: "#3f4b39",
+    fontSize: "12px",
+    outline: "none",
+  },
+
+  searchClear: {
+    position: "absolute",
+    right: "10px",
+    width: "25px",
+    height: "25px",
+    border: "none",
+    borderRadius: "50%",
+    background: "#eef2e8",
+    color: "#718064",
+    fontSize: "16px",
+    cursor: "pointer",
   },
 
   listHeader: {
