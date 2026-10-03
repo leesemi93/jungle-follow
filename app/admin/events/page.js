@@ -61,6 +61,8 @@ export default function AdminEventsPage() {
         key: "not_voted",
         label: isInstagram ? "미투표" : "미완료",
       },
+      { key: "late_complete", label: "지각완료" },
+      { key: "late_incomplete", label: "지각미완료" },
     ],
     [isInstagram]
   );
@@ -347,6 +349,30 @@ export default function AdminEventsPage() {
     }
   }
 
+  async function copyLateIncompleteNicknames() {
+    const incomplete = members.filter(
+      (item) => item.vote_status === "not_voted"
+    );
+
+    if (!incomplete.length) {
+      window.alert("지각 미완료 회원이 없어요 💚");
+      return;
+    }
+
+    const text = incomplete
+      .map((item) => `@${item.kakao_nickname}`)
+      .join(" ");
+
+    try {
+      await navigator.clipboard.writeText(text);
+      window.alert(
+        `지각 미완료 명단 ${incomplete.length}명 복사 완료 💚`
+      );
+    } catch (error) {
+      window.prompt("아래 명단을 복사해주세요.", text);
+    }
+  }
+
   const selectedEvent = useMemo(
     () =>
       events.find((item) => item.id === selectedEventId) ||
@@ -362,7 +388,15 @@ export default function AdminEventsPage() {
 
     return members
       .filter((item) => {
-        if (
+        if (statusTab === "late_complete") {
+          if (!(item.vote_status === "participate" && item.is_late_completion)) {
+            return false;
+          }
+        } else if (statusTab === "late_incomplete") {
+          if (item.vote_status !== "not_voted") {
+            return false;
+          }
+        } else if (
           statusTab !== "all" &&
           item.vote_status !== statusTab
         ) {
@@ -416,10 +450,31 @@ export default function AdminEventsPage() {
       return counts.restricted_count;
     }
 
+    if (key === "late_complete") {
+      return members.filter(
+        (item) =>
+          item.vote_status === "participate" &&
+          item.is_late_completion
+      ).length;
+    }
+
+    if (key === "late_incomplete") {
+      return members.filter(
+        (item) => item.vote_status === "not_voted"
+      ).length;
+    }
+
     return counts.not_voted_count;
   }
 
-  function getStatusLabel(status) {
+  function getStatusLabel(status, item) {
+    if (
+      status === "participate" &&
+      item?.is_late_completion
+    ) {
+      return "지각완료";
+    }
+
     if (status === "participate") {
       return isInstagram ? "맞팔완료" : "완료";
     }
@@ -836,10 +891,16 @@ export default function AdminEventsPage() {
               <div style={styles.listActions}>
                 <button
                   type="button"
-                  onClick={copyIncompleteNicknames}
+                  onClick={
+                    selectedEvent?.late_completion_open
+                      ? copyLateIncompleteNicknames
+                      : copyIncompleteNicknames
+                  }
                   style={styles.copyIncompleteButton}
                 >
-                  미완료 명단 복사
+                  {selectedEvent?.late_completion_open
+                    ? "지각 미완료 복사"
+                    : "미완료 명단 복사"}
                 </button>
 
                 <button
@@ -886,7 +947,8 @@ export default function AdminEventsPage() {
                             )}
                           >
                             {getStatusLabel(
-                              item.vote_status
+                              item.vote_status,
+                              item
                             )}
                           </span>
                         </div>
