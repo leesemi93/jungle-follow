@@ -88,7 +88,16 @@ export default function AdminMembersPage() {
   const [leftNickname, setLeftNickname] = useState("");
   const [leftInstagram, setLeftInstagram] = useState("");
   const [leftReason, setLeftReason] = useState("");
+  const [leftAt, setLeftAt] = useState("");
   const [addingLeft, setAddingLeft] = useState(false);
+  const [leftMembers, setLeftMembers] = useState([]);
+  const [leftMembersLoading, setLeftMembersLoading] = useState(false);
+  const [leftEditingId, setLeftEditingId] = useState(null);
+  const [leftEditNickname, setLeftEditNickname] = useState("");
+  const [leftEditInstagram, setLeftEditInstagram] = useState("");
+  const [leftEditReason, setLeftEditReason] = useState("");
+  const [leftEditAt, setLeftEditAt] = useState("");
+  const [leftSaving, setLeftSaving] = useState(false);
 
   const [newNickname, setNewNickname] =
     useState("");
@@ -197,6 +206,7 @@ export default function AdminMembersPage() {
       loadRequests(token),
       loadMemberRoles(token),
       loadPushStatus(token),
+      loadLeftMembers(token),
     ]);
   }
 
@@ -223,6 +233,25 @@ export default function AdminMembersPage() {
 
     setMembers(data || []);
     setLoading(false);
+  }
+
+  async function loadLeftMembers(token = adminToken) {
+    if (!token) return;
+    setLeftMembersLoading(true);
+
+    const { data, error } = await supabase.rpc(
+      "admin_get_left_members",
+      { p_session_token: token }
+    );
+
+    if (error) {
+      setErrorMessage(error.message || "퇴장자 목록을 불러오지 못했습니다.");
+      setLeftMembersLoading(false);
+      return;
+    }
+
+    setLeftMembers(data || []);
+    setLeftMembersLoading(false);
   }
 
   async function loadRequests(
@@ -502,6 +531,7 @@ export default function AdminMembersPage() {
       p_kakao_nickname: nickname,
       p_instagram_id: instagram,
       p_reason: reason || null,
+      p_left_at: leftAt || null,
     });
 
     if (error) {
@@ -513,9 +543,50 @@ export default function AdminMembersPage() {
     setLeftNickname("");
     setLeftInstagram("");
     setLeftReason("");
+    setLeftAt("");
     setShowAddLeftForm(false);
+    await loadLeftMembers(adminToken);
     setMessage(`${nickname}님을 퇴장자 리스트에 등록했습니다. 💚`);
     setAddingLeft(false);
+  }
+
+  function openLeftEditor(item) {
+    setLeftEditingId(item.id);
+    setLeftEditNickname(item.kakao_nickname || "");
+    setLeftEditInstagram(item.instagram_id || "");
+    setLeftEditReason(item.leave_reason || "");
+    setLeftEditAt(item.left_at || "");
+  }
+
+  async function saveLeftMember(item) {
+    if (!leftEditNickname.trim() || !leftEditInstagram.trim()) {
+      setErrorMessage("카톡방 닉네임과 인스타그램 아이디를 입력해주세요.");
+      return;
+    }
+
+    setLeftSaving(true);
+    setMessage("");
+    setErrorMessage("");
+
+    const { error } = await supabase.rpc("admin_update_left_member", {
+      p_session_token: adminToken,
+      p_id: item.id,
+      p_kakao_nickname: leftEditNickname.trim(),
+      p_instagram_id: normalizeInstagram(leftEditInstagram),
+      p_reason: leftEditReason.trim() || null,
+      p_left_at: leftEditAt || null,
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "퇴장자 수정 중 오류가 발생했습니다.");
+      setLeftSaving(false);
+      return;
+    }
+
+    setLeftEditingId(null);
+    setMessage("퇴장자 정보를 수정했습니다. 💚");
+    await loadLeftMembers(adminToken);
+    setLeftSaving(false);
   }
 
   async function openLinkEditor(member) {
@@ -1384,6 +1455,16 @@ export default function AdminMembersPage() {
                 }}
               />
 
+              <div style={{ ...fieldLabel, marginTop: "10px" }}>
+                퇴장일
+              </div>
+              <input
+                type="date"
+                value={leftAt}
+                onChange={(event) => setLeftAt(event.target.value)}
+                style={inputStyle}
+              />
+
               <button
                 type="submit"
                 disabled={addingLeft}
@@ -1600,6 +1681,79 @@ export default function AdminMembersPage() {
               📋 퇴장목록 엑셀 복사
             </button>
           </div>
+
+          {filter === "inactive" && (
+            <div style={{ marginTop: "16px", display: "grid", gap: "10px" }}>
+              <div style={{ ...subText, fontWeight: "900" }}>
+                공개 퇴장자 리스트 {leftMembers.length}명
+              </div>
+
+              {leftMembersLoading ? (
+                <div className="emptyMembers">퇴장자 목록 불러오는 중...</div>
+              ) : leftMembers.length === 0 ? (
+                <div className="emptyMembers">등록된 퇴장자가 없습니다.</div>
+              ) : (
+                leftMembers.map((item) => (
+                  <div key={item.id} style={requestCard}>
+                    {leftEditingId === item.id ? (
+                      <>
+                        <input
+                          value={leftEditNickname}
+                          onChange={(e) => setLeftEditNickname(e.target.value)}
+                          placeholder="카톡방 닉네임"
+                          style={inputStyle}
+                        />
+                        <input
+                          value={leftEditInstagram}
+                          onChange={(e) => setLeftEditInstagram(e.target.value)}
+                          placeholder="인스타그램 아이디"
+                          style={{ ...inputStyle, marginTop: "8px" }}
+                        />
+                        <textarea
+                          value={leftEditReason}
+                          onChange={(e) => setLeftEditReason(e.target.value)}
+                          placeholder="퇴장사유"
+                          rows={2}
+                          style={{ ...inputStyle, marginTop: "8px", resize: "vertical" }}
+                        />
+                        <input
+                          type="date"
+                          value={leftEditAt}
+                          onChange={(e) => setLeftEditAt(e.target.value)}
+                          style={{ ...inputStyle, marginTop: "8px" }}
+                        />
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "10px" }}>
+                          <button type="button" disabled={leftSaving} onClick={() => saveLeftMember(item)} style={approveButton}>
+                            {leftSaving ? "저장 중..." : "저장"}
+                          </button>
+                          <button type="button" onClick={() => setLeftEditingId(null)} style={rejectButton}>
+                            취소
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                          <div>
+                            <strong>{item.kakao_nickname}</strong>
+                            <div style={instagramText}>@{String(item.instagram_id || "").replace(/^@/, "")}</div>
+                          </div>
+                          <button type="button" onClick={() => openLeftEditor(item)} className="refreshButton">
+                            수정
+                          </button>
+                        </div>
+                        <div style={{ marginTop: "9px", fontSize: "10px", color: "#6f7868", lineHeight: 1.6 }}>
+                          퇴장사유 · {item.leave_reason || "-"}
+                          <br />
+                          퇴장일 · {item.left_at || "-"}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
 
           {loading ? (
             <div className="emptyMembers">
