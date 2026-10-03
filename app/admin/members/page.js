@@ -83,13 +83,6 @@ export default function AdminMembersPage() {
 
   const [showAddForm, setShowAddForm] =
     useState(false);
-  const [showAddLeftForm, setShowAddLeftForm] =
-    useState(false);
-  const [leftNickname, setLeftNickname] = useState("");
-  const [leftInstagram, setLeftInstagram] = useState("");
-  const [leftReason, setLeftReason] = useState("");
-  const [leftAt, setLeftAt] = useState("");
-  const [addingLeft, setAddingLeft] = useState(false);
   const [leftMembers, setLeftMembers] = useState([]);
   const [leftMembersLoading, setLeftMembersLoading] = useState(false);
   const [leftEditingId, setLeftEditingId] = useState(null);
@@ -518,46 +511,6 @@ export default function AdminMembersPage() {
     } finally {
       setAdding(false);
     }
-  }
-
-  async function handleAddLeftMember(event) {
-    event.preventDefault();
-
-    const nickname = leftNickname.trim();
-    const instagram = normalizeInstagram(leftInstagram);
-    const reason = leftReason.trim();
-
-    if (!nickname || !instagram) {
-      setErrorMessage("카톡방 닉네임과 인스타그램 아이디를 입력해주세요.");
-      return;
-    }
-
-    setAddingLeft(true);
-    setMessage("");
-    setErrorMessage("");
-
-    const { error } = await supabase.rpc("admin_add_left_member", {
-      p_session_token: adminToken,
-      p_kakao_nickname: nickname,
-      p_instagram_id: instagram,
-      p_reason: reason || null,
-      p_left_at: leftAt || null,
-    });
-
-    if (error) {
-      setErrorMessage(error.message || "퇴장자 등록 중 오류가 발생했습니다.");
-      setAddingLeft(false);
-      return;
-    }
-
-    setLeftNickname("");
-    setLeftInstagram("");
-    setLeftReason("");
-    setLeftAt("");
-    setShowAddLeftForm(false);
-    await loadLeftMembers(adminToken);
-    setMessage(`${nickname}님을 퇴장자 리스트에 등록했습니다. 💚`);
-    setAddingLeft(false);
   }
 
   function openLeftEditor(item) {
@@ -1409,80 +1362,6 @@ export default function AdminMembersPage() {
                 </div>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* 기존 퇴장자 직접 등록 */}
-        <div
-          className="memberAdminCard"
-          style={{ marginBottom: "18px" }}
-        >
-          <div className="memberListTop">
-            <div>
-              <div style={kickerStyle}>LEFT MEMBER</div>
-              <div className="memberCount">기존 퇴장자 등록</div>
-              <div style={subText}>
-                기존 회원 기록이 없는 퇴장자를 공개 리스트에 추가해요.
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="refreshButton"
-              onClick={() => setShowAddLeftForm((prev) => !prev)}
-            >
-              {showAddLeftForm ? "닫기" : "+ 퇴장자 등록"}
-            </button>
-          </div>
-
-          {showAddLeftForm && (
-            <form onSubmit={handleAddLeftMember} style={addForm}>
-              <div style={formTitle}>퇴장자 직접 등록</div>
-
-              <input
-                value={leftNickname}
-                onChange={(event) => setLeftNickname(event.target.value)}
-                placeholder="카톡방 닉네임 *"
-                style={inputStyle}
-              />
-
-              <input
-                value={leftInstagram}
-                onChange={(event) => setLeftInstagram(event.target.value)}
-                placeholder="인스타그램 아이디 *"
-                style={{ ...inputStyle, marginTop: "9px" }}
-              />
-
-              <textarea
-                value={leftReason}
-                onChange={(event) => setLeftReason(event.target.value)}
-                placeholder="퇴장사유"
-                rows={3}
-                style={{
-                  ...inputStyle,
-                  marginTop: "9px",
-                  resize: "vertical",
-                }}
-              />
-
-              <div style={{ ...fieldLabel, marginTop: "10px" }}>
-                퇴장일
-              </div>
-              <input
-                type="date"
-                value={leftAt}
-                onChange={(event) => setLeftAt(event.target.value)}
-                style={inputStyle}
-              />
-
-              <button
-                type="submit"
-                disabled={addingLeft}
-                style={mainButton}
-              >
-                {addingLeft ? "등록 중..." : "퇴장자 등록하기"}
-              </button>
-            </form>
           )}
         </div>
 
