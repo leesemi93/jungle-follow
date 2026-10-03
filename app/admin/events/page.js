@@ -276,6 +276,42 @@ export default function AdminEventsPage() {
     setCreating(false);
   }
 
+  async function toggleLateCompletion() {
+    if (!selectedEvent) return;
+
+    const token = localStorage.getItem("jungle_follow_session");
+    if (!token) {
+      router.replace("/");
+      return;
+    }
+
+    const nextOpen = !selectedEvent.late_completion_open;
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const { error } = await supabase.rpc(
+      "admin_set_late_completion",
+      {
+        p_session_token: token,
+        p_event_id: selectedEvent.id,
+        p_open: nextOpen,
+      }
+    );
+
+    if (error) {
+      setErrorMessage(error.message || "지각 완료 상태 변경에 실패했어요.");
+      return;
+    }
+
+    setSuccessMessage(
+      nextOpen
+        ? "지각 완료 기간을 열었어요 ⏰"
+        : "지각 완료 기간을 마감했어요 💚"
+    );
+
+    await loadEvents(token);
+  }
+
   async function refresh() {
     if (!selectedEventId) return;
 
@@ -593,6 +629,35 @@ export default function AdminEventsPage() {
                     : "마감"}
                 </span>
               </div>
+
+              {!selectedEvent?.is_open && (
+                <div style={styles.lateControl}>
+                  <div>
+                    <strong style={styles.lateControlTitle}>
+                      ⏰ 지각 완료
+                    </strong>
+                    <div style={styles.lateControlText}>
+                      {selectedEvent?.late_completion_open
+                        ? "현재 지각 완료를 받고 있어요."
+                        : "미완료자의 지각 완료를 열 수 있어요."}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleLateCompletion}
+                    style={{
+                      ...styles.lateControlButton,
+                      ...(selectedEvent?.late_completion_open
+                        ? styles.lateControlButtonClose
+                        : {}),
+                    }}
+                  >
+                    {selectedEvent?.late_completion_open
+                      ? "지각 완료 마감"
+                      : "지각 완료 열기"}
+                  </button>
+                </div>
+              )}
 
               {events.length > 1 && (
                 <select
@@ -1031,6 +1096,45 @@ const styles = {
     color: "#777b74",
     fontSize: "9px",
     fontWeight: "950",
+  },
+
+  lateControl: {
+    marginTop: "13px",
+    padding: "12px",
+    borderRadius: "15px",
+    background: "#fff9e8",
+    border: "1px solid #eadcae",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "10px",
+  },
+
+  lateControlTitle: {
+    color: "#735f2f",
+    fontSize: "11px",
+  },
+
+  lateControlText: {
+    marginTop: "3px",
+    color: "#91815c",
+    fontSize: "9px",
+  },
+
+  lateControlButton: {
+    flexShrink: 0,
+    border: "none",
+    borderRadius: "999px",
+    background: "#9aba61",
+    color: "#fff",
+    padding: "9px 11px",
+    fontSize: "9px",
+    fontWeight: "950",
+    cursor: "pointer",
+  },
+
+  lateControlButtonClose: {
+    background: "#9b9182",
   },
 
   select: {
