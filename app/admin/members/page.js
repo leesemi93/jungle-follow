@@ -250,7 +250,17 @@ export default function AdminMembersPage() {
       return;
     }
 
-    setLeftMembers(data || []);
+    const sorted = [...(data || [])].sort((x, y) => {
+      const xDate = x.left_at ? new Date(x.left_at).getTime() : 0;
+      const yDate = y.left_at ? new Date(y.left_at).getTime() : 0;
+      if (yDate !== xDate) return yDate - xDate;
+      return (x.kakao_nickname || "").localeCompare(
+        y.kakao_nickname || "",
+        "ko-KR"
+      );
+    });
+
+    setLeftMembers(sorted);
     setLeftMembersLoading(false);
   }
 
