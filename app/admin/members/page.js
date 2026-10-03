@@ -672,6 +672,53 @@ export default function AdminMembersPage() {
     setActionLoadingId(null);
   }
 
+  async function deleteMemberPermanently(member) {
+    const firstConfirmed = window.confirm(
+      `${member.kakao_nickname}님을 완전히 삭제할까요?\n\n회원 기록과 연결된 정보가 삭제되며 되돌릴 수 없습니다.`
+    );
+
+    if (!firstConfirmed) return;
+
+    const typedName = window.prompt(
+      `완전 삭제하려면 카카오톡 닉네임 "${member.kakao_nickname}"을 입력해주세요.`
+    );
+
+    if (typedName !== member.kakao_nickname) {
+      if (typedName !== null) {
+        window.alert("닉네임이 일치하지 않아 삭제하지 않았습니다.");
+      }
+      return;
+    }
+
+    setActionLoadingId(member.id);
+    setMessage("");
+    setErrorMessage("");
+
+    const { error } = await supabase.rpc(
+      "admin_delete_member",
+      {
+        p_session_token: adminToken,
+        p_member_id: member.id,
+      }
+    );
+
+    if (error) {
+      setErrorMessage(
+        error.message ||
+          "회원 완전 삭제 중 오류가 발생했습니다."
+      );
+      setActionLoadingId(null);
+      return;
+    }
+
+    setMessage(
+      `${member.kakao_nickname}님의 회원 기록을 완전히 삭제했습니다.`
+    );
+
+    await refreshAll(adminToken);
+    setActionLoadingId(null);
+  }
+
   function openProfileEditor(member) {
     if (profileEditingId === member.id) {
       setProfileEditingId(null);
@@ -1769,26 +1816,49 @@ export default function AdminMembersPage() {
                               "12px",
                           }}
                         >
-                          <button
-                            type="button"
-                            disabled={
-                              actionLoadingId ===
+                          <div style={inactiveActionGrid}>
+                            <button
+                              type="button"
+                              disabled={
+                                actionLoadingId ===
+                                member.id
+                              }
+                              onClick={() =>
+                                rejoinMember(
+                                  member
+                                )
+                              }
+                              style={
+                                rejoinButton
+                              }
+                            >
+                              {actionLoadingId ===
                               member.id
-                            }
-                            onClick={() =>
-                              rejoinMember(
-                                member
-                              )
-                            }
-                            style={
-                              rejoinButton
-                            }
-                          >
-                            {actionLoadingId ===
-                            member.id
-                              ? "처리 중..."
-                              : "재입장"}
-                          </button>
+                                ? "처리 중..."
+                                : "재입장"}
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={
+                                actionLoadingId ===
+                                member.id
+                              }
+                              onClick={() =>
+                                deleteMemberPermanently(
+                                  member
+                                )
+                              }
+                              style={
+                                deleteButton
+                              }
+                            >
+                              {actionLoadingId ===
+                              member.id
+                                ? "처리 중..."
+                                : "완전 삭제"}
+                            </button>
+                          </div>
                         </div>
                       )}
 
@@ -2307,6 +2377,23 @@ const leaveButton = {
   borderRadius: "12px",
   background: "#fff7f7",
   color: "#a65c5c",
+  fontWeight: "900",
+  cursor: "pointer",
+};
+
+const inactiveActionGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "8px",
+};
+
+const deleteButton = {
+  width: "100%",
+  padding: "10px 12px",
+  border: "1px solid #efcaca",
+  borderRadius: "12px",
+  background: "#fff1f1",
+  color: "#b64d4d",
   fontWeight: "900",
   cursor: "pointer",
 };
