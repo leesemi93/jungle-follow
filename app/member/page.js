@@ -544,7 +544,32 @@ export default function MemberPage() {
               정글룸 불러오는 중...
             </div>
           </div>
-        </section>
+          <button
+          type="button"
+          onClick={() => {
+            window.location.href = "https://jungleroom.vercel.app/";
+          }}
+          style={{
+            position: "fixed",
+            right: "12px",
+            bottom: "14px",
+            zIndex: 9998,
+            padding: "8px 11px",
+            border: "1px solid #d8e5c8",
+            borderRadius: "999px",
+            background: "rgba(255,255,255,0.95)",
+            color: "#536642",
+            fontSize: "10px",
+            fontWeight: "900",
+            boxShadow: "0 4px 14px rgba(66,73,54,0.12)",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          🐯 정글룸
+        </button>
+
+      </section>
       </main>
     );
   }
@@ -829,33 +854,6 @@ export default function MemberPage() {
               : "맞팔데이 참여하기"}
           </button>
 
-        </div>
-
-
-        {/* JUNGLE ROOM */}
-
-        <div style={styles.sectionCard}>
-          <div style={styles.sectionTop}>
-            <div>
-              <div style={styles.smallLabel}>JUNGLE ROOM</div>
-              <h2 style={styles.sectionTitle}>정글룸 🐯</h2>
-            </div>
-            <div style={styles.leafCircle}>🌿</div>
-          </div>
-
-          <p style={styles.description}>
-            정글룸 활동 웹앱으로 바로 이동해요.
-          </p>
-
-          <button
-            type="button"
-            style={styles.mainButton}
-            onClick={() => {
-              window.location.href = "https://jungleroom.vercel.app/";
-            }}
-          >
-            정글룸 바로가기
-          </button>
         </div>
 
 
