@@ -330,6 +330,20 @@ export default function MemberFollowPage() {
       return;
     }
 
+    const requiredPlatforms = event?.is_open
+      ? platforms
+      : platforms.filter((item) => canLateComplete(item.platform));
+
+    const uncheckedPlatforms = requiredPlatforms.filter(
+      (item) => !selections[item.platform]
+    );
+
+    if (uncheckedPlatforms.length > 0) {
+      setMessage("");
+      setErrorMessage("완료체크를 해주세요.");
+      return;
+    }
+
     const token = localStorage.getItem(
       "jungle_follow_session"
     );
