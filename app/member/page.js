@@ -544,30 +544,6 @@ export default function MemberPage() {
               정글룸 불러오는 중...
             </div>
           </div>
-          <button
-          type="button"
-          onClick={() => {
-            window.location.href = "https://jungleroom.vercel.app/";
-          }}
-          style={{
-            position: "fixed",
-            right: "12px",
-            bottom: "14px",
-            zIndex: 9998,
-            padding: "8px 11px",
-            border: "1px solid #d8e5c8",
-            borderRadius: "999px",
-            background: "rgba(255,255,255,0.95)",
-            color: "#536642",
-            fontSize: "10px",
-            fontWeight: "900",
-            boxShadow: "0 4px 14px rgba(66,73,54,0.12)",
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-          }}
-        >
-          🐯 정글룸
-        </button>
 
       </section>
       </main>
@@ -1032,6 +1008,31 @@ export default function MemberPage() {
           style={styles.logoutButton}
         >
           로그아웃
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = "https://jungleroom.vercel.app/";
+          }}
+          style={{
+            position: "fixed",
+            right: "12px",
+            bottom: "14px",
+            zIndex: 99999,
+            padding: "8px 11px",
+            border: "1px solid #d8e5c8",
+            borderRadius: "999px",
+            background: "#ffffff",
+            color: "#536642",
+            fontSize: "10px",
+            fontWeight: "900",
+            boxShadow: "0 4px 14px rgba(66,73,54,0.18)",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          🐯 정글룸
         </button>
 
       </section>
