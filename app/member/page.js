@@ -832,6 +832,33 @@ export default function MemberPage() {
         </div>
 
 
+        {/* JUNGLE ROOM */}
+
+        <div style={styles.sectionCard}>
+          <div style={styles.sectionTop}>
+            <div>
+              <div style={styles.smallLabel}>JUNGLE ROOM</div>
+              <h2 style={styles.sectionTitle}>정글룸 🐯</h2>
+            </div>
+            <div style={styles.leafCircle}>🌿</div>
+          </div>
+
+          <p style={styles.description}>
+            정글룸 활동 웹앱으로 바로 이동해요.
+          </p>
+
+          <button
+            type="button"
+            style={styles.mainButton}
+            onClick={() => {
+              window.location.href = "https://jungleroom.vercel.app/";
+            }}
+          >
+            정글룸 바로가기
+          </button>
+        </div>
+
+
         {/* MY PLATFORM MANAGER */}
 
         <div style={styles.platformManagerCard}>
