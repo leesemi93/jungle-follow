@@ -315,9 +315,7 @@ export default function AdminEventsPage() {
 
   async function copyLateIncompleteNicknames() {
     const incomplete = members.filter(
-      (item) =>
-        item.vote_status === "not_voted" &&
-        item.kakao_nickname !== "과카모리"
+      (item) => item.vote_status === "not_voted"
     );
 
     if (!incomplete.length) {
@@ -337,6 +335,39 @@ export default function AdminEventsPage() {
     } catch (error) {
       window.prompt("아래 명단을 복사해주세요.", text);
     }
+  }
+
+  async function completeLateMember(item) {
+    const token = localStorage.getItem("jungle_follow_session");
+    if (!token || !selectedEventId) return;
+
+    const ok = window.confirm(
+      `${item.kakao_nickname}님을 완료 처리할까요?`
+    );
+    if (!ok) return;
+
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const { error } = await supabase.rpc(
+      "admin_complete_platform_vote",
+      {
+        p_session_token: token,
+        p_event_id: selectedEventId,
+        p_member_id: item.member_id,
+        p_platform: platform,
+      }
+    );
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setSuccessMessage(
+      `${item.kakao_nickname}님 완료 처리했어요 💚`
+    );
+    await loadPlatformData(selectedEventId, platform);
   }
 
   const selectedEvent = useMemo(
@@ -359,10 +390,7 @@ export default function AdminEventsPage() {
             return false;
           }
         } else if (statusTab === "late_incomplete") {
-          if (
-            item.vote_status !== "not_voted" ||
-            item.kakao_nickname === "과카모리"
-          ) {
+          if (item.vote_status !== "not_voted") {
             return false;
           }
         } else if (
@@ -429,9 +457,7 @@ export default function AdminEventsPage() {
 
     if (key === "late_incomplete") {
       return members.filter(
-        (item) =>
-          item.vote_status === "not_voted" &&
-          item.kakao_nickname !== "과카모리"
+        (item) => item.vote_status === "not_voted"
       ).length;
     }
 
@@ -930,6 +956,17 @@ export default function AdminEventsPage() {
 
                       <span>열기 ↗</span>
                     </button>
+
+                    {statusTab === "late_incomplete" &&
+                      item.vote_status === "not_voted" && (
+                        <button
+                          type="button"
+                          onClick={() => completeLateMember(item)}
+                          style={styles.completeButton}
+                        >
+                          ✓ 완료
+                        </button>
+                      )}
                   </div>
                 ))}
               </div>
@@ -1499,6 +1536,19 @@ const styles = {
     color: "#7b7d77",
     fontSize: "8px",
     fontWeight: "950",
+  },
+
+  completeButton: {
+    width: "100%",
+    marginTop: "8px",
+    padding: "11px 12px",
+    border: "none",
+    borderRadius: "13px",
+    background: "#e4edce",
+    color: "#536642",
+    fontSize: "12px",
+    fontWeight: "950",
+    cursor: "pointer",
   },
 
   accountButton: {
