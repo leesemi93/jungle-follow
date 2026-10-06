@@ -370,6 +370,39 @@ export default function AdminEventsPage() {
     await loadPlatformData(selectedEventId, platform);
   }
 
+  async function markNewMember(item) {
+    const token = localStorage.getItem("jungle_follow_session");
+    if (!token || !selectedEventId) return;
+
+    const ok = window.confirm(
+      `${item.kakao_nickname}님을 신입으로 처리할까요?\n이번 달 맞팔데이는 완료 처리되고 다음 달부터 정상 적용돼요.`
+    );
+    if (!ok) return;
+
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const { error } = await supabase.rpc(
+      "admin_mark_new_member_follow",
+      {
+        p_session_token: token,
+        p_event_id: selectedEventId,
+        p_member_id: item.member_id,
+        p_platform: platform,
+      }
+    );
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setSuccessMessage(
+      `${item.kakao_nickname}님 신입 처리했어요 💚 다음 달부터 적용돼요.`
+    );
+    await loadPlatformData(selectedEventId, platform);
+  }
+
   const selectedEvent = useMemo(
     () =>
       events.find((item) => item.id === selectedEventId) ||
@@ -959,13 +992,23 @@ export default function AdminEventsPage() {
 
                     {statusTab === "late_incomplete" &&
                       item.vote_status === "not_voted" && (
-                        <button
-                          type="button"
-                          onClick={() => completeLateMember(item)}
-                          style={styles.completeButton}
-                        >
-                          ✓ 완료
-                        </button>
+                        <div style={styles.lateActionRow}>
+                          <button
+                            type="button"
+                            onClick={() => completeLateMember(item)}
+                            style={styles.completeButton}
+                          >
+                            ✓ 완료
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => markNewMember(item)}
+                            style={styles.newMemberButton}
+                          >
+                            🌱 신입
+                          </button>
+                        </div>
                       )}
                   </div>
                 ))}
@@ -1538,14 +1581,32 @@ const styles = {
     fontWeight: "950",
   },
 
+  lateActionRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "8px",
+    marginTop: "8px",
+  },
+
   completeButton: {
     width: "100%",
-    marginTop: "8px",
     padding: "11px 12px",
     border: "none",
     borderRadius: "13px",
     background: "#e4edce",
     color: "#536642",
+    fontSize: "12px",
+    fontWeight: "950",
+    cursor: "pointer",
+  },
+
+  newMemberButton: {
+    width: "100%",
+    padding: "11px 12px",
+    border: "1px solid #d8e5c8",
+    borderRadius: "13px",
+    background: "#ffffff",
+    color: "#657553",
     fontSize: "12px",
     fontWeight: "950",
     cursor: "pointer",
