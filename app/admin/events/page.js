@@ -314,33 +314,11 @@ export default function AdminEventsPage() {
   }
 
   async function copyLateIncompleteNicknames() {
-    const incomplete = members.filter((item) => {
-      if (item.vote_status !== "not_voted") return false;
-
-      const joinedAt = item.member_created_at
-        ? new Date(item.member_created_at)
-        : null;
-
-      if (!joinedAt || !selectedEvent) return true;
-
-      const joinedYear = Number(
-        new Intl.DateTimeFormat("en-US", {
-          timeZone: "Asia/Seoul",
-          year: "numeric",
-        }).format(joinedAt)
-      );
-      const joinedMonth = Number(
-        new Intl.DateTimeFormat("en-US", {
-          timeZone: "Asia/Seoul",
-          month: "numeric",
-        }).format(joinedAt)
-      );
-
-      return !(
-        joinedYear === Number(selectedEvent.year) &&
-        joinedMonth === Number(selectedEvent.month)
-      );
-    });
+    const incomplete = members.filter(
+      (item) =>
+        item.vote_status === "not_voted" &&
+        item.kakao_nickname !== "과카모리"
+    );
 
     if (!incomplete.length) {
       window.alert("지각 미완료 회원이 없어요 💚");
@@ -381,26 +359,10 @@ export default function AdminEventsPage() {
             return false;
           }
         } else if (statusTab === "late_incomplete") {
-          const joinedAt = item.member_created_at
-            ? new Date(item.member_created_at)
-            : null;
-          const joinedInEventMonth =
-            joinedAt &&
-            selectedEvent &&
-            Number(
-              new Intl.DateTimeFormat("en-US", {
-                timeZone: "Asia/Seoul",
-                year: "numeric",
-              }).format(joinedAt)
-            ) === Number(selectedEvent.year) &&
-            Number(
-              new Intl.DateTimeFormat("en-US", {
-                timeZone: "Asia/Seoul",
-                month: "numeric",
-              }).format(joinedAt)
-            ) === Number(selectedEvent.month);
-
-          if (item.vote_status !== "not_voted" || joinedInEventMonth) {
+          if (
+            item.vote_status !== "not_voted" ||
+            item.kakao_nickname === "과카모리"
+          ) {
             return false;
           }
         } else if (
@@ -438,7 +400,7 @@ export default function AdminEventsPage() {
           "ko-KR"
         )
       );
-  }, [members, statusTab, search, selectedEvent]);
+  }, [members, statusTab, search]);
 
   const adminCount = members.filter(
     (item) => item.vote_status === "admin"
@@ -466,33 +428,11 @@ export default function AdminEventsPage() {
     }
 
     if (key === "late_incomplete") {
-      return members.filter((item) => {
-        if (item.vote_status !== "not_voted") return false;
-
-        const joinedAt = item.member_created_at
-          ? new Date(item.member_created_at)
-          : null;
-
-        if (!joinedAt || !selectedEvent) return true;
-
-        const joinedYear = Number(
-          new Intl.DateTimeFormat("en-US", {
-            timeZone: "Asia/Seoul",
-            year: "numeric",
-          }).format(joinedAt)
-        );
-        const joinedMonth = Number(
-          new Intl.DateTimeFormat("en-US", {
-            timeZone: "Asia/Seoul",
-            month: "numeric",
-          }).format(joinedAt)
-        );
-
-        return !(
-          joinedYear === Number(selectedEvent.year) &&
-          joinedMonth === Number(selectedEvent.month)
-        );
-      }).length;
+      return members.filter(
+        (item) =>
+          item.vote_status === "not_voted" &&
+          item.kakao_nickname !== "과카모리"
+      ).length;
     }
 
     return counts.not_voted_count;
