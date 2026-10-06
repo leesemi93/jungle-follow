@@ -63,6 +63,7 @@ export default function AdminEventsPage() {
       },
       { key: "late_complete", label: "지각완료" },
       { key: "late_incomplete", label: "지각미완료" },
+      { key: "new_member", label: "신입" },
     ],
     [isInstagram]
   );
@@ -422,6 +423,10 @@ export default function AdminEventsPage() {
           if (!(item.vote_status === "participate" && item.is_late_completion)) {
             return false;
           }
+        } else if (statusTab === "new_member") {
+          if (!item.is_new_member_follow) {
+            return false;
+          }
         } else if (statusTab === "late_incomplete") {
           if (item.vote_status !== "not_voted") {
             return false;
@@ -485,6 +490,12 @@ export default function AdminEventsPage() {
         (item) =>
           item.vote_status === "participate" &&
           item.is_late_completion
+      ).length;
+    }
+
+    if (key === "new_member") {
+      return members.filter(
+        (item) => item.is_new_member_follow
       ).length;
     }
 
