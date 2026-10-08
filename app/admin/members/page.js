@@ -1361,7 +1361,7 @@ export default function AdminMembersPage() {
               </div>
 
               <div className="memberCount">
-                전체 {members.length}명
+                전체 {activeCount + adminCount}명
               </div>
 
               <div style={subText}>
