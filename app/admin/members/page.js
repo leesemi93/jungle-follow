@@ -554,6 +554,50 @@ export default function AdminMembersPage() {
     setLeftSaving(false);
   }
 
+  async function deleteLeftMember(item) {
+    const linkedMember = members.find(
+      (member) => member.id === item.member_id
+    );
+
+    if (!linkedMember || linkedMember.status === "inactive") {
+      window.alert("재입장된 회원만 퇴장자 목록에서 삭제할 수 있어요.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `${item.kakao_nickname}님의 퇴장 기록을 목록에서 삭제할까요?\n회원 자체는 삭제되지 않아요.`
+    );
+
+    if (!confirmed) return;
+
+    setLeftSaving(true);
+    setMessage("");
+    setErrorMessage("");
+
+    const { error } = await supabase.rpc(
+      "admin_delete_left_member",
+      {
+        p_session_token: adminToken,
+        p_id: item.id,
+      }
+    );
+
+    if (error) {
+      setErrorMessage(
+        error.message || "퇴장자 기록 삭제 중 오류가 발생했습니다."
+      );
+      setLeftSaving(false);
+      return;
+    }
+
+    setMessage(
+      `${item.kakao_nickname}님의 퇴장 기록을 삭제했습니다. 💚`
+    );
+
+    await loadLeftMembers(adminToken);
+    setLeftSaving(false);
+  }
+
   async function openLinkEditor(member) {
     setMessage("");
     setErrorMessage("");
@@ -1614,9 +1658,36 @@ export default function AdminMembersPage() {
                             <strong>{item.kakao_nickname}</strong>
                             <div style={instagramText}>@{String(item.instagram_id || "").replace(/^@/, "")}</div>
                           </div>
-                          <button type="button" onClick={() => openLeftEditor(item)} className="refreshButton">
-                            수정
-                          </button>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                            }}
+                          >
+                            {members.some(
+                              (member) =>
+                                member.id === item.member_id &&
+                                member.status !== "inactive"
+                            ) && (
+                              <button
+                                type="button"
+                                disabled={leftSaving}
+                                onClick={() => deleteLeftMember(item)}
+                                style={rejectButton}
+                              >
+                                삭제
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => openLeftEditor(item)}
+                              className="refreshButton"
+                            >
+                              수정
+                            </button>
+                          </div>
                         </div>
                         <div style={{ marginTop: "9px", fontSize: "10px", color: "#6f7868", lineHeight: 1.6 }}>
                           퇴장사유 · {item.leave_reason || "-"}
