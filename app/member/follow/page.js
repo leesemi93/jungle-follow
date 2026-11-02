@@ -62,6 +62,12 @@ export default function MemberFollowPage() {
   const [expandedLinks, setExpandedLinks] =
     useState({});
 
+  const [followLinkChecks, setFollowLinkChecks] =
+    useState({});
+
+  const [checkSaving, setCheckSaving] =
+    useState({});
+
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] =
     useState("");
@@ -174,6 +180,11 @@ export default function MemberFollowPage() {
       );
     }
 
+    await loadFollowLinkChecks(
+      token,
+      visiblePlatformRows
+    );
+
     if (currentEvent?.event_id) {
       await loadParticipantLinks(
         token,
@@ -275,6 +286,137 @@ export default function MemberFollowPage() {
     }
 
     setParticipantLinks(nextLinks);
+  }
+
+  async function loadFollowLinkChecks(
+    token,
+    platformRows
+  ) {
+    const nonInstagramPlatforms =
+      platformRows.filter(
+        (item) =>
+          item.platform !== "instagram"
+      );
+
+    const nextChecks = {};
+
+    for (const platform of nonInstagramPlatforms) {
+      const { data, error } =
+        await supabase.rpc(
+          "get_my_follow_link_checks",
+          {
+            p_session_token: token,
+            p_platform:
+              platform.platform,
+          }
+        );
+
+      if (error) {
+        console.error(
+          `${platform.platform} 체크 조회 오류:`,
+          error
+        );
+
+        nextChecks[platform.platform] =
+          {};
+        continue;
+      }
+
+      const platformChecks = {};
+
+      (Array.isArray(data) ? data : []).forEach(
+        (row) => {
+          if (row.target_member_id) {
+            platformChecks[
+              row.target_member_id
+            ] = true;
+          }
+        }
+      );
+
+      nextChecks[platform.platform] =
+        platformChecks;
+    }
+
+    setFollowLinkChecks(nextChecks);
+  }
+
+  async function toggleFollowLinkCheck(
+    platform,
+    targetMemberId
+  ) {
+    if (!platform || !targetMemberId) {
+      return;
+    }
+
+    const token = localStorage.getItem(
+      "jungle_follow_session"
+    );
+
+    if (!token) {
+      router.replace("/");
+      return;
+    }
+
+    const key =
+      `${platform}:${targetMemberId}`;
+
+    if (checkSaving[key]) {
+      return;
+    }
+
+    const wasChecked =
+      Boolean(
+        followLinkChecks[
+          platform
+        ]?.[targetMemberId]
+      );
+
+    const nextChecked = !wasChecked;
+
+    setCheckSaving((prev) => ({
+      ...prev,
+      [key]: true,
+    }));
+
+    setFollowLinkChecks((prev) => ({
+      ...prev,
+      [platform]: {
+        ...(prev[platform] || {}),
+        [targetMemberId]: nextChecked,
+      },
+    }));
+
+    const { error } = await supabase.rpc(
+      "set_my_follow_link_check",
+      {
+        p_session_token: token,
+        p_platform: platform,
+        p_target_member_id:
+          targetMemberId,
+        p_checked: nextChecked,
+      }
+    );
+
+    if (error) {
+      setFollowLinkChecks((prev) => ({
+        ...prev,
+        [platform]: {
+          ...(prev[platform] || {}),
+          [targetMemberId]: wasChecked,
+        },
+      }));
+
+      setErrorMessage(
+        error.message ||
+          "체크 저장 중 오류가 발생했어요."
+      );
+    }
+
+    setCheckSaving((prev) => ({
+      ...prev,
+      [key]: false,
+    }));
   }
 
   function canLateComplete(platform) {
@@ -974,7 +1116,19 @@ export default function MemberFollowPage() {
                             }
                             style={styles.participantToggle}
                           >
-                            <span>{links.length}명</span>
+                            <span>
+                              {
+                                links.filter(
+                                  (person) =>
+                                    followLinkChecks[
+                                      item.platform
+                                    ]?.[
+                                      person.member_id
+                                    ]
+                                ).length
+                              }
+                              /{links.length} 확인
+                            </span>
                             <span>{expandedLinks[item.platform] ? "접기 ▲" : "보기 ▼"}</span>
                           </button>
                         </div>
@@ -1007,28 +1161,83 @@ export default function MemberFollowPage() {
                           }
                         >
 
-                          {links.map((person, index) => (
-                            <button
-                              key={`${person.member_id}-${index}`}
-                              type="button"
-                              onClick={() =>
-                                openParticipantLink(person.account_value)
-                              }
-                              style={styles.participantItem}
-                            >
-                              <span style={styles.participantNumber}>
-                                {index + 1}
-                              </span>
+                          {links.map((person, index) => {
+                            const isChecked =
+                              Boolean(
+                                followLinkChecks[
+                                  item.platform
+                                ]?.[
+                                  person.member_id
+                                ]
+                              );
 
-                              <span style={styles.participantName}>
-                                {person.kakao_nickname || "회원"}
-                              </span>
+                            const savingKey =
+                              `${item.platform}:${person.member_id}`;
 
-                              <span style={styles.openLinkText}>
-                                열기 ↗
-                              </span>
-                            </button>
-                          ))}
+                            return (
+                              <div
+                                key={`${person.member_id}-${index}`}
+                                style={{
+                                  ...styles.participantItem,
+                                  ...(isChecked
+                                    ? styles.participantItemChecked
+                                    : {}),
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  aria-label={
+                                    isChecked
+                                      ? "확인 체크 해제"
+                                      : "확인 체크"
+                                  }
+                                  disabled={
+                                    Boolean(
+                                      checkSaving[
+                                        savingKey
+                                      ]
+                                    )
+                                  }
+                                  onClick={() =>
+                                    toggleFollowLinkCheck(
+                                      item.platform,
+                                      person.member_id
+                                    )
+                                  }
+                                  style={{
+                                    ...styles.linkCheckButton,
+                                    ...(isChecked
+                                      ? styles.linkCheckButtonActive
+                                      : {}),
+                                  }}
+                                >
+                                  {isChecked
+                                    ? "✓"
+                                    : ""}
+                                </button>
+
+                                <span style={styles.participantNumber}>
+                                  {index + 1}
+                                </span>
+
+                                <span style={styles.participantName}>
+                                  {person.kakao_nickname || "회원"}
+                                </span>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openParticipantLink(
+                                      person.account_value
+                                    )
+                                  }
+                                  style={styles.openLinkButton}
+                                >
+                                  열기 ↗
+                                </button>
+                              </div>
+                            );
+                          })}
 
                         </div>
                       )
@@ -1785,12 +1994,34 @@ const styles = {
     borderRadius: "11px",
     background: "#ffffff",
     display: "grid",
-    gridTemplateColumns: "25px minmax(0, 1fr) 50px",
+    gridTemplateColumns: "28px 25px minmax(0, 1fr) 50px",
     alignItems: "center",
     gap: "7px",
     textAlign: "left",
-    cursor: "pointer",
     boxSizing: "border-box",
+  },
+
+  participantItemChecked: {
+    background: "#f4f9ec",
+    border: "1px solid #cfe3ad",
+  },
+
+  linkCheckButton: {
+    width: "26px",
+    height: "26px",
+    padding: 0,
+    border: "1px solid #cfd9c5",
+    borderRadius: "8px",
+    background: "#ffffff",
+    color: "#ffffff",
+    fontSize: "14px",
+    fontWeight: "950",
+    cursor: "pointer",
+  },
+
+  linkCheckButtonActive: {
+    background: "#86ad52",
+    border: "1px solid #86ad52",
   },
 
   participantNumber: {
@@ -1816,12 +2047,16 @@ const styles = {
     textOverflow: "ellipsis",
   },
 
-  openLinkText: {
+  openLinkButton: {
+    border: "none",
+    background: "transparent",
     color: "#6d8258",
     fontSize: "9px",
     fontWeight: "900",
     textAlign: "right",
     whiteSpace: "nowrap",
+    cursor: "pointer",
+    padding: "6px 0",
   },
 
   lateNotice: {
