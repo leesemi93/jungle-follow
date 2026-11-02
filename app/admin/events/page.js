@@ -299,7 +299,7 @@ export default function AdminEventsPage() {
 
     const text = incomplete
       .map((item) => `@${item.kakao_nickname}`)
-      .join(" ");
+      .join("\n");
 
     try {
       await navigator.clipboard.writeText(text);
@@ -326,7 +326,7 @@ export default function AdminEventsPage() {
 
     const text = incomplete
       .map((item) => `@${item.kakao_nickname}`)
-      .join(" ");
+      .join("\n");
 
     try {
       await navigator.clipboard.writeText(text);
